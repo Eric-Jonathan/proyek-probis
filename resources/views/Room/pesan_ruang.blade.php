@@ -5,12 +5,12 @@
     <div class="container py-5">
     <div class="row mb-4">
         <div class="col-12">
-            <h2 class="fw-bold">Don't forget your booking [cite: 3]</h2>
+            <h2 class="fw-bold">Don't forget your booking</h2>
             <div class="alert alert-info d-flex align-items-center" role="alert">
                 <i class="bi bi-info-circle-fill me-2"></i>
                 <div>
-                    Hampir selesai! Selesaikan rincian untuk pemesanan Anda[cite: 7]. 
-                    <strong>Tinggal 7 hari lagi! [cite: 16]</strong>
+                    Hampir selesai! Selesaikan rincian untuk pemesanan Anda. 
+                    <strong>Tinggal 7 hari lagi!</strong>
                 </div>
             </div>
         </div>
@@ -82,7 +82,7 @@
                             <div class="col-6">
                                 <p class="mb-1 fw-bold small">Check-in</p> 
                                 <p class="mb-0 fw-bold" style="font-size: 1.1rem;">Thu, Apr 9, 2026</p> 
-                                <p class="text-muted small mb-0">From 3:00 PM</p> [cite: 15, 110]
+                                <p class="text-muted small mb-0">From 3:00 PM</p> 
                             </div>
                         
                             <div class="col-6 ps-4">
@@ -96,15 +96,15 @@
                             <div class="rounded-circle border border-2 d-flex align-items-center justify-content-center me-2" style="width: 26px; height: 26px; border-color: #a35d14 !important;">
                                 <span class="fw-bold" style="font-size: 0.9rem;">!</span>
                             </div>
-                            <span class="fw-bold small">Just 7 days away!</span> [cite: 16]
+                            <span class="fw-bold small">Just 7 days away!</span> 
                         </div>
                     
                         <hr class="my-4" style="opacity: 0.1;">
                     
                         <div class="mb-1">
-                            <p class="mb-2 fw-bold small">You selected</p> [cite: 24]
-                            <p class="mb-1 fw-bold" style="font-size: 1.1rem;">3 nights, 1 room for 2 adults</p> [cite: 25, 79]
-                            <p class="mb-3 text-dark">1 x Kontena Twin Room</p> [cite: 33, 76]
+                            <p class="mb-2 fw-bold small">You selected</p>
+                            <p class="mb-1 fw-bold" style="font-size: 1.1rem;">3 nights, 1 room for 2 adults</p>
+                            <p class="mb-3 text-dark">1 x Kontena Twin Room</p>
                             <a href="#" class="text-decoration-none small fw-bold" style="color: #006ce4;">Change your selection</a> 
                         </div>
                     </div>
@@ -295,10 +295,26 @@
                     </form>
                 </div>
 
+                <div class="card border-0 shadow-sm mb-4" style="border-radius: 8px; border: 1px solid #e7e7e7 !important; margin-top: 2vw;">
+                    <div class="card-body p-3">
+                        <h6 class="fw-bold mb-2" style="color: #1a1a1a;">Good to know:</h6>
+
+                        <div class="d-flex align-items-start">
+                            <div class="me-2 mt-1">
+                                <i class="bi bi-check-circle text-success" style="font-size: 1.1rem;"></i>
+                            </div>
+                            <p class="mb-0 small">
+                                <span class="fw-bold">Stay flexible:</span> 
+                                You can cancel for free before April 8, 2026 – lock in this great price today. 
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="card border-0 shadow-sm mb-4" style="border-radius: 8px; border: 1px solid #e7e7e7 !important;">
                     <div class="card-body p-4">
                         <h5 class="fw-bold mb-4" style="color: #1a1a1a;">Add to your stay</h5>
-                        
+
                         <div class="d-flex justify-content-between align-items-start mb-4">
                             <div class="d-flex align-items-start">
                                 <div class="form-check me-2">
@@ -337,24 +353,116 @@
                     </div>
                 </div>
 
-                <div class="card border-0 shadow-sm mb-4" style="border-radius: 8px; border: 1px solid #e7e7e7 !important; margin-top: 2vw;">
-                    <div class="card-body p-3">
-                        <h6 class="fw-bold mb-2" style="color: #1a1a1a;">Good to know:</h6>
+                <div class="card border-0 shadow-sm mb-4" style="border-radius: 8px; border: 1px solid #e7e7e7 !important;">
+                    <div class="card-body p-4">
+                        <h5 class="fw-bold mb-3" style="color: #1a1a1a;">Special requests</h5>
 
-                        <div class="d-flex align-items-start">
-                            <div class="me-2 mt-1">
-                                <i class="bi bi-check-circle text-success" style="font-size: 1.1rem;"></i>
+                        <p class="small mb-3" style="color: #4a4a4a; line-height: 1.5;">
+                            Special requests can't be guaranteed, but the property will do its best to meet your needs. You can always make a special request after your booking is complete.
+                        </p>
+                    
+                        <label for="specialRequestsArea" class="form-label small fw-bold mb-2">
+                            Please write your requests in English or Indonesian. <span class="text-muted fw-normal">(optional)</span> 
+                        </label>
+                    
+                        <textarea 
+                            class="form-control" 
+                            id="specialRequestsArea" 
+                            rows="4" 
+                            style="border-color: #868686; resize: vertical;">
+                        </textarea>
+                    </div>
+                </div>
+
+                <div class="card border-0 shadow-sm mb-4" style="border-radius: 8px; border: 1px solid #e7e7e7 !important;">
+                    <div class="card-body p-4">
+                        <h5 class="fw-bold mb-4" style="color: #1a1a1a;">Check-in details</h5>
+
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="me-3">
+                                <i class="bi bi-check-circle text-success" style="font-size: 1.5rem;"></i>
                             </div>
-                            <p class="mb-0 small">
-                                <span class="fw-bold">Stay flexible:</span> 
-                                You can cancel for free before April 8, 2026 – lock in this great price today. 
+                            <p class="mb-0" style="color: #1a1a1a;">
+                                Your room will be ready for check-in at 3:00 PM 
                             </p>
+                        </div>
+                    
+                        <div class="d-flex align-items-center mb-4">
+                            <div class="me-3">
+                                <i class="bi bi-person-workspace text-success" style="font-size: 1.5rem;"></i>
+                            </div>
+                            <p class="mb-0" style="color: #1a1a1a;">
+                                24-hour front desk – help whenever you need it! 
+                            </p>
+                        </div>
+                    
+                        <div class="col-md-6">
+                            <label for="arrivalTime" class="form-label fw-bold small mb-2">
+                                Add your estimated arrival time <span class="text-muted fw-normal">(optional)</span>
+                            </label>
+                            <select class="form-select" id="arrivalTime" style="border-color: #868686;">
+                                <option selected>Please select</option>
+                                </select>
+                        </div>
+                    </div>
+                </div>     
+                
+                <div class="card border shadow-sm mb-4" style="border-radius: 8px;">
+                    <div class="card-body p-4">
+                        <h5 class="fw-bold mb-3">Cribs and extra beds</h5>
+                        
+                        <ul class="list-unstyled mb-3">
+                            <li class="mb-2 d-flex align-items-start small">
+                                <span class="me-2">•</span>
+                                <span>Requests are subject to availability</span>
+                            </li>
+                            <li class="mb-2 d-flex align-items-start small">
+                                <span class="me-2">•</span>
+                                <span>Requests need to be confirmed by the property </span>
+                            </li>
+                            <li class="mb-2 d-flex align-items-start small">
+                                <span class="me-2">•</span>
+                                <span>Requests not labeled "Free" could incur extra charges </span>
+                            </li>
+                        </ul>
+                    
+                        <div class="mb-4">
+                            <a href="#" class="text-decoration-none small fw-bold" style="color: #006ce4;">
+                                Read full crib and extra bed policy
+                            </a>
+                        </div>
+                    
+                        <div class="mt-2">
+                            <p class="small text-muted mb-3">Add to your <strong>Kontena Twin Room</strong></p>
+                            <div class="form-check">
+                                <input class="form-check-input shadow-none" type="checkbox" id="extraBedCheck" style="width: 1.5em; height: 1.5em; border-radius: 4px;">
+                                <label class="form-check-label ms-2 small pt-1" for="extraBedCheck">
+                                    Extra bed
+                                </label>
+                            </div>
                         </div>
                     </div>
                 </div>
 
+                <div class="d-flex flex-column align-items-end py-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="me-4 d-flex align-items-center" style="color: #006ce4;">
+                            <i class="bi bi-tag me-1" style="transform: rotate(90deg);"></i>
+                            <span class="small fw-bold">We Price Match</span>
+                        </div>
 
-
+                        <button class="btn btn-primary d-flex align-items-center px-4 py-2 fw-bold" style="background-color: #006ce4; border-radius: 4px;">
+                            Next: Final details
+                            <i class="bi bi-chevron-right ms-3"></i>
+                        </button>
+                    </div>
+                
+                    <div>
+                        <a href="#" class="text-decoration-none small fw-bold" style="color: #006ce4;">
+                            What are my booking conditions?
+                        </a>
+                    </div>
+                </div>
                 
             </div>
         </div>

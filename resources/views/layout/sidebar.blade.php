@@ -4,8 +4,11 @@
         <a href="#" class="list-group-item list-group-item-action bg-dark text-white border-0 py-2">
             <i class="bi bi-speedometer2 me-2"></i> Dashboard
         </a>
-        <a href="#" class="list-group-item list-group-item-action bg-dark text-white border-0 py-2">
+        <a href="/room" class="list-group-item list-group-item-action bg-dark text-white border-0 py-2">
             <i class="bi bi-door-open me-2"></i> Ruangan
+        </a>
+        <a href="/makan" class="list-group-item list-group-item-action bg-dark text-white border-0 py-2">
+            <i class="bi bi-door-open me-2"></i> Pesan Ruangan
         </a>
     </div>
 </div>
