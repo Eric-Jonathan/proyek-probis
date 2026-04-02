@@ -20,3 +20,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
     Route::get('/dashboard', function () { return view('dashboard'); });
 });
+
+Route::get('/makan', function () {
+    return view('Room/pesan_ruang');
+});
