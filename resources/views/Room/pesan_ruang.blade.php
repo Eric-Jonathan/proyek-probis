@@ -1,0 +1,343 @@
+@extends('layout.layout')
+
+@section('content')
+<body>
+    <div class="container py-5">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="fw-bold">Don't forget your booking [cite: 3]</h2>
+            <div class="alert alert-info d-flex align-items-center" role="alert">
+                <i class="bi bi-info-circle-fill me-2"></i>
+                <div>
+                    Hampir selesai! Selesaikan rincian untuk pemesanan Anda[cite: 7]. 
+                    <strong>Tinggal 7 hari lagi! [cite: 16]</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container py-5 row">
+        <div class="row col-4">
+            <div class="col-lg-12 mb-4">
+                <div class="card shadow-sm border-0 overflow-hidden" style="border-radius: 12px;">
+                    <img src="https://via.placeholder.com/600x400" class="card-img-top" alt="Kontena Hotel Lobby" style="height: 250px; object-fit: cover;">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center mb-2">
+                            <div class="text-warning me-2">
+                                <i class="bi bi-star-fill small"></i>
+                                <i class="bi bi-star-fill small"></i>
+                                <i class="bi bi-star-fill small"></i>
+                            </div>
+                            <div class="bg-warning text-white d-flex align-items-center justify-content-center rounded" style="width: 24px; height: 24px;">
+                                <i class="bi bi-hand-thumbs-up-fill small"></i>
+                            </div>
+                        </div>
+
+                        <h4 class="fw-bold mb-2">Kontena Hotel</h4>
+                        <p class="text-muted small mb-1">
+                            Jl.KH Agus Salim No.106 Batu Malang, 65315 Batu, Indonesia
+                        </p>
+
+                        <p class="text-success small fw-semibold mb-3">
+                            Excellent Location — 9.0
+                        </p>
+
+                        <div class="d-flex align-items-center mb-4">
+                            <div class="bg-primary text-white fw-bold rounded d-flex align-items-center justify-content-center me-2" style="width: 35px; height: 35px; background-color: #003580 !important;">
+                                8.7
+                            </div>
+                            <div class="small">
+                                <span class="fw-bold">Excellent</span>
+                                <span class="text-muted"> · 37 reviews</span>
+                            </div>
+                        </div>
+
+                        <div class="row g-3 text-dark small">
+                            <div class="col-auto">
+                                <i class="bi bi-fork-knife"></i> Restaurant
+                            </div>
+                            <div class="col-auto">
+                                <i class="bi bi-p-circle me-1"></i> Parking
+                            </div>
+                            <div class="col-auto">
+                                <i class="bi bi-snow me-1"></i> Air conditioning
+                            </div>
+                            <div class="col-auto">
+                                <i class="bi bi-droplet me-1"></i> Private bathroom
+                            </div>
+                            <div class="col-auto">
+                                <i class="bi bi-binoculars"></i> View
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card shadow-sm border-0" style="border-radius: 12px; max-width: 450px; border: 1px solid #e7e7e7 !important; margin-top: 2vw;">
+                    <div class="card-body p-4">
+                        <h5 class="fw-bold mb-4" style="color: #1a1a1a;">Your booking details</h5> 
+                    
+                        <div class="row mb-3 position-relative">
+                            <div class="position-absolute start-50 top-0 bottom-0 border-start" style="width: 1px; height: 100%; opacity: 0.1; "></div>
+                        
+                            <div class="col-6">
+                                <p class="mb-1 fw-bold small">Check-in</p> 
+                                <p class="mb-0 fw-bold" style="font-size: 1.1rem;">Thu, Apr 9, 2026</p> 
+                                <p class="text-muted small mb-0">From 3:00 PM</p> [cite: 15, 110]
+                            </div>
+                        
+                            <div class="col-6 ps-4">
+                                <p class="mb-1 fw-bold small">Check-out</p> 
+                                <p class="mb-0 fw-bold" style="font-size: 1.1rem;">Sun, Apr 12, 2026</p> 
+                                <p class="text-muted small mb-0">12:00 AM – 12:00 PM</p> 
+                            </div>
+                        </div>
+                    
+                        <div class="d-flex align-items-center mt-3" style="color: #a35d14;">
+                            <div class="rounded-circle border border-2 d-flex align-items-center justify-content-center me-2" style="width: 26px; height: 26px; border-color: #a35d14 !important;">
+                                <span class="fw-bold" style="font-size: 0.9rem;">!</span>
+                            </div>
+                            <span class="fw-bold small">Just 7 days away!</span> [cite: 16]
+                        </div>
+                    
+                        <hr class="my-4" style="opacity: 0.1;">
+                    
+                        <div class="mb-1">
+                            <p class="mb-2 fw-bold small">You selected</p> [cite: 24]
+                            <p class="mb-1 fw-bold" style="font-size: 1.1rem;">3 nights, 1 room for 2 adults</p> [cite: 25, 79]
+                            <p class="mb-3 text-dark">1 x Kontena Twin Room</p> [cite: 33, 76]
+                            <a href="#" class="text-decoration-none small fw-bold" style="color: #006ce4;">Change your selection</a> 
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card shadow-sm border-0" style="border-radius: 12px; max-width: 450px; border: 1px solid #e7e7e7 !important; margin-top: 2vw;">
+                    <div class="card-body p-4">
+                        <h5 class="fw-bold mb-3" style="color: #1a1a1a;">Your price summary</h5>
+
+                        <div class="d-flex justify-content-between mb-1">
+                            <span>Original price</span>
+                            <span>Rp 1,449,000</span>
+                        </div>
+
+                        <div class="d-flex justify-content-between mb-1">
+                            <span>Genius Discount</span>
+                            <span>- Rp 169,050</span>
+                        </div>
+
+                        <p class="text-muted small mb-0" style="line-height: 1.2;">
+                            You're getting a reduced rate because you're a Genius member.
+                        </p>
+                    </div>
+                
+                    <div class="p-4" style="background-color: #ebf3ff;">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h3 class="fw-bold mb-0">Total</h3>
+                            <div class="text-end">
+                                <del class="text-danger small d-block mb-1">Rp 1,449,000</del>
+                                <h3 class="fw-bold mb-0">Rp 1,279,950</h3>
+                                <p class="text-muted small mb-0">Includes taxes and fees</p>
+                            </div>
+                        </div>
+                    </div>
+                
+                    <div class="card-body p-4">
+                        <h6 class="fw-bold mb-3">Price information</h6>
+
+                        <div class="d-flex align-items-start mb-2">
+                            <i class="bi bi-cash-stack me-2 mt-1"></i>
+                            <span class="small fw-semibold">Includes Rp 116,359 in taxes and fees</span>
+                        </div>
+
+                        <div class="d-flex justify-content-between text-muted small ps-4">
+                            <span>10 % Tax</span>
+                            <span>Rp 116,359</span>
+                        </div>
+                    
+                        <div class="mt-4">
+                            <a href="#" class="text-decoration-none small fw-bold" style="color: #006ce4;">Hide details</a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card shadow-sm border-0" style="border-radius: 12px; max-width: 500px; border: 1px solid #e7e7e7 !important; margin-top: 2vw;">
+                    <div class="card-body p-4">
+                        <h7 class="fw-bold" style="color: #1a1a1a;">How much will it cost to cancel?</h7>
+
+                        <div class="mb-2">
+                            <p class="text-success fw-bold mb-1" style="font-size: 1.1rem;">
+                                Free cancellation before Apr 
+                            </p>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center mt-3">
+                            <span class="text-dark" style="font-size: 1.05rem;">After 12:00 AM on Apr 8</span>
+                            <span class="fw-bold" style="font-size: 1.05rem;">Rp 1,279,950</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row col-8">
+            <div class="col-lg-12">
+                <div class="card shadow-sm border-0 overflow-hidden" style="border-radius: 12px;">
+                    <img src="https://via.placeholder.com/600x400" class="card-img-top" alt="Kontena Hotel Lobby" style="height: 250px; object-fit: cover;">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center mb-2">
+                            <div class="text-warning me-2">
+                                <i class="bi bi-star-fill small"></i>
+                                <i class="bi bi-star-fill small"></i>
+                                <i class="bi bi-star-fill small"></i>
+                            </div>
+                            <div class="bg-warning text-white d-flex align-items-center justify-content-center rounded" style="width: 24px; height: 24px;">
+                                <i class="bi bi-hand-thumbs-up-fill small"></i>
+                            </div>
+                        </div>
+
+                        <h4 class="fw-bold mb-2">Kontena Hotel</h4>
+                        <p class="text-muted small mb-1">
+                            Jl.KH Agus Salim No.106 Batu Malang, 65315 Batu, Indonesia
+                        </p>
+
+                        <p class="text-success small fw-semibold mb-3">
+                            Excellent Location — 9.0
+                        </p>
+
+                        <div class="d-flex align-items-center mb-4">
+                            <div class="bg-primary text-white fw-bold rounded d-flex align-items-center justify-content-center me-2" style="width: 35px; height: 35px; background-color: #003580 !important;">
+                                8.7
+                            </div>
+                            <div class="small">
+                                <span class="fw-bold">Excellent</span>
+                                <span class="text-muted"> · 37 reviews</span>
+                            </div>
+                        </div>
+
+                        <div class="row g-3 text-dark small">
+                            <div class="col-auto">
+                                <i class="bi bi-fork-knife"></i> Restaurant
+                            </div>
+                            <div class="col-auto">
+                                <i class="bi bi-p-circle me-1"></i> Parking
+                            </div>
+                            <div class="col-auto">
+                                <i class="bi bi-snow me-1"></i> Air conditioning
+                            </div>
+                            <div class="col-auto">
+                                <i class="bi bi-droplet me-1"></i> Private bathroom
+                            </div>
+                            <div class="col-auto">
+                                <i class="bi bi-binoculars"></i> View
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card shadow-sm border-0" style="border-radius: 12px; max-width: 450px; border: 1px solid #e7e7e7 !important; margin-top: 2vw;">
+                    <div class="card-body p-4">
+                        <h5 class="fw-bold mb-4" style="color: #1a1a1a;">Your booking details</h5> 
+                    
+                        <div class="row mb-3 position-relative">
+                            <div class="position-absolute start-50 top-0 bottom-0 border-start" style="width: 1px; height: 100%; opacity: 0.1; "></div>
+                        
+                            <div class="col-6">
+                                <p class="mb-1 fw-bold small">Check-in</p> 
+                                <p class="mb-0 fw-bold" style="font-size: 1.1rem;">Thu, Apr 9, 2026</p> 
+                                <p class="text-muted small mb-0">From 3:00 PM</p> [cite: 15, 110]
+                            </div>
+                        
+                            <div class="col-6 ps-4">
+                                <p class="mb-1 fw-bold small">Check-out</p> 
+                                <p class="mb-0 fw-bold" style="font-size: 1.1rem;">Sun, Apr 12, 2026</p> 
+                                <p class="text-muted small mb-0">12:00 AM – 12:00 PM</p> 
+                            </div>
+                        </div>
+                    
+                        <div class="d-flex align-items-center mt-3" style="color: #a35d14;">
+                            <div class="rounded-circle border border-2 d-flex align-items-center justify-content-center me-2" style="width: 26px; height: 26px; border-color: #a35d14 !important;">
+                                <span class="fw-bold" style="font-size: 0.9rem;">!</span>
+                            </div>
+                            <span class="fw-bold small">Just 7 days away!</span> [cite: 16]
+                        </div>
+                    
+                        <hr class="my-4" style="opacity: 0.1;">
+                    
+                        <div class="mb-1">
+                            <p class="mb-2 fw-bold small">You selected</p> [cite: 24]
+                            <p class="mb-1 fw-bold" style="font-size: 1.1rem;">3 nights, 1 room for 2 adults</p> [cite: 25, 79]
+                            <p class="mb-3 text-dark">1 x Kontena Twin Room</p> [cite: 33, 76]
+                            <a href="#" class="text-decoration-none small fw-bold" style="color: #006ce4;">Change your selection</a> 
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card shadow-sm border-0" style="border-radius: 12px; max-width: 450px; border: 1px solid #e7e7e7 !important; margin-top: 2vw;">
+                    <div class="card-body p-4">
+                        <h5 class="fw-bold mb-3" style="color: #1a1a1a;">Your price summary</h5>
+
+                        <div class="d-flex justify-content-between mb-1">
+                            <span>Original price</span>
+                            <span>Rp 1,449,000</span>
+                        </div>
+
+                        <div class="d-flex justify-content-between mb-1">
+                            <span>Genius Discount</span>
+                            <span>- Rp 169,050</span>
+                        </div>
+
+                        <p class="text-muted small mb-0" style="line-height: 1.2;">
+                            You're getting a reduced rate because you're a Genius member.
+                        </p>
+                    </div>
+                
+                    <div class="p-4" style="background-color: #ebf3ff;">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h3 class="fw-bold mb-0">Total</h3>
+                            <div class="text-end">
+                                <del class="text-danger small d-block mb-1">Rp 1,449,000</del>
+                                <h3 class="fw-bold mb-0">Rp 1,279,950</h3>
+                                <p class="text-muted small mb-0">Includes taxes and fees</p>
+                            </div>
+                        </div>
+                    </div>
+                
+                    <div class="card-body p-4">
+                        <h6 class="fw-bold mb-3">Price information</h6>
+
+                        <div class="d-flex align-items-start mb-2">
+                            <i class="bi bi-cash-stack me-2 mt-1"></i>
+                            <span class="small fw-semibold">Includes Rp 116,359 in taxes and fees</span>
+                        </div>
+
+                        <div class="d-flex justify-content-between text-muted small ps-4">
+                            <span>10 % Tax</span>
+                            <span>Rp 116,359</span>
+                        </div>
+                    
+                        <div class="mt-4">
+                            <a href="#" class="text-decoration-none small fw-bold" style="color: #006ce4;">Hide details</a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card shadow-sm border-0" style="border-radius: 12px; max-width: 500px; border: 1px solid #e7e7e7 !important; margin-top: 2vw;">
+                    <div class="card-body p-4">
+                        <h7 class="fw-bold" style="color: #1a1a1a;">How much will it cost to cancel?</h7>
+
+                        <div class="mb-2">
+                            <p class="text-success fw-bold mb-1" style="font-size: 1.1rem;">
+                                Free cancellation before Apr 8 
+                            </p>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center mt-3">
+                            <span class="text-dark" style="font-size: 1.05rem;">After 12:00 AM on Apr 8</span>
+                            <span class="fw-bold" style="font-size: 1.05rem;">Rp 1,279,950</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@endsection
