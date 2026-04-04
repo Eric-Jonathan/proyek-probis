@@ -6,7 +6,7 @@
     <style>
         /* resources/views/auth/style.css (NEW DESIGN: Orange Background, Navy Form) */
 :root {
-    --bg-page-orange: #ff9f43;    /* Orange Cerah untuk Background */
+    --bg-page-orange: lavender;    /* Orange Cerah untuk Background */
     --card-navy-dark: #0a1929;    /* Navy Sangat Gelap untuk Card */
     --input-navy: #132f4c;        /* Navy Sedikit Terang untuk Input */
     --navy-button: #007bff;       /* Navy Cerah/Biru untuk Tombol */
@@ -154,12 +154,16 @@ p.error {
         @csrf <h2>Register Account</h2>
 
         <label>Nama Lengkap</label>
-        <input type="text" name="name" value="{{ old('name') }}" required>
-        @error('name') <span class="error">{{ $message }}</span> @enderror
+        <input type="text" name="username" value="{{ old('username') }}" required>
+        @error('username') <span class="error">{{ $message }}</span> @enderror
 
         <label>Email</label>
         <input type="email" name="email" value="{{ old('email') }}" required>
         @error('email') <span class="error">{{ $message }}</span> @enderror
+
+        <label>Phone</label>
+        <input type="text" name="phone" value="{{ old('phone') }}" required>
+        @error('phone') <span class="error">{{ $message }}</span> @enderror
 
         <label>Password (Min 8 Karakter)</label>
         <input type="password" name="password" required>

@@ -6,7 +6,7 @@
     <style>
 /* resources/views/auth/style.css (NEW DESIGN: Orange Background, Navy Form) */
 :root {
-    --bg-page-orange: #ff9f43;    /* Orange Cerah untuk Background */
+    --bg-page-orange: lavender;    /* Orange Cerah untuk Background */
     --card-navy-dark: #0a1929;    /* Navy Sangat Gelap untuk Card */
     --input-navy: #132f4c;        /* Navy Sedikit Terang untuk Input */
     --navy-button: #007bff;       /* Navy Cerah/Biru untuk Tombol */
