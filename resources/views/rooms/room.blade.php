@@ -9,7 +9,7 @@
             <p>Manajemen inventaris dan status ketersediaan unit</p>
         </div>
         <div class="header-action">
-            <a href="" class="btn btn-add-room">
+            <a href="{{ route('rooms.create') }}" class="btn btn-add-room">
                 <i class="fas fa-plus-circle"></i> Tambah Ruangan Baru
             </a>
         </div>
@@ -105,7 +105,6 @@
                     <tr>
                         <th width="50">#</th>
                         <th>Informasi Ruangan</th>
-                        <th>Kategori</th>
                         <th>Lokasi</th>
                         <th>Kapasitas</th>
                         <th>Tarif Sewa</th>
@@ -114,70 +113,85 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse($rooms as $i => $room)
-                    <tr>
-                        <td class="text-muted">{{ $rooms->firstItem() + $i }}</td>
-                        <td>
-                            <div class="room-profile">
-                                <div class="room-img-box shadow-sm">
-                                    @if($room->image)
-                                        <img src="{{ $room->image }}" alt="">
-                                    @else
-                                        <i class="fas fa-building text-secondary"></i>
-                                    @endif
-                                </div>
-                                <div class="room-details">
-                                    <span class="room-name">{{ $room->name }}</span>
-                                    <span class="room-desc">{{ Str::limit($room->description, 35) }}</span>
-                                </div>
+                @forelse($rooms as $i => $room)
+                <tr>
+                    <td class="text-muted">{{ $rooms->firstItem() + $i }}</td>
+
+                    {{-- INFO ROOM --}}
+                    <td>
+                        <div class="room-profile">
+                            <div class="room-img-box shadow-sm">
+                                <i class="fas fa-building text-secondary"></i>
                             </div>
-                        </td>
-                        <td><span class="type-pill">{{ $room->type }}</span></td>
-                        <td><span class="floor-tag">Lt. {{ $room->floor }}</span></td>
-                        <td>
-                            <div class="capacity-info">
-                                <i class="fas fa-users"></i> {{ $room->capacity }} <small>pax</small>
+                            <div class="room-details">
+                                <span class="room-name">{{ $room->name }}</span>
+                                <span class="room-desc">{{ \Illuminate\Support\Str::limit($room->description, 35) }}</span>
                             </div>
-                        </td>
-                        <td>
-                            <div class="price-tag">
-                                <small>Rp</small>{{ number_format($room->price_per_hour, 0, ',', '.') }}<span class="per-hr">/jam</span>
-                            </div>
-                        </td>
-                        <td>
-                            @php
-                                $statusClass = [
-                                    'active' => 'st-active',
-                                    'maintenance' => 'st-maintenance',
-                                    'inactive' => 'st-inactive'
-                                ][$room->status] ?? 'st-inactive';
-                                
-                                $statusLabel = [
-                                    'active' => 'Aktif',
-                                    'maintenance' => 'Perawatan',
-                                    'inactive' => 'Nonaktif'
-                                ][$room->status] ?? 'Nonaktif';
-                            @endphp
-                            <span class="status-indicator {{ $statusClass }}">{{ $statusLabel }}</span>
-                        </td>
-                        <td>
-                            <div class="action-buttons">
-                                <a href="" class="act-btn view" title="Detail"><i class="fas fa-eye"></i></a>
-                                <a href="" class="act-btn edit" title="Edit"><i class="fas fa-pencil-alt"></i></a>
-                                <button class="act-btn delete" onclick="openDeleteModal({{ $room->id }}, '{{ $room->name }}')">
-                                    <i class="fas fa-trash-alt"></i>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                    @empty
-                    <tr>
-                        <td colspan="8" class="empty-state text-center">
-                            <img src="https://cdn-icons-png.flaticon.com/512/7486/7486744.png" width="80" alt="">
-                            <p>Data ruangan tidak ditemukan</p>
-                        </td>
-                    </tr>
-                    @endforelse
+                        </div>
+                    </td>
+
+                    {{-- LOKASI --}}
+                    <td><span class="floor-tag">{{ $room->location }}</span></td>
+
+                    {{-- KAPASITAS --}}
+                    <td>
+                        <div class="capacity-info">
+                            <i class="fas fa-users"></i> {{ $room->capacity }} <small>pax</small>
+                        </div>
+                    </td>
+
+                    {{-- HARGA --}}
+                    <td>
+                        <div class="price-tag">
+                            <small>Rp</small>{{ number_format($room->price, 0, ',', '.') }}
+                        </div>
+                    </td>
+
+                    {{-- STATUS (INT → LABEL) --}}
+                    <td>
+                        @php
+                            $statusClass = [
+                                1 => 'st-active',
+                                2 => 'st-maintenance',
+                                0 => 'st-inactive'
+                            ][$room->status] ?? 'st-inactive';
+
+                            $statusLabel = [
+                                1 => 'Aktif',
+                                2 => 'Maintenance',
+                                0 => 'Nonaktif'
+                            ][$room->status] ?? 'Unknown';
+                        @endphp
+
+                        <span class="status-indicator {{ $statusClass }}">
+                            {{ $statusLabel }}
+                        </span>
+                    </td>
+
+                    {{-- ACTION --}}
+                    <td>
+                        <div class="action-buttons">
+                            <a href="#" class="act-btn view"><i class="fas fa-eye"></i></a>
+
+                            <a href="#" class="act-btn edit">
+                                <i class="fas fa-pencil-alt"></i>
+                            </a>
+
+                            <button class="act-btn delete"
+                                onclick="openDeleteModal({{ $room->room_id }}, '{{ $room->name }}')">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                @empty
+                <tr>
+                    <td colspan="8" class="empty-state text-center">
+                        <img src="https://cdn-icons-png.flaticon.com/512/7486/7486744.png" width="80">
+                        <p>Data ruangan tidak ditemukan</p>
+                    </td>
+                </tr>
+                @endforelse
                 </tbody>
             </table>
         </div>

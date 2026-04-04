@@ -8,12 +8,14 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return view('welcome');
 });
-Route::get('/room', [RoomController::class, 'index'])->name('room');
+Route::get('/rooms', [RoomController::class, 'index'])->name('rooms.index');
 Route::middleware('guest')->group(function () {
     Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
     Route::post('/register', [AuthController::class, 'register']);
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
     Route::post('/login', [AuthController::class, 'login']);
+    Route::get('/rooms/create', [RoomController::class, 'create'])->name('rooms.create');
+    Route::post('/rooms', [RoomController::class, 'store'])->name('rooms.store');
 });
 
 Route::middleware('auth')->group(function () {
@@ -22,5 +24,5 @@ Route::middleware('auth')->group(function () {
 });
 
 Route::get('/makan', function () {
-    return view('Room/pesan_ruang');
+    return view('rooms/pesan_ruang');
 });

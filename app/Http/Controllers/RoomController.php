@@ -29,7 +29,7 @@ class RoomController extends Controller
         $rooms     = $query->latest()->paginate(10)->withQueryString();
         // $roomTypes = Room::distinct()->pluck('type');
  
-        return view('Room.room', [
+        return view('rooms.room', [
             'rooms'            => $rooms,
             // 'roomTypes'        => $roomTypes,
             'totalRooms'       => Room::count(),
@@ -48,19 +48,24 @@ class RoomController extends Controller
     {
         $validated = $request->validate([
             'name'           => 'required|string|max:255',
-            'type'           => 'required|string|max:100',
             'floor'          => 'required|integer|min:1|max:100',
             'capacity'       => 'required|integer|min:1',
-            'price_per_hour' => 'required|numeric|min:0',
+            'deposit_percent'=> 'required|integer|min:1',
+            'price' => 'required|numeric|min:0',
             'description'    => 'nullable|string',
-            'status'         => 'required|in:active,inactive,maintenance',
+            'status'         => 'required|in:0,1,2',
             'facilities'     => 'nullable|array',
+            'location'       => 'required|string|max:255',
+            'rules'          => 'required|string',
             'image'          => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
         ]);
  
         if ($request->hasFile('image')) {
             $validated['image'] = $request->file('image')->store('rooms', 'public');
         }
+
+        // $validated['user_id'] = auth()->id();
+        $validated['user_id'] = 1;
  
         $validated['facilities'] = $request->input('facilities', []);
  
