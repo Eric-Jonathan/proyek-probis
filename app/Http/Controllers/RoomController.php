@@ -82,6 +82,31 @@ class RoomController extends Controller
  
     public function edit(Room $room)
     {
-        return view('rooms.form', compact('room'));
+        return view('rooms.edit', compact('room'));
+    }
+    public function update(Request $request, Room $room)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'capacity' => 'required|integer|min:1',
+            'price' => 'required|numeric|min:0',
+            'deposit_percent' => 'nullable|integer|min:0|max:100',
+            'location' => 'required|string|max:255',
+            'rules' => 'nullable|string',
+            'description' => 'nullable|string',
+            'status' => 'required|integer|in:0,1,2',
+        ]);
+
+        $room->update($validated);
+
+        return redirect()->route('rooms.index')
+            ->with('success', 'Ruangan berhasil diupdate!');
+    }
+    public function destroy(Room $room)
+    {
+        $room->delete();
+
+        return redirect()->route('rooms.index')
+            ->with('success', 'Ruangan berhasil dihapus!');
     }
 }

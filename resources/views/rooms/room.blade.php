@@ -171,16 +171,23 @@
                     {{-- ACTION --}}
                     <td>
                         <div class="action-buttons">
-                            <a href="#" class="act-btn view"><i class="fas fa-eye"></i></a>
-
-                            <a href="#" class="act-btn edit">
-                                <i class="fas fa-pencil-alt"></i>
+                            <a href="#" class="act-btn view">
+                                <i class="bi bi-eye"></i>
                             </a>
 
-                            <button class="act-btn delete"
-                                onclick="openDeleteModal({{ $room->room_id }}, '{{ $room->name }}')">
-                                <i class="fas fa-trash-alt"></i>
-                            </button>
+                            <a href="{{ route('rooms.edit', $room->room_id) }}" class="act-btn edit">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+
+                            <form action="{{ route('rooms.destroy', $room->room_id) }}" method="POST" style="display:inline;">
+                                @csrf
+                                @method('DELETE')
+
+                                <button class="act-btn delete"
+                                    onclick="return confirm('Yakin mau hapus {{ $room->name }}?')">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
                         </div>
                     </td>
                 </tr>
