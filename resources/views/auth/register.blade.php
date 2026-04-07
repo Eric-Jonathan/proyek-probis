@@ -158,7 +158,7 @@ p.error {
     </style>
 </head>
 <body>
-    <form action="{{ route('register') }}" method="POST">
+    <form action="{{ route('register.post') }}" method="POST">
         @csrf <h2>Register Account</h2>
 
         <label>Nama Lengkap</label>
