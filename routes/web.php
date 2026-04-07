@@ -37,3 +37,5 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 Route::get('/makan', function () {
     return view('rooms/pesan_ruang');
 });
+
+Route::get('/minum', [RoomController::class, 'show']);
