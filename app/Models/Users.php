@@ -10,6 +10,8 @@ class Users extends Authenticatable
     use HasFactory, Notifiable;
 
     protected $table = 'users'; 
+    protected $primaryKey = 'user_id';
+    public $incrementing = true;
 
     protected $fillable = [
         'username', 'email', 'phone', 'password', 'role'

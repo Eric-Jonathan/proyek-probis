@@ -56,7 +56,7 @@ label {
 }
 
 /* Penataan Input Field Navy */
-input {
+input, select {
     width: 100%;
     padding: 14px 18px;
     margin-bottom: 25px;
@@ -74,10 +74,18 @@ input::placeholder {
 }
 
 /* Fokus tetap bertema terang agar terlihat */
-input:focus {
+input:focus, select:focus {
     border-color: var(--text-light);
     outline: none;
     box-shadow: 0 0 0 3px rgba(244, 247, 246, 0.2);
+}
+
+select{
+    padding-right: 2rem;
+    appearance: none;          /* hapus default browser styling */
+    -webkit-appearance: none;  /* Safari/Chrome */
+    -moz-appearance: none;
+    cursor: pointer;
 }
 
 /* Tombol Utama Navy Cerah */
@@ -171,6 +179,14 @@ p.error {
 
         <label>Konfirmasi Password</label>
         <input type="password" name="password_confirmation" required>
+
+        <label>Role</label>
+        <select name="role" required>
+            <option value="" selected disabled>Pilih Role</option>
+            <option value="penyedia">Penyedia Tempat</option>
+            <option value="penyewa">Penyewa</option>
+        </select>
+        @error('role') <span class="error">{{ $message }}</span> @enderror
 
         <button type="submit">Daftar Sekarang</button>
         <p>Sudah punya akun? <a href="{{ route('login') }}">Login</a></p>

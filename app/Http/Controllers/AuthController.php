@@ -18,6 +18,7 @@ class AuthController extends Controller
             'email' => 'required|string|email|max:255|unique:users',
             'phone' => 'required|string|max:50',
             'password' => 'required|string|min:8|confirmed',
+            'role' => 'required'
         ]);
 
         Users::create([
@@ -25,7 +26,7 @@ class AuthController extends Controller
             'email' => $request->email,
             'phone' => $request->phone,
             'password' => Hash::make($request->password),
-            'role' => 'admin'
+            'role' => $request->role
         ]);
 
         return redirect()->route('login')->with('success', 'Registrasi berhasil, silakan login.');
@@ -39,9 +40,18 @@ class AuthController extends Controller
         ]);
 
         if (Auth::attempt($credentials)) {
+            $user = Auth::user();
             $request->session()->regenerate();
-            return redirect()->route('rooms.index');
+            
+            if ($user->role == 'admin') {
+                return redirect()->route('admin.dashboard');
+            } elseif ($user->role == 'penyedia') {
+                return redirect()->route('penyedia.dashboard');
+            } else {
+                return redirect()->route('penyewa.dashboard');
+            }
         }
+
 
         return back()->withErrors(['email' => 'Email atau password salah.']);
     }
