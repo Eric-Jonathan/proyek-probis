@@ -22,6 +22,7 @@ Route::delete('/rooms/{room}', [RoomController::class, 'destroy'])->name('rooms.
 
 Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/admin/dashboard', [AdminController::class, 'index'])->name('admin.dashboard');
+    Route::get('/admin/acc_room', [AdminController::class, 'acc_room'])->name('admin.acc_room');
 });
 
 Route::middleware(['auth', 'role:penyedia'])->group(function () {

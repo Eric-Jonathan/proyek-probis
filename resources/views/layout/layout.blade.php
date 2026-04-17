@@ -10,9 +10,41 @@
     <style>
         /* CSS Dasar untuk Layout Sidebar + Content */
         body { overflow-x: hidden; }
-        #wrapper { display: flex; width: 100%; align-items: stretch; }
-        #sidebar-wrapper { min-width: 250px; max-width: 250px; min-height: 100vh; transition: all 0.3s; }
-        #page-content-wrapper { width: 100%; background: #f8f9fa; }
+        #wrapper {
+            display: flex;
+            width: 100%;
+            align-items: stretch;
+        }
+        #sidebar-wrapper {
+            min-width: 250px; 
+            max-width: 250px;
+            min-height: 100vh;
+            transition: all 0.3s;
+        }
+        #page-content-wrapper {
+            width: 100%;
+            background: #f8f9fa;
+            margin-left: 250px;
+        }
+        #sidebar-wrapper {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 250px; /* sesuaikan */
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 1000;
+        }
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 250px; /* HARUS sama dengan lebar sidebar */
+            right: 0;
+            z-index: 1000;
+        }
+        .contain{
+            padding-top: 70px !important;
+        }
     </style>
     @yield('custom_css')
 </head>
@@ -24,7 +56,7 @@
         <div id="page-content-wrapper">
             @include('layout.navbar')
 
-            <div class="container-fluid p-4">
+            <div class="container-fluid p-4 contain">
                 @yield('content')
             </div>
         </div>
