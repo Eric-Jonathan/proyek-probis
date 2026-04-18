@@ -82,25 +82,25 @@ class RoomController extends Controller
     //     return view('rooms.show', compact('room'));
     // }
 
-public function show()
-{
-    $room = (object)[
-    'name' => 'Kontena Hotel',
-    'capacity' => 50,
-    'price' => 100000,
-    'deposit_percent' => 30,
-    'location' => "KH. Agus Salim No.106, Sisir, Kec. Batu, Kota Batu, Jawa Timur 65314",
-    'rules' => [
-        'Dilarang merokok di dalam kamar',
-        'Tidak diperbolehkan membawa hewan peliharaan',
-        'Check-in mulai pukul 14:00',
-        'Menunjukkan identitas saat check-in'
-    ],
-    'description' => "tempatnya bagus mungkin",
-    'embed_url' => "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d10872.509987186995!2d112.52550598185628!3d-7.886403981190083!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e78812756d6007b%3A0x5a7d48319c393cb3!2sKontena%20Hotel!5e0!3m2!1sen!2sid!4v1775574543337!5m2!1sen!2sid"
-    ];
-    return view('rooms/room_detail', compact('room'));
-}
+    public function show()
+    {
+        $room = (object)[
+        'name' => 'Kontena Hotel',
+        'capacity' => 50,
+        'price' => 100000,
+        'deposit_percent' => 30,
+        'location' => "KH. Agus Salim No.106, Sisir, Kec. Batu, Kota Batu, Jawa Timur 65314",
+        'rules' => [
+            'Dilarang merokok di dalam kamar',
+            'Tidak diperbolehkan membawa hewan peliharaan',
+            'Check-in mulai pukul 14:00',
+            'Menunjukkan identitas saat check-in'
+        ],
+        'description' => "tempatnya bagus mungkin",
+        'embed_url' => "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d10872.509987186995!2d112.52550598185628!3d-7.886403981190083!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e78812756d6007b%3A0x5a7d48319c393cb3!2sKontena%20Hotel!5e0!3m2!1sen!2sid!4v1775574543337!5m2!1sen!2sid"
+        ];
+        return view('rooms/room_detail', compact('room'));
+    }
  
     public function edit(Room $room)
     {

@@ -2,7 +2,8 @@
 
 @section('content')
 <body>
-    <div class="container py-5">
+    <div class="container">
+    <button class="btn btn-outline-danger btn-back mb-2">< Back</button>
     <div class="row mb-4">
         <div class="col-12">
             <h2 class="fw-bold">Don't forget your booking</h2>
@@ -468,4 +469,8 @@
         </div>
     </div>
 </div>
+@endsection
+
+@section('custom_js')
+    <script src="{{ asset('custom_js/rooms/pesan_ruang.js') }}"></script>
 @endsection

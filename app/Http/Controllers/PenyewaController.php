@@ -9,4 +9,8 @@ class PenyewaController extends Controller
     public function index() {
         return view('penyewa.dashboard');
     }
+
+    public function searchPage() {
+        return view('rooms.search_room');
+    }
 }

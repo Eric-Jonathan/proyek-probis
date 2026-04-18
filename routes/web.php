@@ -31,6 +31,7 @@ Route::middleware(['auth', 'role:penyedia'])->group(function () {
 
 Route::middleware(['auth', 'role:penyewa'])->group(function () {
     Route::get('/penyewa/dashboard', [PenyewaController::class, 'index'])->name('penyewa.dashboard');
+    Route::get('/penyewa/search', [PenyewaController::class, 'searchPage'])->name('penyewa.search');
 });
 
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
