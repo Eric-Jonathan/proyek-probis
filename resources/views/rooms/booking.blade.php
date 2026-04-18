@@ -34,9 +34,9 @@
                             </div>
                         </div>
 
-                        <h4 class="fw-bold mb-2">Kontena Hotel</h4>
+                        <h4 class="fw-bold mb-2">{{ $room->name }}</h4>
                         <p class="text-muted small mb-1">
-                            Jl.KH Agus Salim No.106 Batu Malang, 65315 Batu, Indonesia
+                            JL. {{ $room->location }}
                         </p>
 
                         <p class="text-success small fw-semibold mb-3">
@@ -191,7 +191,7 @@
 
                         <div>
                             <p class="mb-0 fw-bold" style="color: #1a1a1a;">You are signed in </p>
-                            <p class="mb-0 text-muted small">roycevb2005@gmail.com </p>
+                            <p class="mb-0 text-muted small">{{ Auth::user()->email }}</p>
                         </div>
                     </div>
                 </div>
