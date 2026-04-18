@@ -472,5 +472,5 @@
 @endsection
 
 @section('custom_js')
-    <script src="{{ asset('custom_js/rooms/pesan_ruang.js') }}"></script>
+    <script src="{{ asset('custom_js/rooms/booking.js') }}"></script>
 @endsection
