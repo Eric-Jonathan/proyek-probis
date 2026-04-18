@@ -1,4 +1,4 @@
-<nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom shadow-sm fixed-top">
+<nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom shadow-sm fixed-top" style="z-index: 1000">
     <div class="container-fluid">
         <button class="btn btn-outline-primary btn-sm" id="menu-toggle">
             <i class="bi bi-list"></i>
