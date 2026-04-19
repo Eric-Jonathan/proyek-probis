@@ -3,14 +3,14 @@
 @section('content')
 <div class="content-wrapper">
     {{-- Page Header --}}
-    <div class="page-header">
+    <div class="page-header d-flex justify-content-between">
         <div class="header-text">
-            <h1>Kelola Ruangan</h1>
+            <h2>Kelola Ruangan</h2>
             <p>Manajemen inventaris dan status ketersediaan unit</p>
         </div>
         <div class="header-action">
-            <a href="{{ route('rooms.create') }}" class="btn btn-add-room">
-                <i class="fas fa-plus-circle"></i> Tambah Ruangan Baru
+            <a href="{{ route('rooms.create') }}" class="btn btn-primary btn-add-room mb-3">
+                <i class="bi bi-plus-circle"></i> Tambah Ruangan Baru
             </a>
         </div>
     </div>

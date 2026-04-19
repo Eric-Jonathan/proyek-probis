@@ -1,5 +1,5 @@
 $(document).on('click', '.hotel-card', function(){
-    window.location.href = "/makan";
+    window.location.href = "/room";
 })
 
 $(document).on('click', '.btn-favorite', function(){
