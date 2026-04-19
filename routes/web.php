@@ -19,6 +19,8 @@ Route::post('/rooms', [RoomController::class, 'store'])->name('rooms.store');
 Route::get('/rooms/{room}/edit', [RoomController::class, 'edit'])->name('rooms.edit');
 Route::put('/rooms/{room}', [RoomController::class, 'update'])->name('rooms.update');
 Route::delete('/rooms/{room}', [RoomController::class, 'destroy'])->name('rooms.destroy');
+Route::get('/rooms/{id}/transaction', [RoomController::class, 'transaction'])
+    ->name('rooms.transaction');
 
 Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/admin/dashboard', [AdminController::class, 'index'])->name('admin.dashboard');
