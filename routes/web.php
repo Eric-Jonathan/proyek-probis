@@ -5,6 +5,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PenyediaController;
 use App\Http\Controllers\PenyewaController;
 use App\Http\Controllers\RoomController;
+use App\Http\Controllers\RatingController;
 
 use Illuminate\Support\Facades\Route;
 
@@ -34,6 +35,7 @@ Route::middleware(['auth', 'role:penyedia'])->group(function () {
 Route::middleware(['auth', 'role:penyewa'])->group(function () {
     Route::get('/penyewa/dashboard', [PenyewaController::class, 'index'])->name('penyewa.dashboard');
     Route::get('/penyewa/search', [PenyewaController::class, 'searchPage'])->name('penyewa.search');
+    Route::post('/ratings/store', [RatingController::class, 'store'])->name('ratings.store');
 });
 
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
