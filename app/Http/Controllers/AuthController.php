@@ -1,7 +1,7 @@
 <?php
 namespace App\Http\Controllers;
 
-use App\Models\Users;
+use App\Models\People;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -21,7 +21,7 @@ class AuthController extends Controller
             'role' => 'required'
         ]);
 
-        Users::create([
+        People::create([
             'username' => $request->username,
             'email' => $request->email,
             'phone' => $request->phone,
