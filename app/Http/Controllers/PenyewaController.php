@@ -36,4 +36,6 @@ class PenyewaController extends Controller
         // GANTI 'book' MENJADI 'room'
         return view('rooms/booking', compact('room'));
     }
+
+    
 }
