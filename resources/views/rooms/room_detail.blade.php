@@ -474,6 +474,10 @@
                 data-bs-toggle="modal" data-bs-target="#datePickerModal">
             Change
         </button>
+        <a href="{{ route('rooms.transaction',  1) }}"
+        class="btn btn-success">
+            Book
+        </a>
     </div>
 </div>
 

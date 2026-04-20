@@ -6,7 +6,8 @@ use App\Models\Room;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-
+use Midtrans\Config;
+use Midtrans\Snap;
 class RoomController extends Controller
 {
     public function index(Request $request)
@@ -130,5 +131,96 @@ class RoomController extends Controller
 
         return redirect()->route('rooms.index')
             ->with('success', 'Ruangan berhasil dihapus!');
+    }
+
+    public function transaction($id)
+    {
+        /*
+        =====================================
+        MIDTRANS CONFIG
+        =====================================
+        */
+        Config::$serverKey = config('midtrans.server_key');
+        Config::$isProduction = false;
+        Config::$isSanitized = true;
+        Config::$is3ds = true;
+
+        /*
+        =====================================
+        DUMMY DATA
+        =====================================
+        */
+        $transaction = (object)[
+            'id'         => $id,
+            'name'       => 'Kontena Hotel',
+            'date'       => now(),
+            'place'      => 'Batu, Malang',
+            'price'      => 100000,
+            'start_date' => now(),
+            'end_date'   => now()->addDay(),
+        ];
+
+        /*
+        =====================================
+        PARAM MIDTRANS
+        =====================================
+        */
+        $params = [
+            'transaction_details' => [
+                'order_id' => 'ORDER-' . time() . rand(100,999),
+                'gross_amount' => (int) $transaction->price,
+            ],
+
+            'customer_details' => [
+                'first_name' => 'Guest',
+                'email' => 'guest@mail.com',
+                'phone' => '08123456789',
+            ],
+
+            'item_details' => [
+                [
+                    'id' => $transaction->id,
+                    'price' => (int) $transaction->price,
+                    'quantity' => 1,
+                    'name' => $transaction->name,
+                ]
+            ]
+        ];
+
+        /*
+        =====================================
+        REQUEST TOKEN KE MIDTRANS
+        TANPA PACKAGE SNAP::getSnapToken()
+        =====================================
+        */
+        $response = Http::withBasicAuth(
+            config('midtrans.server_key'),
+            ''
+        )
+        ->withoutVerifying() // untuk localhost windows
+        ->post(
+            'https://app.sandbox.midtrans.com/snap/v1/transactions',
+            $params
+        );
+
+        $result = $response->json();
+
+        /*
+        =====================================
+        JIKA GAGAL
+        =====================================
+        */
+        if (!isset($result['token'])) {
+            dd($result);
+        }
+
+        /*
+        =====================================
+        TOKEN BERHASIL
+        =====================================
+        */
+        $snapToken = $result['token'];
+
+        return view('rooms.transaction', compact('transaction', 'snapToken'));
     }
 }

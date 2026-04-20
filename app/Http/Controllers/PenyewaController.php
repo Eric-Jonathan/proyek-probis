@@ -17,6 +17,7 @@ class PenyewaController extends Controller
     public function show()
     {
         $room = (object)[
+            'id' => 1,
             'name' => 'Kontena Hotel',
             'capacity' => 50,
             'price' => 100000,
