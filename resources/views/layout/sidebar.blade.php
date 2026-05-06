@@ -8,12 +8,12 @@
             <a href="/admin/acc_room" class="list-group-item list-group-item-action bg-dark text-white border-0 py-2">
                 <i class="bi bi-door-open me-2"></i> Pengajuan Ruangan
             </a>
-            {{-- <a href="/rooms" class="list-group-item list-group-item-action bg-dark text-white border-0 py-2">
-                <i class="bi bi-door-open me-2"></i> list Ruangan
-            </a> --}}
-            {{-- <a href="/room" class="list-group-item list-group-item-action bg-dark text-white border-0 py-2">
-                <i class="bi bi-door-open me-2"></i> List Ruangan
-            </a> --}}
+            <a href="/admin/users" class="list-group-item list-group-item-action bg-dark text-white border-0 py-2">
+                <i class="fa fa-user-o me-2"></i> Daftar Pengguna
+            </a>
+            <a href="/admin/outsource" class="list-group-item list-group-item-action bg-dark text-white border-0 py-2">
+                <i class="fa fa-handshake-o me-2"></i> Daftar Outsource
+            </a>
         </div>
     @elseif (Auth::user()->role == "penyedia")
         <div class="list-group list-group-flush">

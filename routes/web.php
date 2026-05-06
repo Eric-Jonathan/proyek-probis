@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\PeopleController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PenyediaController;
@@ -26,6 +27,8 @@ Route::get('/rooms/{id}/transaction', [RoomController::class, 'transaction'])
 Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/admin/dashboard', [AdminController::class, 'index'])->name('admin.dashboard');
     Route::get('/admin/acc_room', [AdminController::class, 'acc_room'])->name('admin.acc_room');
+    Route::get('/admin/users', [PeopleController::class, 'people'])->name('admin.users');
+    Route::get('/admin/outsource', [AdminController::class, 'outsource'])->name('admin.outsource');
 });
 
 Route::middleware(['auth', 'role:penyedia'])->group(function () {

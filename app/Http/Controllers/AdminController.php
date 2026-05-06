@@ -13,4 +13,8 @@ class AdminController extends Controller
     public function acc_room(){
         return view('admin.acc_room');
     }
+    
+    public function outsource(){
+        return view('admin.outsource');
+    }
 }
