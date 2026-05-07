@@ -105,8 +105,9 @@ class RoomController extends Controller
  
     public function edit(Room $room)
     {
-        return view('rooms.edit', compact('room'));
+        return view('rooms.form', compact('room'));
     }
+    
     public function update(Request $request, Room $room)
     {
         $validated = $request->validate([

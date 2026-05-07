@@ -9,4 +9,8 @@ class PenyediaController extends Controller
     public function index() {
         return view('penyedia.dashboard');
     }
+
+    public function form() {
+        return view('penyedia.form');
+    }
 }

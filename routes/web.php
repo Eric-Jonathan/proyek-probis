@@ -42,8 +42,22 @@ Route::middleware(['auth', 'role:penyewa'])->group(function () {
 });
 
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+Route::get('/form_penyewa', [PenyediaController::class, 'form'])->name('form');
 
 
 Route::get('/room', [RoomController::class, 'show'])->name('room.show');
 
 Route::get('/booking', [PenyewaController::class, 'show'])->name('booking.show');
+
+Route::get('/test-rating', function () {
+    // Simulasi data objek agar Blade isset() atau pengisian value tidak error
+    $booking = (object) ['booking_id' => 123];
+    $room    = (object) ['room_id' => 45, 'name' => 'Grand Ballroom Kencana'];
+
+    return view('rooms.rating', compact('booking', 'room'));
+});
+
+// Route simulasi untuk proses submit (agar tidak 404 saat klik tombol kirim)
+Route::post('/ratings', function () {
+    return back()->with('success', 'Pengecekan Berhasil! Ini adalah pesan sukses simulasi.');
+})->name('ratings.store');

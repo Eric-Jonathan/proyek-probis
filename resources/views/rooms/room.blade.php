@@ -75,13 +75,12 @@
     <div class="main-card">
         <div class="card-header">
             <div class="title-section">
-                <h3><i class="fas fa-th-list"></i> Daftar Ruangan</h3>
-                <span class="badge-count">{{ $rooms->total() }} Unit</span>
+                <h3><i class="bi bi-list"></i> Daftar Ruangan</h3> 
+                {{-- <span class="badge-count">{{ $rooms->total() }} Unit</span> --}}
             </div>
             
             <form method="GET" action="" class="filter-wrapper row w-100">
                 <div class="search-box col-5">
-                    <i class="fas fa-search"></i>
                     <input type="text" class="form-control" name="search" value="{{ request('search') }}" placeholder="Cari nama atau lantai...">
                 </div>
                 <div class="col-4">
@@ -120,9 +119,6 @@
                     {{-- INFO ROOM --}}
                     <td>
                         <div class="room-profile">
-                            <div class="room-img-box shadow-sm">
-                                <i class="fas fa-building text-secondary"></i>
-                            </div>
                             <div class="room-details">
                                 <span class="room-name">{{ $room->name }}</span>
                                 <span class="room-desc">{{ \Illuminate\Support\Str::limit($room->description, 35) }}</span>
@@ -136,7 +132,7 @@
                     {{-- KAPASITAS --}}
                     <td>
                         <div class="capacity-info">
-                            <i class="fas fa-users"></i> {{ $room->capacity }} <small>pax</small>
+                            {{ $room->capacity }} <small>pax</small>
                         </div>
                     </td>
 
@@ -169,22 +165,21 @@
                     </td>
 
                     {{-- ACTION --}}
-                    <td>
-                        <div class="action-buttons">
-                            <a href="#" class="act-btn view">
+                    <td class="text-center">
+                        <div class="d-flex justify-content-center align-items-center gap-2">
+                            <a href="#" class="btn btn-sm btn-light text-primary rounded-circle shadow-sm">
                                 <i class="bi bi-eye"></i>
                             </a>
 
-                            <a href="{{ route('rooms.edit', $room->room_id) }}" class="act-btn edit">
+                            <a href="{{ route('rooms.edit', $room->room_id) }}" class="btn btn-sm btn-light text-warning rounded-circle shadow-sm">
                                 <i class="bi bi-pencil"></i>
                             </a>
 
-                            <form action="{{ route('rooms.destroy', $room->room_id) }}" method="POST" style="display:inline;">
+                            <form action="{{ route('rooms.destroy', $room->room_id) }}" method="POST" class="d-inline">
                                 @csrf
                                 @method('DELETE')
-
-                                <button class="act-btn delete"
-                                    onclick="return confirm('Yakin mau hapus {{ $room->name }}?')">
+                                <button type="submit" class="btn btn-sm btn-light text-danger rounded-circle shadow-sm border-0" 
+                                        onclick="return confirm('Yakin mau hapus?')">
                                     <i class="bi bi-trash"></i>
                                 </button>
                             </form>
