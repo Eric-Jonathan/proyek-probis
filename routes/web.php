@@ -9,6 +9,8 @@ use App\Http\Controllers\RoomController;
 use App\Http\Controllers\RatingController;
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Http\Request;
 
 Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
 Route::post('/register', [AuthController::class, 'register'])->name('register.post');
@@ -50,14 +52,53 @@ Route::get('/room', [RoomController::class, 'show'])->name('room.show');
 Route::get('/booking', [PenyewaController::class, 'show'])->name('booking.show');
 
 Route::get('/test-rating', function () {
-    // Simulasi data objek agar Blade isset() atau pengisian value tidak error
+
     $booking = (object) ['booking_id' => 123];
     $room    = (object) ['room_id' => 45, 'name' => 'Grand Ballroom Kencana'];
 
     return view('rooms.rating', compact('booking', 'room'));
 });
 
-// Route simulasi untuk proses submit (agar tidak 404 saat klik tombol kirim)
 Route::post('/ratings', function () {
     return back()->with('success', 'Pengecekan Berhasil! Ini adalah pesan sukses simulasi.');
 })->name('ratings.store');
+
+
+// Route untuk melihat tampilan form denda
+Route::get('/denda', function () {
+    // Data dummy simulasi pesanan yang bermasalah
+    $booking = (object) [
+        'booking_id' => 1001,
+        'customer_name' => 'Andi Wijaya',
+        'room_name' => 'Grand Kencana Ballroom'
+    ];
+    return view('penyedia.denda', compact('booking'));
+})->name('bookings.denda');
+
+// Route simulasi proses kirim
+Route::post('/admin/denda/store', function () {
+    return back()->with('success', 'Pengajuan denda telah berhasil dikirim ke penyewa.');
+})->name('penyedia.denda.store');
+
+
+
+Route::get('/penyedia/list_booking', [PenyediaController::class, 'show_booking'])->name('bookings.index');
+
+
+// Route untuk melihat tampilan form laporan
+Route::get('/report/{id}', function ($id) {
+    // Data dummy simulasi pesanan
+    $booking = (object) [
+        'booking_id' => $id,
+        'customer_name' => 'Ahmad Subarjo',
+        'room_name' => 'Grand Kencana Ballroom',
+        'start_date' => '2026-05-12 08:00:00',
+        'end_date' => '2026-05-12 18:00:00'
+    ];
+    return view('penyedia.report', compact('booking'));
+})->name('bookings.report');
+
+// Route simulasi simpan laporan
+Route::post('/penyedia/report/store', function () {
+    return redirect()->route('bookings.index')->with('success', 'Laporan penggunaan ruangan telah disimpan.');
+})->name('penyedia.report.store');

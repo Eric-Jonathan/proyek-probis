@@ -28,4 +28,9 @@ class Room extends Model
         'description',
         'status',
     ];
+
+    public function bookingDetails()
+    {
+        return $this->hasMany(BookingDetail::class, 'item_id', 'room_id');
+    }
 }

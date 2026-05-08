@@ -12,6 +12,7 @@ class People extends Authenticatable
 
     protected $table = 'people'; 
     protected $primaryKey = 'user_id';
+    protected $keyType = 'int';
     public $incrementing = true;
 
     protected $fillable = [
