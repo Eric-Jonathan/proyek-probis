@@ -58,4 +58,28 @@ class PenyediaController extends Controller
             'bookings', 'totalOrder', 'pendingOrder', 'successOrder', 'cancelOrder'
         ));
     }
+
+    public function report($id) {
+        $booking = Booking::with(['user', 'details.room'])->findOrFail($id);
+
+        // Pastikan penyedia hanya bisa membuat laporan untuk ruangan miliknya
+        if ($booking->details->room->user_id !== auth::id()) {
+            abort(403, 'Anda tidak memiliki akses untuk melaporkan pesanan ini.');
+        }
+
+        return view('penyedia.report', compact('booking'));
+    }
+
+    public function denda($id)
+    {
+        // Mengambil data booking beserta relasi user dan room
+        $booking = Booking::with(['user', 'details.room'])->findOrFail($id);
+
+        // Proteksi: Hanya penyedia pemilik ruangan yang bisa akses
+        if ($booking->details->room->user_id !== auth::id()) {
+            abort(403, 'Akses ditolak.');
+        }
+
+        return view('penyedia.denda', compact('booking'));
+    }
 }

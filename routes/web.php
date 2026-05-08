@@ -64,16 +64,8 @@ Route::post('/ratings', function () {
 })->name('ratings.store');
 
 
-// Route untuk melihat tampilan form denda
-Route::get('/denda', function () {
-    // Data dummy simulasi pesanan yang bermasalah
-    $booking = (object) [
-        'booking_id' => 1001,
-        'customer_name' => 'Andi Wijaya',
-        'room_name' => 'Grand Kencana Ballroom'
-    ];
-    return view('penyedia.denda', compact('booking'));
-})->name('bookings.denda');
+
+Route::get('/penyedia/denda/{id}', [PenyediaController::class, 'denda'])->name('bookings.denda');
 
 // Route simulasi proses kirim
 Route::post('/admin/denda/store', function () {
@@ -85,18 +77,8 @@ Route::post('/admin/denda/store', function () {
 Route::get('/penyedia/list_booking', [PenyediaController::class, 'show_booking'])->name('bookings.index');
 
 
-// Route untuk melihat tampilan form laporan
-Route::get('/report/{id}', function ($id) {
-    // Data dummy simulasi pesanan
-    $booking = (object) [
-        'booking_id' => $id,
-        'customer_name' => 'Ahmad Subarjo',
-        'room_name' => 'Grand Kencana Ballroom',
-        'start_date' => '2026-05-12 08:00:00',
-        'end_date' => '2026-05-12 18:00:00'
-    ];
-    return view('penyedia.report', compact('booking'));
-})->name('bookings.report');
+// Route untuk menampilkan halaman report dengan data asli
+Route::get('/penyedia/report/{id}', [PenyediaController::class, 'report'])->name('bookings.report');
 
 // Route simulasi simpan laporan
 Route::post('/penyedia/report/store', function () {

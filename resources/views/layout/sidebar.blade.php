@@ -24,7 +24,7 @@
                 <i class="bi bi-door-open me-2"></i> List Ruangan
             </a>
             <a href="{{ route('bookings.index') }}" class="list-group-item list-group-item-action bg-dark text-white border-0 py-2">
-                <i class="bi bi-door-open me-2"></i> List Booking
+                <i class="bi-clipboard-data me-2"></i> List Booking
             </a>
             {{-- <a href="/room" class="list-group-item list-group-item-action bg-dark text-white border-0 py-2">
                 <i class="bi bi-door-open me-2"></i> Pesan Ruangan

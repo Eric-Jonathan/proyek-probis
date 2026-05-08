@@ -114,10 +114,11 @@
                                    style="font-size: 0.75rem;">
                                     <i class="bi bi-file-earmark-text me-1"></i> Lapor
                                 </a>
-
-                                <a href="{{ $item->status == 2 ? route('bookings.denda', $item->booking_id) : '#' }}" 
+                                
+                                <a href="{{ $item->status == 2 ? route('bookings.denda', $item->booking_id) : 'javascript:void(0)' }}" 
                                    class="btn {{ $item->status == 2 ? 'btn-danger' : 'btn-light text-muted border' }} btn-sm rounded-pill px-3 fw-bold d-flex align-items-center shadow-sm" 
-                                   style="font-size: 0.75rem; {{ $item->status != 2 ? 'pointer-events: none; opacity: 0.6;' : '' }}">
+                                   style="font-size: 0.75rem; {{ $item->status != 2 ? 'pointer-events: none; opacity: 0.5; cursor: not-allowed;' : '' }}"
+                                   @if($item->status != 2) title="Denda hanya tersedia untuk status Occupied" @endif>
                                     <i class="bi bi-exclamation-octagon me-1"></i> Denda
                                 </a>
                             </div>
