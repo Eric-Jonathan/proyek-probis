@@ -61,7 +61,7 @@
                 <div class="col-md-2 d-flex gap-2">
                     <button type="submit" class="btn btn-primary w-100 fw-bold">Search</button>
                     <a href="{{ route('bookings.index') }}" class="btn btn-outline-secondary">
-                        <i class="bi bi-x-lg"></i>
+                        Clear
                     </a>
                 </div>
             </div>
@@ -109,16 +109,19 @@
                         </td>
                         <td class="text-center">
                             <div class="d-flex justify-content-center gap-2">
-                                <a href="{{ route('bookings.report', $item->booking_id) }}" 
-                                   class="btn btn-primary btn-sm rounded-pill px-3 fw-bold d-flex align-items-center shadow-sm" 
-                                   style="font-size: 0.75rem;">
+                                <!-- Tombol Lapor (Aktif untuk Status 2 & 3) -->
+                                <a href="{{ in_array($item->status, [2, 3]) ? route('bookings.report', $item->booking_id) : 'javascript:void(0)' }}" 
+                                   class="btn {{ in_array($item->status, [2, 3]) ? 'btn-primary' : 'btn-light text-muted border' }} btn-sm rounded-pill px-3 fw-bold d-flex align-items-center shadow-sm" 
+                                   style="font-size: 0.75rem; {{ !in_array($item->status, [2, 3]) ? 'pointer-events: none; opacity: 0.5; cursor: not-allowed;' : '' }}"
+                                   @if(!in_array($item->status, [2, 3])) title="Laporan tersedia saat Occupied atau Selesai" @endif>
                                     <i class="bi bi-file-earmark-text me-1"></i> Lapor
                                 </a>
                                 
-                                <a href="{{ $item->status == 2 ? route('bookings.denda', $item->booking_id) : 'javascript:void(0)' }}" 
-                                   class="btn {{ $item->status == 2 ? 'btn-danger' : 'btn-light text-muted border' }} btn-sm rounded-pill px-3 fw-bold d-flex align-items-center shadow-sm" 
-                                   style="font-size: 0.75rem; {{ $item->status != 2 ? 'pointer-events: none; opacity: 0.5; cursor: not-allowed;' : '' }}"
-                                   @if($item->status != 2) title="Denda hanya tersedia untuk status Occupied" @endif>
+                                <!-- Tombol Denda (Aktif hanya untuk Status 3) -->
+                                <a href="{{ $item->status == 3 ? route('bookings.denda', $item->booking_id) : 'javascript:void(0)' }}" 
+                                   class="btn {{ $item->status == 3 ? 'btn-danger' : 'btn-light text-muted border' }} btn-sm rounded-pill px-3 fw-bold d-flex align-items-center shadow-sm" 
+                                   style="font-size: 0.75rem; {{ $item->status != 3 ? 'pointer-events: none; opacity: 0.5; cursor: not-allowed;' : '' }}"
+                                   @if($item->status != 3) title="Denda hanya tersedia setelah pesanan Selesai" @endif>
                                     <i class="bi bi-exclamation-octagon me-1"></i> Denda
                                 </a>
                             </div>
