@@ -18,19 +18,18 @@ class Room extends Model
     protected $keyType = 'int';
 
     protected $fillable = [
-        'user_id',
-        'name',
-        'capacity',
-        'price',
-        'deposit_percent',
-        'location',
-        'rules',
-        'description',
-        'status',
+        'name', 'capacity', 'deposit_percent', 'price', 
+        'description', 'status', 'location', 'latitude', 
+        'longitude', 'rules', 'user_id'
     ];
 
     public function bookingDetails()
     {
         return $this->hasMany(BookingDetail::class, 'item_id', 'room_id');
+    }
+
+    public function images()
+    {
+        return $this->hasMany(RoomImage::class, 'room_id', 'room_id');
     }
 }

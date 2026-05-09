@@ -1,9 +1,24 @@
 @extends('layout.layout')
 
+@section('custom_css')
+    <style>
+        body { background-color: #f8f9fa; }
+        .form-select:focus, .form-control:focus {
+            background-color: #fff !important;
+            border: 1px solid #0064D2 !important;
+            box-shadow: none;
+            outline: none;
+        }
+        .btn-primary { background-color: #0064D2; border: none; transition: all 0.3s ease; }
+        .btn-primary:hover { background-color: #0056b3; transform: translateY(-2px); }
+        label.small { letter-spacing: 0.5px; color: #495057; }
+    </style>
+@endsection
+
 @section('content')
-<div class="container py-5">
+<div class="container py-2">
     <div class="row justify-content-center">
-        <div class="col-lg-8">
+        <div class="col-lg-10">
             
             <!-- Header Navigasi -->
             <div class="d-flex align-items-center mb-4">
@@ -51,50 +66,81 @@
                             <!-- Nama Ruangan -->
                             <div class="col-md-6">
                                 <label class="form-label fw-bold small text-uppercase">Nama Ruangan *</label>
-                                <input type="text" name="name" class="form-control bg-light border-0 py-2 @error('name') is-invalid @enderror" 
-                                       value="{{ old('name', $room->name ?? '') }}" placeholder="Contoh: Grand Ballroom" required>
+                                <input type="text" name="name" class="form-control bg-light py-2 @error('name') is-invalid @enderror" 
+                                       value="{{ old('name', $room->name ?? '') }}" placeholder="Contoh: Grand Ballroom">
                                 @error('name') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>
 
                             <!-- Lokasi -->
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold small text-uppercase">Lokasi Spesifik *</label>
-                                <input type="text" name="location" class="form-control bg-light border-0 py-2 @error('location') is-invalid @enderror" 
-                                       value="{{ old('location', $room->location ?? '') }}" placeholder="Contoh: Lantai 2, Sayap Barat" required>
-                                @error('location') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                            </div>
+                            <div class="col-md-6 position-relative">
+                                <label class="form-label fw-bold small text-uppercase">Alamat Tempat *</label>
+                                <input type="text" 
+                                    id="address-search" 
+                                    class="form-control bg-light py-2" 
+                                    data-url="{{ route('autocompleteLocation') }}" 
+                                    placeholder="Cari lokasi..."
+                                    autocomplete="off">
+                                
+                                <!-- Pesan error untuk validasi -->
+                                <div class="invalid-feedback">
+                                    Anda harus memilih lokasi dari saran yang tersedia.
+                                </div>
 
-                            <!-- Lantai -->
-                            <div class="col-md-4">
-                                <label class="form-label fw-bold small text-uppercase">Lantai (Angka) *</label>
-                                <input type="number" name="floor" class="form-control bg-light border-0 py-2 @error('floor') is-invalid @enderror" 
-                                       value="{{ old('floor', $room->floor ?? '') }}" placeholder="1" required>
-                                @error('floor') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                <div id="autocomplete-results" class="list-group position-absolute w-100 shadow-sm" style="z-index: 1050; max-height: 250px; overflow-y: auto;"></div>
+                                
+                                <input type="hidden" name="latitude" id="lat">
+                                <input type="hidden" name="longitude" id="lon">
+                                <input type="hidden" name="location" id="full-address">
                             </div>
 
                             <!-- Kapasitas -->
                             <div class="col-md-4">
                                 <label class="form-label fw-bold small text-uppercase">Kapasitas (Pax) *</label>
-                                <input type="number" name="capacity" class="form-control bg-light border-0 py-2 @error('capacity') is-invalid @enderror" 
-                                       value="{{ old('capacity', $room->capacity ?? '') }}" required>
+                                <input type="number" name="capacity" class="form-control bg-light py-2 @error('capacity') is-invalid @enderror" 
+                                       value="{{ old('capacity', $room->capacity ?? 1) }}">
                                 @error('capacity') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>
 
                             <!-- Deposit Percent -->
                             <div class="col-md-4">
-                                <label class="form-label fw-bold small text-uppercase">Deposit (%) *</label>
-                                <input type="number" name="deposit_percent" class="form-control bg-light border-0 py-2 @error('deposit_percent') is-invalid @enderror" 
-                                       value="{{ old('deposit_percent', $room->deposit_percent ?? 0) }}" required>
-                                @error('deposit_percent') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                <label class="form-label fw-bold small text-uppercase">Jenis Deposit *</label>
+                                <select name="jenis_deposit" id="jenis_deposit" class="form-select bg-light py-2">
+                                    <option value="persen">Persen</option>
+                                    <option value="nominal">Nominal</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-4 form-deposit">
+                                <!-- Input Persen -->
+                                <div id="wrapper-persen">
+                                    <label class="form-label fw-bold small text-uppercase">Deposit (%) *</label>
+                                    <div class="input-group">
+                                        <input type="number" name="deposit_percent" class="form-control @error('deposit_percent') is-invalid @enderror" 
+                                            value="{{ old('deposit_percent', $room->deposit_percent ?? 0) }}">
+                                        <span class="input-group-text">%</span>
+                                    </div>
+                                    @error('deposit_percent') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                                </div>
+
+                                <!-- Input Nominal (Sembunyikan defaultnya) -->
+                                <div id="wrapper-nominal" style="display: none;">
+                                    <label class="form-label fw-bold small text-uppercase">Deposit (Rp) *</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">Rp</span>
+                                        <input type="number" name="deposit_nominal" class="form-control @error('deposit_nominal') is-invalid @enderror" 
+                                            value="{{ old('deposit_nominal', $room->deposit_nominal ?? 0) }}">
+                                    </div>
+                                    @error('deposit_nominal') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                                </div>
                             </div>
 
                             <!-- Harga -->
                             <div class="col-md-6">
                                 <label class="form-label fw-bold small text-uppercase">Harga Sewa *</label>
                                 <div class="input-group">
-                                    <span class="input-group-text bg-light border-0">Rp</span>
-                                    <input type="number" name="price" class="form-control bg-light border-0 py-2 @error('price') is-invalid @enderror" 
-                                           value="{{ old('price', $room->price ?? '') }}" required>
+                                    <span class="input-group-text">Rp</span>
+                                    <input type="number" name="price" class="form-control py-2 @error('price') is-invalid @enderror" 
+                                           value="{{ old('price', $room->price ?? 0) }}">
                                 </div>
                                 @error('price') <small class="text-danger small">{{ $message }}</small> @enderror
                             </div>
@@ -103,7 +149,7 @@
                             <div class="col-md-6">
                                 <label class="form-label fw-bold small text-uppercase">Status *</label>
                                 @php $currentStatus = old('status', $room->status ?? ''); @endphp
-                                <select name="status" class="form-select bg-light border-0 py-2 @error('status') is-invalid @enderror" required>
+                                <select name="status" class="form-select bg-light py-2 @error('status') is-invalid @enderror">
                                     <option value="1" {{ $currentStatus == '1' ? 'selected' : '' }}>Aktif (Tersedia)</option>
                                     <option value="2" {{ $currentStatus == '2' ? 'selected' : '' }}>Nonaktif</option>
                                     <option value="3" {{ $currentStatus == '3' ? 'selected' : '' }}>Maintenance (Perbaikan)</option>
@@ -114,7 +160,7 @@
                             <!-- Deskripsi -->
                             <div class="col-12">
                                 <label class="form-label fw-bold small text-uppercase">Deskripsi Ruangan</label>
-                                <textarea name="description" class="form-control bg-light border-0 @error('description') is-invalid @enderror" 
+                                <textarea name="description" class="form-control bg-light @error('description') is-invalid @enderror" 
                                           rows="3" placeholder="Jelaskan keunggulan ruangan Anda...">{{ old('description', $room->description ?? '') }}</textarea>
                                 @error('description') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>
@@ -122,33 +168,47 @@
                             <!-- Peraturan -->
                             <div class="col-12">
                                 <label class="form-label fw-bold small text-uppercase">Peraturan Khusus *</label>
-                                <textarea name="rules" class="form-control bg-light border-0 @error('rules') is-invalid @enderror" 
-                                          rows="3" placeholder="Contoh: Dilarang merokok..." required>{{ old('rules', $room->rules ?? '') }}</textarea>
+                                <textarea name="rules" class="form-control bg-light @error('rules') is-invalid @enderror" 
+                                          rows="3" placeholder="Contoh: Dilarang merokok...">{{ old('rules', $room->rules ?? '') }}</textarea>
                                 @error('rules') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>
 
                             <!-- Upload Gambar -->
                             <div class="col-12">
-                                <label class="form-label fw-bold small text-uppercase">Foto Ruangan</label>
-                                                        
-                                @if(isset($room))
-                                    {{-- Mode Edit: Tampilkan foto lama & beri info --}}
-                                    <div class="mb-3 p-3 bg-light rounded border">
-                                        <div class="d-flex align-items-center">
-                                            <img src="{{ asset('storage/' . $room->image) }}" class="rounded shadow-sm me-3" style="width: 80px; height: 60px; object-fit: cover;">
-                                            <div>
-                                                <span class="badge bg-secondary mb-1">Mode Read-Only</span>
-                                                <p class="mb-0 small text-muted">Foto tidak dapat diubah melalui form ini.</p>
+                                <label class="form-label fw-bold small text-uppercase">Foto Ruangan (Maks. 5 Foto)</label>
+                                
+                                {{-- 1. Tampilkan foto lama (Mode Edit) --}}
+                                @if(isset($room) && $room->images->count() > 0)
+                                    <div class="d-flex flex-wrap gap-2 mb-3">
+                                        @foreach($room->images as $img)
+                                            <div class="position-relative">
+                                                {{-- Langsung panggil path dari database --}}
+                                                <img src="{{ asset($img->path) }}" class="rounded shadow-sm" style="width: 100px; height: 80px; object-fit: cover;">
+                                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-secondary">Lama</span>
                                             </div>
-                                        </div>
+                                        @endforeach
                                     </div>
-                                @else
-                                    {{-- Mode Add: Tampilkan input file seperti biasa --}}
-                                    <div class="input-group">
-                                        <input type="file" name="image" class="form-control bg-light border-0 py-2">
-                                        <span class="input-group-text bg-light border-0"><i class="bi bi-image"></i></span>
+                                    <div class="alert alert-info py-2 small">
+                                        <i class="bi bi-info-circle me-1"></i> Foto baru akan ditambahkan ke koleksi yang sudah ada.
                                     </div>
                                 @endif
+
+                                {{-- 2. Input File (Jangan masukkan preview ke sini) --}}
+                                <div class="input-group">
+                                    <input type="file" 
+                                        name="images[]" 
+                                        id="image-input" 
+                                        class="form-control bg-light py-2 @error('images.*') is-invalid @enderror" 
+                                        accept="image/png, image/jpeg, image/jpg" 
+                                        multiple>
+                                    <span class="input-group-text bg-light"><i class="bi bi-images"></i></span>
+                                </div>
+                                <small class="text-muted mt-1 d-block">Format: JPG, JPEG, PNG. Tekan CTRL untuk pilih banyak foto.</small>
+                                
+                                @error('images.*') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+
+                                {{-- 3. Container untuk Preview Foto Baru (DI LUAR input-group) --}}
+                                <div id="preview-container" class="d-flex flex-wrap gap-3 mt-3"></div>
                             </div>
                         </div>
                     </div>
@@ -167,17 +227,8 @@
         </div>
     </div>
 </div>
+@endsection
 
-<style>
-    body { background-color: #f8f9fa; }
-    .form-select:focus, .form-control:focus {
-        background-color: #fff !important;
-        border: 1px solid #0064D2 !important;
-        box-shadow: none;
-        outline: none;
-    }
-    .btn-primary { background-color: #0064D2; border: none; transition: all 0.3s ease; }
-    .btn-primary:hover { background-color: #0056b3; transform: translateY(-2px); }
-    label.small { letter-spacing: 0.5px; color: #495057; }
-</style>
+@section('custom_js')
+    <script src="{{asset('custom_js/rooms/form.js')}}"></script>
 @endsection

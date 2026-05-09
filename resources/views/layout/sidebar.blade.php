@@ -38,9 +38,9 @@
             <a href="/penyewa/search" class="list-group-item list-group-item-action bg-dark text-white border-0 py-2">
                 <i class="bi bi-search me-2"></i> Cari Ruangan
             </a>
-            <a href="{{ route('rooms.index') }}" class="list-group-item list-group-item-action bg-dark text-white border-0 py-2">
+            {{-- <a href="{{ route('rooms.index') }}" class="list-group-item list-group-item-action bg-dark text-white border-0 py-2">
                 <i class="bi bi-door-open me-2"></i> Daftar Ruangan
-            </a>
+            </a> --}}
         </div>
     @endif
 </div>

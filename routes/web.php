@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\PeopleController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\ApiController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PenyediaController;
 use App\Http\Controllers\PenyewaController;
@@ -25,6 +26,8 @@ Route::put('/rooms/{room}', [RoomController::class, 'update'])->name('rooms.upda
 Route::delete('/rooms/{room}', [RoomController::class, 'destroy'])->name('rooms.destroy');
 Route::get('/rooms/{id}/transaction', [RoomController::class, 'transaction'])
     ->name('rooms.transaction');
+
+Route::get('/autocompleteLocation', [ApiController::class, 'autocompleteLocation'])->name('autocompleteLocation');
 
 Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/admin/dashboard', [AdminController::class, 'index'])->name('admin.dashboard');

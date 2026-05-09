@@ -39,9 +39,9 @@ public function index(Request $request)
         'rooms'            => $rooms,
         // Statistik juga harus difilter berdasarkan user_id yang login
         'totalRooms'       => Room::where('user_id', $userId)->count(),
-        'activeRooms'      => Room::where('user_id', $userId)->where('status', 1)->count(),
-        'maintenanceRooms' => Room::where('user_id', $userId)->where('status', 2)->count(),
-        'inactiveRooms'    => Room::where('user_id', $userId)->where('status', 3)->count(),
+        'activeRooms'      => Room::where('user_id', $userId)->where('status', 2)->count(),
+        'diajukan' => Room::where('user_id', $userId)->where('status', 1)->count(),
+        'inactiveRooms'    => Room::where('user_id', $userId)->where('status', 0)->count(),
     ]);
 }
  
@@ -83,36 +83,49 @@ public function index(Request $request)
     // }
  
     public function store(Request $request)
-{
-    // 1. Validasi Input
-    $validated = $request->validate([
-        'name'            => 'required|string|max:255',
-        'capacity'        => 'required|integer|min:1',
-        'deposit_percent' => 'nullable|integer|min:0|max:100', // deposit biasanya bisa 0
-        'price'           => 'required|numeric|min:0',
-        'description'     => 'nullable|string',
-        'status'          => 'required|in:1,2,3',
-        'location'        => 'required|string|max:255',
-        'rules'           => 'nullable|string',
-        'image'           => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
-    ]);
+    {
+        // 1. Validasi Input
+        $validated = $request->validate([
+            'name'            => 'required|string|max:255',
+            'capacity'        => 'required|integer|min:1',
+            'deposit_percent' => 'nullable|integer|min:0|max:100', // deposit biasanya bisa 0
+            'price'           => 'required|numeric|min:0',
+            'description'     => 'nullable|string',
+            'status'          => 'required|in:1,2,3',
+            'location'        => 'required', // Nama alamat
+            'latitude'        => 'required|numeric', // Wajib ada hasil dari API
+            'longitude'       => 'required|numeric',
+            'rules'           => 'nullable|string',
+            'images.*' => 'image|mimes:jpg,jpeg,png|max:2048',
+        ], [
+            'latitude.required' => 'Lokasi harus dipilih dari saran autocomplete.',
+        ]);
 
-    // 2. Handle Upload Gambar
-    if ($request->hasFile('image')) {
-        $validated['image'] = $request->file('image')->store('rooms', 'public');
+        // Masukkan User ID dari Session Login
+        $validated['user_id'] = Auth::id();
+
+        $room = Room::create($validated);
+
+        // Handle Upload Gambar (Setelah Room tersimpan)
+        if ($request->hasFile('images')) {
+            foreach ($request->file('images') as $image) {
+                // Buat nama file unik
+                $fileName = time() . '_' . $image->getClientOriginalName();
+                
+                // Pindahkan file langsung ke folder public/rooms
+                $image->move(public_path('rooms'), $fileName);
+                
+                // Simpan path ke database (cukup 'rooms/namafile.jpg')
+                $room->images()->create([
+                    'path' => 'rooms/' . $fileName
+                ]);
+            }
+        }
+
+        // Redirect dengan Flash Message
+        return redirect()->route('rooms.index')
+                        ->with('success', 'Ruangan berhasil dipublikasikan!');
     }
-
-    // 3. Masukkan User ID dari Session Login
-    $validated['user_id'] = Auth::id();
-
-
-    // 5. Eksekusi Simpan ke Database
-    Room::create($validated);
-
-    // 6. Redirect dengan Flash Message
-    return redirect()->route('rooms.index')
-                     ->with('success', 'Ruangan berhasil dipublikasikan!');
-}
 
     // public function show(Room $room)
     // {

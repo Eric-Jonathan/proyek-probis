@@ -174,17 +174,17 @@ p.error {
         @error('phone') <span class="error">{{ $message }}</span> @enderror
 
         <label>Password (Min 8 Karakter)</label>
-        <input type="password" name="password" required>
+        <input type="password" name="password" value="{{ old('password') }}" required>
         @error('password') <span class="error">{{ $message }}</span> @enderror
 
         <label>Konfirmasi Password</label>
         <input type="password" name="password_confirmation" required>
 
         <label>Role</label>
-        <select name="role" required>
-            <option value="" selected disabled>Pilih Role</option>
-            <option value="penyedia">Penyedia Tempat</option>
-            <option value="penyewa">Penyewa</option>
+        <select name="role" class="form-control" required>
+            <option value="" disabled {{ old('role') === null ? 'selected' : '' }}>Pilih Role</option>
+            <option value="penyedia" {{ old('role') == 'penyedia' ? 'selected' : '' }}>Penyedia Tempat</option>
+            <option value="penyewa" {{ old('role') == 'penyewa' ? 'selected' : '' }}>Penyewa</option>
         </select>
         @error('role') <span class="error">{{ $message }}</span> @enderror
 

@@ -18,7 +18,12 @@ return new class extends Migration
             $table->integer('capacity');
             $table->integer('price');
             $table->integer('deposit_percent')->default(0);
-            $table->string('location');
+            
+            // Data dari LocationIQ
+            $table->string('location'); // Alamat lengkap (display_name)
+            $table->decimal('latitude', 10, 8);  // Koordinat Lat
+            $table->decimal('longitude', 11, 8); // Koordinat Lon
+            
             $table->text('rules')->nullable();
             $table->text('description')->nullable();
             $table->integer('status')->default(1)->comment('1 = Diajukan, 2 = Diterima, 3 = Not Available, 0 = Inactive');

@@ -1,107 +1,103 @@
 @extends('layout.layout')
 
 @section('content')
-<div class="content-wrapper p-4">
-    {{-- Header --}}
-    <div class="d-flex justify-content-between align-items-center mb-4">
+<div class="container-fluid p-4 pt-3">
+    {{-- Header: Menggunakan flex-wrap agar tidak tembus saat layar kecil/zoom --}}
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
         <div>
-            <h2 class="fw-bold">Kelola Ruangan</h2>
-            <p class="text-muted">Manajemen inventaris dan status ketersediaan unit</p>
+            <h2 class="fw-bold mb-1">Kelola Ruangan</h2>
+            <p class="text-muted mb-0">Manajemen inventaris dan status ketersediaan unit</p>
         </div>
-            <a href="{{ route('rooms.create') }}" class="btn btn-primary px-4 rounded-pill">
-                <i class="bi bi-plus-circle me-2"></i>Tambah Ruangan Baru
-            </a>    
-        </div>
+        <a href="{{ route('rooms.create') }}" class="btn btn-primary px-4 rounded-pill shadow-sm">
+            <i class="bi bi-plus-circle me-2"></i>Tambah Ruangan Baru
+        </a>    
+    </div>
 
-    {{-- Stats Cards --}}
-    <div class="row g-3 mb-4 text-center">
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm p-3">
-                <span class="text-muted small fw-bold">Total Ruangan</span>
-                <h3 class="fw-bold text-primary mb-0">{{ $totalRooms }}</h3>
+    {{-- Stats Cards: col-6 pada HP, col-md-3 pada Desktop --}}
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm p-3 text-center h-100">
+                <span class="text-muted small fw-bold text-uppercase">Total Ruangan</span>
+                <h3 class="fw-bold text-primary mb-0 mt-1">{{ $totalRooms }}</h3>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm p-3">
-                <span class="text-muted small fw-bold">Unit Aktif</span>
-                <h3 class="fw-bold text-success mb-0">{{ $activeRooms }}</h3>
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm p-3 text-center h-100">
+                <span class="text-muted small fw-bold text-uppercase">Unit Aktif</span>
+                <h3 class="fw-bold text-success mb-0 mt-1">{{ $activeRooms }}</h3>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm p-3">
-                <span class="text-muted small fw-bold">Nonaktif</span>
-                <h3 class="fw-bold text-danger mb-0">{{ $inactiveRooms }}</h3>
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm p-3 text-center h-100">
+                <span class="text-muted small fw-bold text-uppercase">Nonaktif</span>
+                <h3 class="fw-bold text-danger mb-0 mt-1">{{ $inactiveRooms }}</h3>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm p-3">
-                <span class="text-muted small fw-bold">Perawatan</span>
-                <h3 class="fw-bold text-warning mb-0">{{ $maintenanceRooms }}</h3>
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm p-3 text-center h-100">
+                <span class="text-muted small fw-bold text-uppercase">Diajukan</span>
+                <h3 class="fw-bold text-warning mb-0 mt-1">{{ $diajukan }}</h3>
             </div>
         </div>
     </div>
 
-    {{-- Main List --}}
-    <div class="card border-0 shadow-sm p-4">
-        <form method="GET" action="{{ route('rooms.index') }}" class="row g-2 mb-4">
-            <div class="col-md-6">
-                <input type="text" name="search" class="form-control" placeholder="Cari nama atau lokasi..." value="{{ request('search') }}">
-            </div>
-            <div class="col-md-3">
-                <select name="status" class="form-select">
-                    <option value="">Semua Status</option>
-                    <option value="1" {{ request('status') == '1' ? 'selected' : '' }}>Aktif</option>
-                    <option value="2" {{ request('status') == '2' ? 'selected' : '' }}>Nonaktif</option>
-                    <option value="3" {{ request('status') == '3' ? 'selected' : '' }}>Perawatan</option>
-                </select>
-            </div>
-            <div class="col-md-3 d-flex gap-2">
-                <button type="submit" class="btn btn-primary w-100">Search</button>
-                <a href="{{ route('rooms.index') }}" class="btn btn-outline-secondary px-3">Clear</a>
-            </div>
-        </form>
-
+    {{-- Table Card --}}
+    <div class="card border-0 shadow-sm overflow-hidden">
         <div class="table-responsive">
-            <table class="table align-middle">
-                <thead class="table-light">
+            <table class="table align-middle mb-0" id="tableRoom" style="width: 100%;">
+                <thead class="table-light text-nowrap">
                     <tr>
-                        <th width="50">#</th>
-                        <th>Informasi Ruangan</th>
-                        <th>Lokasi</th>
+                        <th class="ps-4" width="50">#</th>
+                        <th style="min-width: 250px;">Informasi Ruangan</th>
+                        <th style="min-width: 200px;">Lokasi</th>
                         <th>Kapasitas</th>
                         <th>Tarif Sewa</th>
                         <th class="text-center">Status</th>
-                        <th class="text-center">Tindakan</th>
+                        <th class="text-center pe-4">Tindakan</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach($rooms as $i => $room)
                     <tr>
-                        <td>{{ $rooms->firstItem() + $i }}</td>
+                        <td class="ps-4 text-muted">{{ $rooms->firstItem() + $i }}</td>
                         <td>
                             <div class="fw-bold text-dark">{{ $room->name }}</div>
-                            <small class="text-muted">{{ Str::limit($room->description, 40) }}</small>
+                            <small class="text-muted">{{ Str::limit($room->description, 45) }}</small>
                         </td>
-                        <td><span class="badge bg-light text-dark border">{{ $room->location }}</span></td>
-                        <td>{{ $room->capacity }} <small>pax</small></td>
-                        <td class="fw-bold text-primary">Rp{{ number_format($room->price, 0, ',', '.') }}</td>
+                        <td class="pe-3">
+                            {{-- Mengambil 2 data depan koma --}}
+                            <span class="badge bg-light text-dark border fw-normal" style="white-space: normal; text-align: left;">
+                                {{ implode(', ', array_slice(explode(',', $room->location), 0, 1)) }}
+                            </span>
+                        </td>
+                        <td class="text-nowrap">
+                            <i class="bi bi-people me-1"></i> {{ $room->capacity }} Orang
+                        </td>
+                        <td class="text-nowrap fw-bold text-primary">
+                            Rp {{ number_format($room->price, 0, ',', '.') }}
+                        </td>
                         <td class="text-center">
                             @php
-                                $map = [1 => ['Aktif', 'success'], 2 => ['Nonaktif', 'danger'], 3 => ['Perawatan', 'warning']];
-                                $badge = $map[$room->status] ?? ['Unknown', 'secondary'];
+                                $statusMap = [
+                                    1 => ['Diajukan', 'warning'],
+                                    2 => ['Aktif', 'success'],
+                                    3 => ['Maintenance', 'secondary'],
+                                    0 => ['Nonaktif', 'danger']
+                                ];
+                                $badge = $statusMap[$room->status] ?? ['Unknown', 'dark'];
                             @endphp
                             <span class="badge rounded-pill bg-{{ $badge[1] }}-subtle text-{{ $badge[1] }} px-3 py-2">
                                 {{ $badge[0] }}
                             </span>
                         </td>
-                        <td class="text-center">
+                        <td class="pe-4">
                             <div class="d-flex justify-content-center gap-2">
-                                <button class="btn btn-sm btn-light text-primary rounded-circle shadow-sm"><i class="bi bi-eye"></i></button>
+                                <button class="btn btn-sm btn-light text-primary rounded-circle shadow-sm" title="Lihat"><i class="bi bi-eye"></i></button>
                                 <a href="{{ route('rooms.edit', $room->room_id) }}" 
-                                   class="btn btn-sm btn-light text-warning rounded-circle shadow-sm">
+                                   class="btn btn-sm btn-light text-warning rounded-circle shadow-sm" title="Edit">
                                     <i class="bi bi-pencil"></i>
                                 </a>
-                                <button class="btn btn-sm btn-light text-danger rounded-circle shadow-sm"><i class="bi bi-trash"></i></button>
+                                <button class="btn btn-sm btn-light text-danger rounded-circle shadow-sm" title="Hapus"><i class="bi bi-trash"></i></button>
                             </div>
                         </td>
                     </tr>
@@ -110,10 +106,21 @@
             </table>
         </div>
 
-        <div class="mt-4 d-flex justify-content-between align-items-center">
-            <p class="text-muted small mb-0">Menampilkan <b>{{ $rooms->firstItem() }}</b> ke <b>{{ $rooms->lastItem() }}</b> dari <b>{{ $rooms->total() }}</b> unit</p>
-            {{ $rooms->links('pagination::bootstrap-5') }}
+        {{-- Footer Tabel --}}
+        <div class="card-footer bg-white border-0 py-3">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+                <p class="text-muted small mb-0">
+                    Menampilkan <b>{{ $rooms->firstItem() }}</b> ke <b>{{ $rooms->lastItem() }}</b> dari <b>{{ $rooms->total() }}</b> unit
+                </p>
+                <div class="pagination-responsive">
+                    {{ $rooms->links('pagination::bootstrap-5') }}
+                </div>
+            </div>
         </div>
     </div>
 </div>
+@endsection
+
+@section('custom_js')
+    <script src="{{ asset('custom_js/rooms/room.js') }}"></script>
 @endsection
