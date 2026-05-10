@@ -112,12 +112,12 @@ public function index(Request $request)
                 // Buat nama file unik
                 $fileName = time() . '_' . $image->getClientOriginalName();
                 
-                // Pindahkan file langsung ke folder public/rooms
-                $image->move(public_path('rooms'), $fileName);
+                // Pindahkan file langsung ke folder public/upload_room
+                $image->move(public_path('upload_room'), $fileName);
                 
                 // Simpan path ke database (cukup 'rooms/namafile.jpg')
                 $room->images()->create([
-                    'path' => 'rooms/' . $fileName
+                    'path' => 'upload_room/' . $fileName
                 ]);
             }
         }

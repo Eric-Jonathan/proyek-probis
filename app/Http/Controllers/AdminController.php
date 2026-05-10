@@ -17,4 +17,8 @@ class AdminController extends Controller
     public function outsource(){
         return view('admin.outsource');
     }
+
+    public function create_outsource(){
+        return view('admin.form_outsource');
+    }
 }

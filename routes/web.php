@@ -34,6 +34,7 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/admin/acc_room', [AdminController::class, 'acc_room'])->name('admin.acc_room');
     Route::get('/admin/users', [PeopleController::class, 'people'])->name('admin.users');
     Route::get('/admin/outsource', [AdminController::class, 'outsource'])->name('admin.outsource');
+    Route::get('/admin/outsource/create', [AdminController::class, 'create_outsource'])->name('admin.outsource.form');
 });
 
 Route::middleware(['auth', 'role:penyedia'])->group(function () {
@@ -62,9 +63,9 @@ Route::get('/test-rating', function () {
     return view('rooms.rating', compact('booking', 'room'));
 });
 
-Route::post('/ratings', function () {
-    return back()->with('success', 'Pengecekan Berhasil! Ini adalah pesan sukses simulasi.');
-})->name('ratings.store');
+// Route::post('/ratings', function () {
+//     return back()->with('success', 'Pengecekan Berhasil! Ini adalah pesan sukses simulasi.');
+// })->name('ratings.store');
 
 
 
