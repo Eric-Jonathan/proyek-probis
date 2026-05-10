@@ -97,7 +97,13 @@
                                    class="btn btn-sm btn-light text-warning rounded-circle shadow-sm" title="Edit">
                                     <i class="bi bi-pencil"></i>
                                 </a>
-                                <button class="btn btn-sm btn-light text-danger rounded-circle shadow-sm" title="Hapus"><i class="bi bi-trash"></i></button>
+                                <form action="{{ route('rooms.destroy', $room->room_id) }}" method="POST" class="d-inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus ruangan ini?')">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-sm btn-light text-danger rounded-circle shadow-sm" title="Hapus">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
                             </div>
                         </td>
                     </tr>

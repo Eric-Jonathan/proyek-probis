@@ -69,9 +69,9 @@
                 <p class="text-muted mb-0">Kelola data vendor dan tenaga kerja eksternal</p>
             </div>
             <div class="col-12 col-md-6 text-md-end mt-3 mt-md-0 header-action">
-                <button class="btn btn-primary rounded-pill px-3 shadow-sm fw-medium">
+                <a href="{{ route('admin.outsource.form') }}" class="btn btn-primary rounded-pill px-4 py-2 shadow-sm fw-medium d-inline-flex align-items-center">
                     <i class="bi bi-plus-lg me-2"></i> Tambah Mitra
-                </button>
+                </a>
             </div>
         </div>
 
