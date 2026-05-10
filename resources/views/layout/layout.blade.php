@@ -16,6 +16,9 @@
     
     {{-- DataTables --}}
     <link rel="stylesheet" href="https://cdn.datatables.net/2.0.7/css/dataTables.dataTables.css">
+
+    {{-- Quill JS --}}
+    <link href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css" rel="stylesheet" />
     
     <style>
         /* CSS Dasar untuk Layout Sidebar + Content */
@@ -137,6 +140,10 @@
     
     {{-- DataTables --}}
     <script src="https://cdn.datatables.net/2.0.7/js/dataTables.js"></script>
+
+    {{-- Quill JS --}}
+    <script src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js"></script>
+
     @yield('custom_js')
 </body>
 </html>

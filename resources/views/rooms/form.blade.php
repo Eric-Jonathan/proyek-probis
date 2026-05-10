@@ -71,8 +71,20 @@
                                 @error('name') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>
 
+                            <!-- Status -->
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold small text-uppercase">Status *</label>
+                                @php $currentStatus = old('status', $room->status ?? ''); @endphp
+                                <select name="status" class="form-select bg-light py-2 @error('status') is-invalid @enderror">
+                                    <option value="1" {{ $currentStatus == '1' ? 'selected' : '' }}>Aktif (Tersedia)</option>
+                                    <option value="2" {{ $currentStatus == '2' ? 'selected' : '' }}>Nonaktif</option>
+                                    <option value="3" {{ $currentStatus == '3' ? 'selected' : '' }}>Maintenance (Perbaikan)</option>
+                                </select>
+                                @error('status') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            </div>
+
                             <!-- Lokasi -->
-                            <div class="col-md-6 position-relative">
+                            <div class="col-md-12 position-relative">
                                 <label class="form-label fw-bold small text-uppercase">Alamat Tempat *</label>
                                 <input type="text" 
                                     id="address-search" 
@@ -135,7 +147,7 @@
                             </div>
 
                             <!-- Harga -->
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 <label class="form-label fw-bold small text-uppercase">Harga Sewa *</label>
                                 <div class="input-group">
                                     <span class="input-group-text">Rp</span>
@@ -145,16 +157,24 @@
                                 @error('price') <small class="text-danger small">{{ $message }}</small> @enderror
                             </div>
 
-                            <!-- Status -->
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold small text-uppercase">Status *</label>
-                                @php $currentStatus = old('status', $room->status ?? ''); @endphp
-                                <select name="status" class="form-select bg-light py-2 @error('status') is-invalid @enderror">
-                                    <option value="1" {{ $currentStatus == '1' ? 'selected' : '' }}>Aktif (Tersedia)</option>
-                                    <option value="2" {{ $currentStatus == '2' ? 'selected' : '' }}>Nonaktif</option>
-                                    <option value="3" {{ $currentStatus == '3' ? 'selected' : '' }}>Maintenance (Perbaikan)</option>
+                            <!-- Jenis harga -->
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold small text-uppercase">Jenis Harga *</label>
+                                <select name="jenis_harga" id="jenis_harga" class="form-select bg-light py-2">
+                                    <option value="Pax" selected>Pax</option>
+                                    <option value="Jam">Jam</option>
+                                    <option value="Hari">Hari</option>
                                 </select>
-                                @error('status') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            </div>
+
+                            <!-- Minimal Order -->
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold small text-uppercase">Minimal Order *</label>
+                                <div class="input-group">
+                                    <input type="number" name="min_order" class="form-control @error('min_order') is-invalid @enderror" 
+                                            value="{{ old('min_order', $room->min_order ?? 1) }}">
+                                    <span class="input-group-text" id="satuan_min_order">Pax</span>
+                                </div>
                             </div>
 
                             <!-- Deskripsi -->
@@ -168,14 +188,14 @@
                             <!-- Peraturan -->
                             <div class="col-12">
                                 <label class="form-label fw-bold small text-uppercase">Peraturan Khusus *</label>
-                                <textarea name="rules" class="form-control bg-light @error('rules') is-invalid @enderror" 
-                                          rows="3" placeholder="Contoh: Dilarang merokok...">{{ old('rules', $room->rules ?? '') }}</textarea>
+                                <div id="editor" style="height: 200px;"></div>
+                                <input type="hidden" name="rules" id="rules-input" value="{{ old('rules') }}">
                                 @error('rules') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>
 
                             <!-- Upload Gambar -->
                             <div class="col-12">
-                                <label class="form-label fw-bold small text-uppercase">Foto Ruangan (Maks. 5 Foto)</label>
+                                <label class="form-label fw-bold small text-uppercase">Foto Ruangan</label>
                                 
                                 {{-- 1. Tampilkan foto lama (Mode Edit) --}}
                                 @if(isset($room) && $room->images->count() > 0)

@@ -3,6 +3,7 @@ let isSelected = false; // Flag untuk menandai apakah user sudah klik hasil
 
 $(document).ready(function() {
     $('#jenis_deposit').trigger('change');
+    $('#jenis_harga').trigger('change');
 });
 
 $('#address-search').on('input', function() {
@@ -51,6 +52,37 @@ $('#address-search').on('input', function() {
     }, 500);
 });
 
+var quill = new Quill('#editor', {
+    theme: 'snow',
+    modules: {
+        toolbar: [
+            [{ 'list': 'ordered'}, { 'list': 'bullet' }] // Hanya munculkan opsi list
+        ]
+    },
+    placeholder: 'Masukkan peraturan ruangan...'
+});
+
+quill.on('text-change', function(delta, oldDelta, source) {
+    if (source === 'user') {
+        const selection = quill.getSelection();
+        if (selection) {
+            // Ambil format pada posisi kursor saat ini
+            const [line, offset] = quill.getLine(selection.index);
+            const formats = line.formats();
+
+            // Jika baris saat ini tidak memiliki format 'list'
+            if (!formats.list) {
+                // Paksa baris tersebut menjadi bullet list secara otomatis
+                quill.formatLine(selection.index, 1, 'list', 'bullet');
+            }
+        }
+    }
+});
+
+setTimeout(() => {
+    quill.formatLine(0, 1, 'list', 'bullet');
+}, 100);
+
 // Validasi saat Form dikirim
 $('form').on('submit', function(e) {
     let lat = $('#lat').val();
@@ -61,6 +93,13 @@ $('form').on('submit', function(e) {
         $('#address-search').addClass('is-invalid');
         $('#address-search').focus();
     }
+
+    var rulesHtml = quill.root.innerHTML;
+    // Jika isinya hanya <p><br></p> (kosong), kosongkan saja agar kena validasi 'required'
+    if (quill.getText().trim().length === 0) {
+        rulesHtml = '';
+    }
+    $('#rules-hidden').val(rulesHtml);
 });
 
 $(document).on('change', '#jenis_deposit', function(){
@@ -76,6 +115,10 @@ $(document).on('change', '#jenis_deposit', function(){
         $('input[name="deposit_percent"]').val(0);
     }
 });
+
+$(document).on('change', '#jenis_harga', function() {
+    $('#satuan_min_order').html($(this).val());
+})
 
 $(document).on('change', '#image-input', function() {
     const files = this.files;

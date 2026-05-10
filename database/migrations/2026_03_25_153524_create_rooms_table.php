@@ -16,7 +16,10 @@ return new class extends Migration
             $table->integer('user_id');
             $table->string('name');
             $table->integer('capacity');
+            $table->string('jenis_harga');
             $table->integer('price');
+            $table->integer('min_order');
+            $table->string('jenis_deposit');
             $table->integer('deposit_percent')->default(0);
             
             // Data dari LocationIQ

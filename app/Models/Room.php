@@ -20,7 +20,7 @@ class Room extends Model
     protected $fillable = [
         'name', 'capacity', 'deposit_percent', 'price', 
         'description', 'status', 'location', 'latitude', 
-        'longitude', 'rules', 'user_id'
+        'longitude', 'rules', 'user_id', 'jenis_harga', 'min_order'
     ];
 
     public function bookingDetails()

@@ -90,6 +90,7 @@ public function index(Request $request)
             'capacity'        => 'required|integer|min:1',
             'deposit_percent' => 'nullable|integer|min:0|max:100', // deposit biasanya bisa 0
             'price'           => 'required|numeric|min:0',
+            'min_order'       => 'required|numeric|min:0',
             'description'     => 'nullable|string',
             'status'          => 'required|in:1,2,3',
             'location'        => 'required', // Nama alamat
