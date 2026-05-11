@@ -33,7 +33,13 @@ Route::get('/autocompleteLocation', [ApiController::class, 'autocompleteLocation
 Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/admin/dashboard', [AdminController::class, 'index'])->name('admin.dashboard');
     Route::get('/admin/acc_room', [AdminController::class, 'acc_room'])->name('admin.acc_room');
+
     Route::get('/admin/users', [PeopleController::class, 'people'])->name('admin.users');
+    Route::post('/admin/users/insert', [PeopleController::class, 'insertPeople'])->name('users.insert');
+    Route::post('/admin/users/update', [PeopleController::class, 'updatePeople'])->name('users.update');
+    Route::post('/admin/users/delete', [PeopleController::class, 'deletePeople'])->name('users.delete');
+
+    Route::get('/admin/formPeople', [PeopleController::class, 'formPeople'])->name('admin.formPeople');
     Route::get('/admin/outsource', [AdminController::class, 'outsource'])->name('admin.outsource');
     Route::get('/admin/outsource/create', [AdminController::class, 'create_outsource'])->name('admin.outsource.form');
 });
@@ -46,6 +52,21 @@ Route::middleware(['auth', 'role:penyewa'])->group(function () {
     Route::get('/penyewa/dashboard', [PenyewaController::class, 'index'])->name('penyewa.dashboard');
     Route::get('/penyewa/search', [PenyewaController::class, 'searchPage'])->name('penyewa.search');
     Route::post('/ratings/store', [RatingController::class, 'store'])->name('ratings.store');
+});
+
+Route::middleware(['auth', 'role:outsource'])->group(function () {
+    Route::prefix('outsource')->name('outsource.')->group(function () {
+        Route::get('/', [OutsourceController::class, 'index'])->name('dashboard');
+        Route::get('/form', [OutsourceController::class, 'form'])->name('form');
+        Route::get('/list_job', [OutsourceController::class, 'jobList'])->name('job');
+
+        // Halaman Tabel History
+        Route::get('/history', [OutsourceController::class, 'history'])->name('history');
+        
+        // Halaman Detail (Tambahkan {id} dan arahkan ke historyDetail)
+        Route::get('/history/{id}', [OutsourceController::class, 'historyDetail'])->name('history.detail');
+
+    });
 });
 
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
@@ -89,17 +110,3 @@ Route::get('/penyedia/report/{id}', [PenyediaController::class, 'report'])->name
 Route::post('/penyedia/report/store', function () {
     return redirect()->route('bookings.index')->with('success', 'Laporan penggunaan ruangan telah disimpan.');
 })->name('penyedia.report.store');
-
-Route::prefix('outsource')->name('outsource.')->group(function () {
-    
-    Route::get('/', [OutsourceController::class, 'index'])->name('dashboard');
-    Route::get('/form', [OutsourceController::class, 'form'])->name('form');
-    Route::get('/list_job', [OutsourceController::class, 'jobList'])->name('job');
-
-    // Halaman Tabel History
-    Route::get('/history', [OutsourceController::class, 'history'])->name('history');
-    
-    // Halaman Detail (Tambahkan {id} dan arahkan ke historyDetail)
-    Route::get('/history/{id}', [OutsourceController::class, 'historyDetail'])->name('history.detail');
-
-});

@@ -84,7 +84,7 @@ setTimeout(() => {
 }, 100);
 
 // Validasi saat Form dikirim
-$('form').on('submit', function(e) {
+$(document).on('click', '.btn-save', function(e) {
     let lat = $('#lat').val();
     let lon = $('#lon').val();
 
