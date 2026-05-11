@@ -92,7 +92,10 @@
                         </td>
                         <td class="pe-4">
                             <div class="d-flex justify-content-center gap-2">
-                                <button class="btn btn-sm btn-light text-primary rounded-circle shadow-sm" title="Lihat"><i class="bi bi-eye"></i></button>
+                                <a href="{{route('rooms.show', $room->room_id)}}" 
+                                    class="btn btn-sm btn-light text-primary rounded-circle shadow-sm" title="Lihat">
+                                    <i class="bi bi-eye"></i>
+                                </a>
                                 <a href="{{ route('rooms.edit', $room->room_id) }}" 
                                    class="btn btn-sm btn-light text-warning rounded-circle shadow-sm" title="Edit">
                                     <i class="bi bi-pencil"></i>

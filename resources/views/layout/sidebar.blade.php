@@ -26,9 +26,9 @@
             <a href="{{ route('bookings.index') }}" class="list-group-item list-group-item-action bg-dark text-white border-0 py-2">
                 <i class="bi-clipboard-data me-2"></i> List Booking
             </a>
-            {{-- <a href="/room" class="list-group-item list-group-item-action bg-dark text-white border-0 py-2">
-                <i class="bi bi-door-open me-2"></i> Pesan Ruangan
-            </a> --}}
+            <a href="/bookings/history" class="list-group-item list-group-item-action bg-dark text-white border-0 py-2">
+                <i class="bi bi-card-checklist me-2"></i> History Persewaan
+            </a>
         </div>
     @elseif (Auth::user()->role == "outsource")
         <div class="list-group list-group-flush">
@@ -53,9 +53,9 @@
             <a href="/penyewa/search" class="list-group-item list-group-item-action bg-dark text-white border-0 py-2">
                 <i class="bi bi-search me-2"></i> Cari Ruangan
             </a>
-            {{-- <a href="{{ route('rooms.index') }}" class="list-group-item list-group-item-action bg-dark text-white border-0 py-2">
-                <i class="bi bi-door-open me-2"></i> Daftar Ruangan
-            </a> --}}
+            <a href="/bookings/history" class="list-group-item list-group-item-action bg-dark text-white border-0 py-2">
+                <i class="bi bi-card-checklist me-2"></i> History Persewaan
+            </a>
         </div>
     @endif
 </div>

@@ -4,6 +4,7 @@ use App\Http\Controllers\PeopleController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\ApiController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\BookingController;
 use App\Http\Controllers\PenyediaController;
 use App\Http\Controllers\PenyewaController;
 use App\Http\Controllers\RoomController;
@@ -20,6 +21,7 @@ Route::get('/', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
 
 Route::get('/rooms', [RoomController::class, 'index'])->name('rooms.index');
+Route::get('/rooms/{id}', [RoomController::class, 'show'])->name('rooms.show');
 Route::get('/rooms/create', [RoomController::class, 'create'])->name('rooms.create');
 Route::post('/rooms', [RoomController::class, 'store'])->name('rooms.store');
 Route::get('/rooms/{room}/edit', [RoomController::class, 'edit'])->name('rooms.edit');
@@ -71,7 +73,7 @@ Route::middleware(['auth', 'role:outsource'])->group(function () {
 
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 Route::get('/form_penyewa', [PenyediaController::class, 'form'])->name('form');
-
+Route::get('/bookings/history', [BookingController::class, 'history'])->name('bookings.history');
 
 Route::get('/room', [RoomController::class, 'show'])->name('room.show');
 

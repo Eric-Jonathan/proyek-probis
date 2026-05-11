@@ -18,7 +18,7 @@ class Room extends Model
     protected $keyType = 'int';
 
     protected $fillable = [
-        'name', 'capacity', 'deposit_percent', 'price', 
+        'name', 'capacity', 'deposit_percent', 'jenis_deposit', 'price', 
         'description', 'status', 'location', 'latitude', 
         'longitude', 'rules', 'user_id', 'jenis_harga', 'min_order'
     ];

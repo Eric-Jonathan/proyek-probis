@@ -449,75 +449,75 @@
     </div>
 
     <div id="section-info" class="container py-3">
-    <div class="row g-2 mb-4">
-        <div class="col-md-6">
-            <div class="h-100">
-                <img src="{{ asset('upload_room/tes/tes_1.webp') }}" class="img-fluid rounded object-fit-cover w-100" alt="Main Image" style="height: 408px;">
+        <div class="row g-2 mb-4">
+            <div class="col-md-6">
+                <div class="h-100">
+                    <img src="{{ asset('upload_room/tes/tes_1.webp') }}" class="img-fluid rounded object-fit-cover w-100" alt="Main Image" style="height: 408px;">
+                </div>
             </div>
-        </div>
 
-        <div class="col-md-6">
-            <div class="row g-2">
-                <div class="col-6">
-                    <img src="{{ asset('upload_room/tes/tes_2.webp') }}" class="img-fluid rounded object-fit-cover w-100" style="height: 200px;" alt="Gallery 1">
-                </div>
-                <div class="col-6 position-relative">
-    <img src="{{ asset('upload_room/tes/tes_3.webp') }}" class="img-fluid rounded object-fit-cover w-100" style="height: 200px;" alt="Gallery 2">
-    
-    <button type="button" class="btn btn-wishlist-float" id="btn-wishlist">
-        <i class="bi bi-heart" id="icon-wishlist"></i>
-    </button>
-</div>
-                <div class="col-6">
-                    <img src="{{ asset('upload_room/tes/tes_4.webp') }}" class="img-fluid rounded object-fit-cover w-100" style="height: 200px;" alt="Gallery 3">
-                </div>
-                <div class="col-6">
-                    <div class="gallery-item position-relative overflow-hidden rounded shadow-sm h-100">
-                        <img src="{{ asset('upload_room/tes/tes_5.webp') }}" class="img-fluid object-fit-cover w-100 gallery-img" style="height: 200px;" alt="Gallery Room">
-                        <div class="position-absolute bottom-0 end-0 m-2">
-                            <button class="btn text-white px-3 py-2 custom-btn-opacity" data-bs-toggle="modal" data-bs-target="#galleryModal">
-                                Lihat semua foto
-                            </button>
+            <div class="col-md-6">
+                <div class="row g-2">
+                    <div class="col-6">
+                        <img src="{{ asset('upload_room/tes/tes_2.webp') }}" class="img-fluid rounded object-fit-cover w-100" style="height: 200px;" alt="Gallery 1">
+                    </div>
+                    <div class="col-6 position-relative">
+                        <img src="{{ asset('upload_room/tes/tes_3.webp') }}" class="img-fluid rounded object-fit-cover w-100" style="height: 200px;" alt="Gallery 2">
+                        
+                        <button type="button" class="btn btn-wishlist-float" id="btn-wishlist">
+                            <i class="bi bi-heart" id="icon-wishlist"></i>
+                        </button>
+                    </div>
+                    <div class="col-6">
+                        <img src="{{ asset('upload_room/tes/tes_4.webp') }}" class="img-fluid rounded object-fit-cover w-100" style="height: 200px;" alt="Gallery 3">
+                    </div>
+                    <div class="col-6">
+                        <div class="gallery-item position-relative overflow-hidden rounded shadow-sm h-100">
+                            <img src="{{ asset('upload_room/tes/tes_5.webp') }}" class="img-fluid object-fit-cover w-100 gallery-img" style="height: 200px;" alt="Gallery Room">
+                            <div class="position-absolute bottom-0 end-0 m-2">
+                                <button class="btn text-white px-3 py-2 custom-btn-opacity" data-bs-toggle="modal" data-bs-target="#galleryModal">
+                                    Lihat semua foto
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <div class="row align-items-start">
-        <div class="col-md-8">
-            <div class="d-flex align-items-center gap-2 mb-1">
-                <span class="badge border text-muted fw-normal px-2 py-1" style="font-size: 0.75rem;">Hotel</span>
-                <div class="text-warning small d-flex gap-1">
-                    <i class="bi bi-star-fill"></i>
-                    <i class="bi bi-star-fill"></i>
-                    <i class="bi bi-star-fill"></i>
+        <div class="row align-items-start">
+            <div class="col-md-8">
+                <div class="d-flex align-items-center gap-2 mb-1">
+                    <span class="badge border text-muted fw-normal px-2 py-1" style="font-size: 0.75rem;">Hotel</span>
+                    <div class="text-warning small d-flex gap-1">
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                    </div>
+                </div>
+
+                <h2 class="fw-bold mb-1" style="font-size: 2.2rem; letter-spacing: -0.5px;">{{ $room->name }}</h2>
+
+                <div class="d-flex align-items-center gap-2 small">
+                    <span class="fw-bold">4,5<span class="text-muted fw-normal">/5</span></span>
+                    <a href="#" class="text-decoration-none fw-semibold" style="color: #006ce4;">(3.972 review)</a>
+                    <span class="text-muted mx-1">•</span>
+                    <a href="#" class="text-decoration-none fw-semibold" style="color: #006ce4;">Batu, Malang</a>
                 </div>
             </div>
 
-            <h2 class="fw-bold mb-1" style="font-size: 2.2rem; letter-spacing: -0.5px;">{{ $room->name }}</h2>
-
-            <div class="d-flex align-items-center gap-2 small">
-                <span class="fw-bold">4,5<span class="text-muted fw-normal">/5</span></span>
-                <a href="#" class="text-decoration-none fw-semibold" style="color: #006ce4;">(3.972 review)</a>
-                <span class="text-muted mx-1">•</span>
-                <a href="#" class="text-decoration-none fw-semibold" style="color: #006ce4;">Batu, Malang</a>
+            <div class="col-md-4 text-md-end">
+                <span class="badge bg-danger mb-2">Diskon 20%</span>
+                <p class="text-muted small mb-0">Mulai dari (setelah cashback)</p>
+                <del class="text-muted small">IDR {{ number_format($room->price, 0, ',', '.') }}</del>
+                <h2 class="text-danger fw-bold mb-0">IDR {{ number_format($room->price * 0.8, 0, ',', '.') }}</h2>
+                <p class="text-muted small mb-3">/hari</p>
+                <a href="#section-rooms" class="btn btn-primary px-5 py-2 fw-bold shadow-sm">
+                    Lihat Ruangan
+                </a>
             </div>
         </div>
-
-        <div class="col-md-4 text-md-end">
-            <span class="badge bg-danger mb-2">Diskon 20%</span>
-            <p class="text-muted small mb-0">Mulai dari (setelah cashback)</p>
-            <del class="text-muted small">IDR {{ number_format($room->price, 0, ',', '.') }}</del>
-            <h2 class="text-danger fw-bold mb-0">IDR {{ number_format($room->price * 0.8, 0, ',', '.') }}</h2>
-            <p class="text-muted small mb-3">/hari</p>
-            <a href="#section-rooms" class="btn btn-primary px-5 py-2 fw-bold shadow-sm">
-                Lihat Ruangan
-            </a>
-        </div>
     </div>
-</div>
 
         <div class="container py-4">
             <ul class="nav nav-tabs border-bottom border-dark mb-4 text-nowrap flex-nowrap overflow-auto"></ul>

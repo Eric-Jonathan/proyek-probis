@@ -89,7 +89,9 @@ public function index(Request $request)
             'name'            => 'required|string|max:255',
             'capacity'        => 'required|integer|min:1',
             'deposit_percent' => 'nullable|integer|min:0|max:100', // deposit biasanya bisa 0
+            'jenis_deposit'   => 'required',
             'price'           => 'required|numeric|min:0',
+            'jenis_harga'     => 'required',
             'min_order'       => 'required|numeric|min:0',
             'description'     => 'nullable|string',
             'status'          => 'required|in:1,2,3',
@@ -133,6 +135,11 @@ public function index(Request $request)
     //     return view('rooms.show', compact('room'));
     // }
 
+    // public function show($id)
+    // {
+    //     $room = Room::with('images')->findOrFail($id);
+    //     return view('rooms.room_detail', compact('room'));
+    // }
     public function show()
     {
         $room = (object)[
