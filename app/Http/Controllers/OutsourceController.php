@@ -50,66 +50,77 @@ class OutsourceController extends Controller
         return view('outsource.list_job', compact('allJobs'));
     }
 
-    public function historyDetail($id)
+public function historyDetail($id)
 {
-    // 1. Kumpulan Data Dummy Lengkap
-    // Saya tambahkan ID 105 agar sesuai dengan yang ada di view history kamu
+    // Struktur data sudah disamakan agar variabel seperti $job->room, $job->status, dll 
+    // konsisten di seluruh aplikasi.
     $allJobs = collect([
         (object)[
             'id' => 101,
-            'room' => 'Kontena Hotel - Ball Room',
+            'room' => 'Cozy Meeting Room', // Sebelumnya 'name'
             'city' => 'Batu',
+            'floor' => 'Lantai 1',
             'address' => 'Jl. KH. Agus Salim No. 106, Kota Batu',
-            'fee' => 250000,
+            'fee' => 500000,
             'deadline' => '2026-05-15',
-            'priority' => 'High',
             'kondisi' => 'Sangat Baik (9/10)',
             'kebersihan' => 'Sangat Bersih',
             'catatan' => 'Fasilitas lengkap, AC dingin, dan pencahayaan sangat baik.',
             'tgl_kirim' => '2026-05-10',
-            'status' => 'Diterima'
+            'status' => 'Diterima' // Status sinkron untuk pengecekan tombol cetak
         ],
         (object)[
             'id' => 102,
-            'room' => 'Lab Komputer Bisnis',
-            'city' => 'Malang',
-            'address' => 'Jl. Soekarno Hatta No. 9, Malang',
-            'fee' => 150000,
+            'room' => 'Grand Ballroom Kencana',
+            'city' => 'Batu',
+            'floor' => 'Lantai 3',
+            'address' => 'Jl. Ir. Soekarno No. 15, Kota Batu',
+            'fee' => 5500000,
             'deadline' => '2026-05-18',
-            'priority' => 'Medium',
-            'kondisi' => 'Baik (7/10)',
-            'kebersihan' => 'Cukup',
-            'catatan' => 'Beberapa kursi perlu dirapikan, namun secara fungsi siap digunakan.',
+            'kondisi' => 'Baik (8/10)',
+            'kebersihan' => 'Bersih',
+            'catatan' => 'Ruangan sangat luas, karpet baru saja dibersihkan.',
             'tgl_kirim' => '2026-05-11',
+            'status' => 'Pending' // Admin akan melihat tombol Setuju/Tolak
+        ],
+        (object)[
+            'id' => 103,
+            'room' => 'Diponegoro Suite',
+            'city' => 'Malang',
+            'floor' => 'Lantai 2',
+            'address' => 'Jl. Diponegoro No. 2, Kota Malang',
+            'fee' => 750000,
+            'deadline' => '2026-05-12',
+            'kondisi' => 'Sangat Baik (9/10)',
+            'kebersihan' => 'Sangat Bersih',
+            'catatan' => 'Siap digunakan untuk tamu VIP.',
+            'tgl_kirim' => '2026-05-09',
             'status' => 'Diterima'
         ],
         (object)[
-            'id' => 105, // ID ini yang tadi menyebabkan 404
+            'id' => 104,
             'room' => 'Studio Foto Malang',
             'city' => 'Malang',
+            'floor' => 'Lantai 1',
             'address' => 'Jl. Borobudur No. 12, Malang',
-            'fee' => 175000,
+            'fee' => 300000,
             'deadline' => '2026-05-20',
-            'priority' => 'Low',
-            'kondisi' => 'Cukup (5/10)',
+            'kondisi' => 'Kurang (5/10)',
             'kebersihan' => 'Kotor',
-            'catatan' => 'Banyak debu di area properti foto, perlu pembersihan menyeluruh sebelum disewakan.',
+            'catatan' => 'Banyak debu dan lampu beberapa mati.',
             'tgl_kirim' => '2026-05-08',
-            'status' => 'Revisi'
+            'status' => 'Ditolak' // Tombol cetak akan disable
         ],
     ]);
 
-    // 2. Pencarian data berdasarkan ID dari URL
+    // Pencarian data berdasarkan ID
     $job = $allJobs->firstWhere('id', $id);
 
-    // 3. Logic Bypass untuk Tes Visual
-    // Jika kamu memasukkan ID yang tidak ada di list (misal 999)
-    // sistem akan tetap menampilkan data agar tidak 404
+    // Bypass jika ID tidak ditemukan untuk kebutuhan tes visual
     if (!$job) {
-        $job = $allJobs->first(); // Default ambil data Kontena Hotel
+        $job = $allJobs->first();
     }
 
-    // 4. Kirim ke view
     return view('outsource.detail_history', compact('job', 'id'));
 }
 }
