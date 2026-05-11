@@ -6,7 +6,7 @@
                 <i class="bi bi-speedometer2 me-2"></i> Dashboard
             </a>
             <a href="/admin/acc_room" class="list-group-item list-group-item-action bg-dark text-white border-0 py-2">
-                <i class="bi bi-door-open me-2"></i> Pengajuan Ruangan
+                <i class="bi bi-door-open me-2"></i> Laporan Outsource
             </a>
             <a href="/admin/users" class="list-group-item list-group-item-action bg-dark text-white border-0 py-2">
                 <i class="fa fa-user-o me-2"></i> Daftar Pengguna

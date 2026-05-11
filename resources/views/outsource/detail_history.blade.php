@@ -6,7 +6,7 @@
         <div class="col-lg-10">
             
             <div class="d-flex align-items-center mb-4">
-                <a href="{{ route('outsource.history') }}" class="btn btn-light rounded-circle me-3 shadow-sm">
+                <a href="javascript:void(0)" onclick="history.back()" class="btn btn-light rounded-circle me-3 shadow-sm">
                     <i class="bi bi-arrow-left"></i>
                 </a>
                 <h4 class="fw-bold m-0">Detail Laporan #SRV-{{ $job->id }}</h4>
