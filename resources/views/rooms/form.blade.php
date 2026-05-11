@@ -236,7 +236,7 @@
 
                 <!-- Footer Tindakan -->
                 <div class="d-flex gap-2">
-                    <button type="submit" class="btn btn-primary px-5 py-3 rounded-pill fw-bold shadow-sm flex-grow-1">
+                    <button type="submit" class="btn btn-save btn-primary px-5 py-3 rounded-pill fw-bold shadow-sm flex-grow-1">
                         {{ isset($room) ? 'Simpan Perubahan' : 'Simpan & Publikasikan Ruangan' }}
                     </button>
                     <a href="{{ route('rooms.index') }}" class="btn btn-light px-4 py-3 rounded-pill fw-bold shadow-sm text-secondary border">

@@ -67,7 +67,7 @@
 @endsection
 
 @section('content')
-<div class="container-fluid py-4">
+<div class="container-fluid py-2">
     <nav aria-label="breadcrumb" class="mb-4">
         <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="{{ url('/admin/users') }}" class="text-decoration-none" style="color: #1e3a8a;">Daftar Pengguna</a></li>
@@ -85,7 +85,7 @@
                     </div>
                 </div>
 
-                <div class="card-body p-4 p-md-5">
+                <div class="card-body p-3 p-md-4">
                     <form action="{{ url('/admin/users/insert') }}" method="POST">
                         @csrf
                         
@@ -119,9 +119,10 @@
                                 <label for="role" class="form-label">Role Akses</label>
                                 <select class="form-select" id="role" name="role" required>
                                     <option value="" selected disabled>Pilih Hak Akses</option>
-                                    <option value="Admin">Admin</option>
-                                    <option value="Staff">Staff</option>
-                                    <option value="User">User</option>
+                                    <option value="admin">Admin</option>
+                                    <option value="penyedia">Penyedia</option>
+                                    <option value="penyewa">Penyewa</option>
+                                    <option value="outsource">Outsource</option>
                                 </select>
                             </div>
 

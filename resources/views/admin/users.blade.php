@@ -68,9 +68,9 @@
                 <p class="text-muted mb-0">Kelola hak akses dan data profil pengguna sistem</p>
             </div>
             <div class="col-12 col-lg-6 text-md-end mt-3 mt-md-0 header-action">
-                <button class="btn btn-primary rounded-pill px-4 shadow-sm fw-medium">
+                <a class="btn btn-primary rounded-pill px-4 shadow-sm fw-medium" href="{{ route('admin.formPeople') }}">
                     <i class="bi bi-person-plus-fill me-2"></i> Tambah Pengguna
-                </button>
+                </a>
             </div>
         </div>
 

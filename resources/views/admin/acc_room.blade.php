@@ -68,11 +68,6 @@
                 <h2 class="fw-bold mb-1">List Pengajuan Ruangan</h2>
                 <p class="text-muted mb-0">Kelola dan monitor status penyewaan unit</p>
             </div>
-            <div class="col-12 col-md-6 text-md-end mt-3 mt-md-0 header-action">
-                <button class="btn btn-primary rounded-pill px-4 shadow-sm fw-medium">
-                    <i class="bi bi-plus-lg me-2"></i> Tambah Ruangan
-                </button>
-            </div>
         </div>
 
         <!-- Stats Grid (Responsive: 1 col on Mobile, 2 on Tablet, 4 on Laptop) -->

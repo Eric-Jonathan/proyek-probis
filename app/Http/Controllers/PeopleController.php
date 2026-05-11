@@ -19,6 +19,10 @@ class PeopleController extends Controller
         return view('admin.users', compact('users', 'totalUser', 'totalActive', 'totalInactive'));
     }
 
+    public function formPeople(){
+        return view('admin.form_users');
+    }
+
     // Menambahkan data baru (Create)
     public function insertPeople(Request $request)
     {
@@ -38,7 +42,7 @@ class PeopleController extends Controller
             'status'   => 'Aktif',
         ]);
 
-        return redirect()->back()->with('success', 'People berhasil ditambahkan!');
+        return redirect()->route('admin.users');
     }
 
     // Mengubah data (Update)
