@@ -30,6 +30,21 @@
                 <i class="bi bi-door-open me-2"></i> Pesan Ruangan
             </a> --}}
         </div>
+    @elseif (Auth::user()->role == "outsource")
+        <div class="list-group list-group-flush">
+            <a href="/outsource" class="list-group-item list-group-item-action bg-dark text-white border-0 py-2">
+                <i class="bi bi-speedometer2 me-2"></i> Dashboard
+            </a>
+            <a href="{{ route('outsource.job') }}" class="list-group-item list-group-item-action bg-dark text-white border-0 py-2">
+                <i class="bi bi-door-open me-2"></i> List Job
+            </a>
+            <a href="{{ route('outsource.history') }}" class="list-group-item list-group-item-action bg-dark text-white border-0 py-2">
+                <i class="bi-clipboard-data me-2"></i> Riwayat Laporan
+            </a>
+            {{-- <a href="/room" class="list-group-item list-group-item-action bg-dark text-white border-0 py-2">
+                <i class="bi bi-door-open me-2"></i> Pesan Ruangan
+            </a> --}}
+        </div>
     @else
         <div class="list-group list-group-flush">
             <a href="/penyewa/dashboard" class="list-group-item list-group-item-action bg-dark text-white border-0 py-2">

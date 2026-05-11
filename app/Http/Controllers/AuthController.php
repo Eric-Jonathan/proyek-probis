@@ -47,6 +47,8 @@ class AuthController extends Controller
                 return redirect()->route('admin.dashboard');
             } elseif ($user->role == 'penyedia') {
                 return redirect()->route('penyedia.dashboard');
+            } elseif ($user->role == 'outsource') {
+                return redirect()->route('outsource.dashboard');
             } else {
                 return redirect()->route('penyewa.dashboard');
             }

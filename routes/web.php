@@ -7,6 +7,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PenyediaController;
 use App\Http\Controllers\PenyewaController;
 use App\Http\Controllers\RoomController;
+use App\Http\Controllers\OutsourceController;
 use App\Http\Controllers\RatingController;
 
 use Illuminate\Support\Facades\Route;
@@ -88,3 +89,17 @@ Route::get('/penyedia/report/{id}', [PenyediaController::class, 'report'])->name
 Route::post('/penyedia/report/store', function () {
     return redirect()->route('bookings.index')->with('success', 'Laporan penggunaan ruangan telah disimpan.');
 })->name('penyedia.report.store');
+
+Route::prefix('outsource')->name('outsource.')->group(function () {
+    
+    Route::get('/', [OutsourceController::class, 'index'])->name('dashboard');
+    Route::get('/form', [OutsourceController::class, 'form'])->name('form');
+    Route::get('/list_job', [OutsourceController::class, 'jobList'])->name('job');
+
+    // Halaman Tabel History
+    Route::get('/history', [OutsourceController::class, 'history'])->name('history');
+    
+    // Halaman Detail (Tambahkan {id} dan arahkan ke historyDetail)
+    Route::get('/history/{id}', [OutsourceController::class, 'historyDetail'])->name('history.detail');
+
+});
