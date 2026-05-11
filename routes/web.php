@@ -35,6 +35,7 @@ Route::get('/autocompleteLocation', [ApiController::class, 'autocompleteLocation
 Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/admin/dashboard', [AdminController::class, 'index'])->name('admin.dashboard');
     Route::get('/admin/acc_room', [AdminController::class, 'acc_room'])->name('admin.acc_room');
+    Route::get('/admin/assign_outsource', [AdminController::class, 'assign_outsource'])->name('admin.assign_outsource');
 
     Route::get('/admin/users', [PeopleController::class, 'people'])->name('admin.users');
     Route::post('/admin/users/insert', [PeopleController::class, 'insertPeople'])->name('users.insert');
@@ -56,6 +57,10 @@ Route::middleware(['auth', 'role:penyewa'])->group(function () {
     Route::post('/ratings/store', [RatingController::class, 'store'])->name('ratings.store');
 });
 
+Route::middleware(['auth', 'role:admin,outsource'])->group(function () {
+    Route::get('/outsource/history/{id}', [OutsourceController::class, 'historyDetail'])->name('outsource.history.detail');
+});
+
 Route::middleware(['auth', 'role:outsource'])->group(function () {
     Route::prefix('outsource')->name('outsource.')->group(function () {
         Route::get('/', [OutsourceController::class, 'index'])->name('dashboard');
@@ -64,10 +69,6 @@ Route::middleware(['auth', 'role:outsource'])->group(function () {
 
         // Halaman Tabel History
         Route::get('/history', [OutsourceController::class, 'history'])->name('history');
-        
-        // Halaman Detail (Tambahkan {id} dan arahkan ke historyDetail)
-        Route::get('/history/{id}', [OutsourceController::class, 'historyDetail'])->name('history.detail');
-
     });
 });
 

@@ -38,28 +38,62 @@
 <div class="content-wrapper py-3 px-4">
     
     <div class="mb-4">
-        <h2 class="fw-bold mb-1">Verifikasi Pengajuan Unit</h2>
-        <p class="text-muted mb-0">Pantau hasil survei lapangan dan tentukan kelayakan unit.</p>
+        <h2 class="fw-bold mb-1 text-dark">Verifikasi Pengajuan Unit</h2>
+        <p class="text-secondary mb-0">Pantau hasil survei lapangan dan tentukan kelayakan unit secara akurat.</p>
     </div>
 
     @php
-        // Data Dummy untuk Statistik & Tabel
+        /** * DATA DUMMY SINKRON DENGAN CONTROLLER 
+         * Menggunakan properti 'room' (bukan 'name') dan status (Diterima/Pending/Ditolak)
+         */
         $allRooms = collect([
-            (object)['id' => 101, 'name' => 'Cozy Meeting Room', 'floor' => 'Lantai 1', 'price' => '500.000', 'status' => 'pending', 'outsource' => 'Budi Santoso', 'rek' => 'Layak'],
-            (object)['id' => 102, 'name' => 'Grand Ballroom Kencana', 'floor' => 'Lantai 3', 'price' => '5.500.000', 'status' => 'pending', 'outsource' => 'Siti Aminah', 'rek' => 'Layak'],
-            (object)['id' => 103, 'name' => 'Diponegoro Suite', 'floor' => 'Lantai 2', 'price' => '750.000', 'status' => 'verified', 'outsource' => 'Budi Santoso', 'rek' => 'Layak'],
-            (object)['id' => 104, 'name' => 'Studio Foto Malang', 'floor' => 'Lantai 1', 'price' => '300.000', 'status' => 'rejected', 'outsource' => 'Siti Aminah', 'rek' => 'Tidak Layak'],
+            (object)[
+                'id' => 101, 
+                'room' => 'Cozy Meeting Room', 
+                'floor' => 'Lantai 1', 
+                'price' => '500.000', 
+                'status' => 'Diterima', 
+                'outsource' => 'Budi Santoso', 
+                'rek' => 'Layak'
+            ],
+            (object)[
+                'id' => 102, 
+                'room' => 'Grand Ballroom Kencana', 
+                'floor' => 'Lantai 3', 
+                'price' => '5.500.000', 
+                'status' => 'Pending', 
+                'outsource' => 'Siti Aminah', 
+                'rek' => 'Layak'
+            ],
+            (object)[
+                'id' => 103, 
+                'room' => 'Diponegoro Suite', 
+                'floor' => 'Lantai 2', 
+                'price' => '750.000', 
+                'status' => 'Diterima', 
+                'outsource' => 'Budi Santoso', 
+                'rek' => 'Layak'
+            ],
+            (object)[
+                'id' => 104, 
+                'room' => 'Studio Foto Malang', 
+                'floor' => 'Lantai 1', 
+                'price' => '300.000', 
+                'status' => 'Ditolak', 
+                'outsource' => 'Siti Aminah', 
+                'rek' => 'Tidak Layak'
+            ],
         ]);
 
         $stats = [
             ['label' => 'Total Pengajuan', 'val' => $allRooms->count(), 'color' => 'primary', 'icon' => 'bi-list-check'],
-            ['label' => 'Menunggu di Setujui', 'val' => $allRooms->where('status', 'pending')->count(), 'color' => 'warning', 'icon' => 'bi-clock-history'],
-            ['label' => 'Disetujui', 'val' => $allRooms->where('status', 'verified')->count(), 'color' => 'success', 'icon' => 'bi-check-all'],
-            ['label' => 'Ditolak', 'val' => $allRooms->where('status', 'rejected')->count(), 'color' => 'danger', 'icon' => 'bi-x-circle'],
+            ['label' => 'Menunggu di Setujui', 'val' => $allRooms->where('status', 'Pending')->count(), 'color' => 'warning', 'icon' => 'bi-clock-history'],
+            ['label' => 'Disetujui', 'val' => $allRooms->where('status', 'Diterima')->count(), 'color' => 'success', 'icon' => 'bi-check-all'],
+            ['label' => 'Ditolak', 'val' => $allRooms->where('status', 'Ditolak')->count(), 'color' => 'danger', 'icon' => 'bi-x-circle'],
         ];
 
-        $pendingRooms = $allRooms->where('status', 'pending');
-        $processedRooms = $allRooms->whereIn('status', ['verified', 'rejected']);
+        $pendingRooms = $allRooms->where('status', 'Pending');
+        $processedRooms = $allRooms->whereIn('status', ['Diterima', 'Ditolak']);
     @endphp
 
     <div class="row g-3 mb-5">
@@ -71,8 +105,8 @@
                         <i class="bi {{ $s['icon'] }} fs-4"></i>
                     </div>
                     <div>
-                        <small class="text-muted fw-medium d-block mb-1 small text-uppercase">{{ $s['label'] }}</small>
-                        <h4 class="fw-bold mb-0">{{ $s['val'] }}</h4>
+                        <small class="text-muted fw-medium d-block mb-1 small text-uppercase" style="font-size: 0.65rem;">{{ $s['label'] }}</small>
+                        <h4 class="fw-bold mb-0 text-dark">{{ $s['val'] }}</h4>
                     </div>
                 </div>
             </div>
@@ -87,82 +121,86 @@
 
     <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-5">
         <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-                <thead class="text-secondary text-center">
+            <table class="table table-hover align-middle mb-0 text-center">
+                <thead class="text-secondary text-uppercase" style="font-size: 0.7rem;">
                     <tr>
                         <th class="ps-4 text-start">Informasi Unit</th>
                         <th>Surveyor</th>
                         <th>Rekomendasi Mitra</th>
-                        <th>Status</th>
-                        <th class="pe-4">Tindakan</th>
+                        <th>Status Review</th>
+                        <th class="pe-4Action">Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach($pendingRooms as $room)
+                    @forelse($pendingRooms as $room)
                     <tr>
-                        <td class="ps-4 py-4">
-                            <div class="fw-bold text-dark">{{ $room->name }}</div>
+                        <td class="ps-4 py-4 text-start">
+                            <div class="fw-bold text-dark">{{ $room->room }}</div>
                             <small class="text-muted">{{ $room->floor }}</small>
                         </td>
-                        <td class="text-center small">{{ $room->outsource }}</td>
-                        <td class="text-center">
+                        <td class="small">{{ $room->outsource }}</td>
+                        <td>
                             <span class="badge {{ $room->rek == 'Layak' ? 'bg-success-soft' : 'bg-danger-soft' }} rounded-pill px-3 py-2 fw-medium">
                                 {{ $room->rek }}
                             </span>
                         </td>
-                        <td class="text-center">
-                            <span class="badge rounded-pill bg-warning-soft px-3 py-2 small fw-medium">Menunggu Disetujui</span>
+                        <td>
+                            <span class="badge rounded-pill bg-warning-soft px-3 py-2 small fw-medium">Pending Admin</span>
                         </td>
-                        <td class="text-center pe-4">
+                        <td class="pe-4 text-center">
                             <a href="{{ route('outsource.history.detail', $room->id) }}" class="btn btn-primary btn-sm rounded-pill px-4 fw-bold shadow-sm">
                                 <i class="bi bi-shield-check me-2"></i> Periksa
                             </a>
                         </td>
                     </tr>
-                    @endforeach
+                    @empty
+                    <tr><td colspan="5" class="py-4 text-muted small">Tidak ada laporan yang menunggu persetujuan.</td></tr>
+                    @endforelse
                 </tbody>
             </table>
         </div>
     </div>
 
     <div class="section-divider mt-5">
-        <h5 class="fw-bold mb-1">Histori Keputusan</h5>
-        <p class="small text-muted mb-0">Daftar pengajuan yang sudah Anda Terima atau Tolak.</p>
+        <h5 class="fw-bold mb-1">Histori Keputusan Laporan</h5>
+        <p class="small text-muted mb-0">Arsip pengajuan yang sudah diproses oleh manajemen.</p>
     </div>
 
     <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
         <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-                <thead class="table-light text-center">
+            <table class="table table-hover align-middle mb-0 text-center">
+                <thead class="table-light text-secondary text-uppercase" style="font-size: 0.7rem;">
                     <tr>
                         <th class="ps-4 text-start">Informasi Unit</th>
-                        <th>Tarif / Hari</th>
+                        <th>Tarif Per Hari</th>
                         <th>Keputusan Akhir</th>
                         <th class="pe-4">Tindakan</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach($processedRooms as $room)
+                    @forelse($processedRooms as $room)
                     <tr>
-                        <td class="ps-4 py-4">
-                            <div class="fw-bold text-dark">{{ $room->name }}</div>
+                        <td class="ps-4 py-4 text-start">
+                            <div class="fw-bold text-dark">{{ $room->room }}</div>
                             <small class="text-muted">{{ $room->floor }}</small>
                         </td>
-                        <td class="text-center fw-bold">Rp {{ $room->price }}</td>
-                        <td class="text-center">
-                            @if($room->status == 'verified')
-                                <span class="badge rounded-pill bg-success-soft px-3 py-2 fw-medium">Disetujui</span>
+                        <td class="fw-bold text-dark">Rp {{ $room->price }}</td>
+                        <td>
+                            @if($room->status == 'Diterima')
+                                <span class="badge rounded-pill bg-success-soft px-3 py-2 fw-medium">Unit Disetujui</span>
                             @else
-                                <span class="badge rounded-pill bg-danger-soft px-3 py-2 fw-medium">Ditolak</span>
+                                <span class="badge rounded-pill bg-danger-soft px-3 py-2 fw-medium">Unit Ditolak</span>
                             @endif
                         </td>
-                        <td class="text-center pe-4">
-                            <a href="{{ route('outsource.history.detail', $room->id) }}" class="btn btn-outline-secondary btn-sm rounded-pill px-4 fw-medium border shadow-sm">
-                                <i class="bi bi-eye me-2"></i> Lihat Detail
+                        <td class="pe-4">
+                            <a href="{{ route('outsource.history.detail', $room->id) }}" class="btn btn-outline-secondary btn-sm rounded-pill px-4 fw-medium border shadow-sm text-decoration-none">
+                                <i class="bi bi-eye me-2"></i> Detail
                             </a>
                         </td>
                     </tr>
-                    @endforeach
+                    @empty
+                    <tr><td colspan="4" class="py-4 text-muted small">Belum ada histori pengajuan.</td></tr>
+                    @endforelse
                 </tbody>
             </table>
         </div>

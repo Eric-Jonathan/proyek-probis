@@ -16,8 +16,14 @@
         .bg-danger-soft { background-color: #fee2e2 !important; color: #b91c1c !important; }
         .bg-primary-soft { background-color: #e0e7ff !important; color: #4338ca !important; }
 
-        /* Card & Table Interaction */
-        .stat-card { transition: transform 0.2s ease, box-shadow 0.2s ease; }
+        .stat-card { 
+            border: none; 
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .stat-card:hover { 
+            transform: translateY(-5px); 
+            box-shadow: 0 10px 20px rgba(0,0,0,0.05) !important;
+        }
         
         .table thead th {
             font-size: 0.7rem;
@@ -85,7 +91,7 @@
                 ];
             @endphp
             @foreach($stats as $stat)
-            <div class="col-12 col-md-4">
+            <div class="col-12 col-lg-4">
                 <div class="card border-0 shadow-sm rounded-4 p-3 h-100 stat-card">
                     <div class="d-flex align-items-center">
                         <div class="bg-{{ $stat['color'] }} bg-opacity-10 text-{{ $stat['color'] }} rounded-3 p-3 me-3">
