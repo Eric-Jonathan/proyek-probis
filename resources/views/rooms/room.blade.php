@@ -10,7 +10,7 @@
         </div>
         <a href="{{ route('rooms.create') }}" class="btn btn-primary px-4 rounded-pill shadow-sm">
             <i class="bi bi-plus-circle me-2"></i>Tambah Ruangan Baru
-        </a>    
+        </a>
     </div>
 
     {{-- Stats Cards: col-6 pada HP, col-md-3 pada Desktop --}}

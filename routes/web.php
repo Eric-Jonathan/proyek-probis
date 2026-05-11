@@ -21,14 +21,13 @@ Route::get('/', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
 
 Route::get('/rooms', [RoomController::class, 'index'])->name('rooms.index');
-Route::get('/rooms/{id}', [RoomController::class, 'show'])->name('rooms.show');
 Route::get('/rooms/create', [RoomController::class, 'create'])->name('rooms.create');
 Route::post('/rooms', [RoomController::class, 'store'])->name('rooms.store');
+Route::get('/rooms/{id}/transaction', [RoomController::class, 'transaction'])->name('rooms.transaction');
 Route::get('/rooms/{room}/edit', [RoomController::class, 'edit'])->name('rooms.edit');
+Route::get('/rooms/{id}', [RoomController::class, 'show'])->name('rooms.show');
 Route::put('/rooms/{room}', [RoomController::class, 'update'])->name('rooms.update');
 Route::delete('/rooms/{room}', [RoomController::class, 'destroy'])->name('rooms.destroy');
-Route::get('/rooms/{id}/transaction', [RoomController::class, 'transaction'])
-    ->name('rooms.transaction');
 
 Route::get('/autocompleteLocation', [ApiController::class, 'autocompleteLocation'])->name('autocompleteLocation');
 
