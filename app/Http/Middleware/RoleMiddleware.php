@@ -10,20 +10,24 @@ use Symfony\Component\HttpFoundation\Response;
 class RoleMiddleware
 {
     /**
-     * Handle an incoming request.
-     *
-     * @param  Closure(Request): (Response)  $next
-     */
-    public function handle(Request $request, Closure $next, string $role): Response
-    {
-        if (!Auth::check()) {
-            return redirect()->route('login');
-        }
-
-        if (Auth::user()->role !== $role) {
-            abort(403);
-        }
-        
-        return $next($request);
+ * Handle an incoming request.
+ *
+ * @param  \Illuminate\Http\Request  $request
+ * @param  \Closure  $next
+ * @param  string  ...$roles  <-- Dokumentasi PHPDoc untuk array of strings
+ * @return \Symfony\Component\HttpFoundation\Response
+ */
+public function handle(Request $request, Closure $next, string ...$roles): Response
+{
+    if (!Auth::check()) {
+        return redirect()->route('login');
     }
+
+    // $roles di sini akan otomatis menjadi array berisi string
+    if (!in_array(Auth::user()->role, $roles)) {
+        abort(403, 'Unauthorized role.');
+    }
+
+    return $next($request);
+}
 }
