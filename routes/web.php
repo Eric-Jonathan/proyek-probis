@@ -48,6 +48,7 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
 
 Route::middleware(['auth', 'role:penyedia'])->group(function () {
     Route::get('/penyedia/dashboard', [PenyediaController::class, 'index'])->name('penyedia.dashboard');
+    Route::get('/penyedia/history/{id}', [PenyediaController::class, 'detail_history'])->name('penyedia.detail_history');
 });
 
 Route::middleware(['auth', 'role:penyewa'])->group(function () {

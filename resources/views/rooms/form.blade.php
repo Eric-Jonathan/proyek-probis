@@ -12,6 +12,64 @@
         .btn-primary { background-color: #0064D2; border: none; transition: all 0.3s ease; }
         .btn-primary:hover { background-color: #0056b3; transform: translateY(-2px); }
         label.small { letter-spacing: 0.5px; color: #495057; }
+
+        .facility-label {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 1.25rem;
+    border-radius: 16px;
+    background-color: #ffffff;
+    border: 1px solid #e2e8f0;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+}
+
+/* State: Hover (Efek melayang halus) */
+.facility-label:hover {
+    transform: translateY(-4px);
+    border-color: #0064D2;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+}
+
+/* State: Terpilih (Checked) */
+.btn-check:checked + .facility-label {
+    background-color: #f0f7ff !important; /* Biru sangat muda yang segar */
+    border: 2px solid #0064D2 !important; /* Border lebih tebal */
+    box-shadow: 0 0 0 1px #0064D2, 0 8px 16px rgba(0, 100, 210, 0.12) !important;
+    transform: translateY(-2px) scale(1.02);
+}
+
+/* Styling Ikon saat Terpilih */
+.btn-check:checked + .facility-label i {
+    color: #0064D2 !important;
+    transform: scale(1.1);
+}
+
+/* Styling Teks saat Terpilih */
+.btn-check:checked + .facility-label span {
+    color: #0056b3 !important;
+    font-weight: 700;
+}
+
+/* Tambahan: Indikator centang kecil di pojok kanan atas (Opsional tapi Pro) */
+.btn-check:checked + .facility-label::after {
+    font-weight: 900;
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    color: #0064D2;
+    font-size: 0.9rem;
+}
+
+/* Transisi Dasar untuk Elemen Internal */
+.facility-label i, 
+.facility-label span {
+    transition: all 0.2s ease;
+}
     </style>
 @endsection
 
@@ -186,11 +244,42 @@
                             </div>
 
                             <!-- Peraturan -->
-                            <div class="col-12">
-                                <label class="form-label fw-bold small text-uppercase">Peraturan Khusus *</label>
-                                <div id="editor" style="height: 200px;"></div>
-                                <input type="hidden" name="rules" id="rules-input" value="{{ old('rules') }}">
-                                @error('rules') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            <div class="col-12 mt-5">
+                                <h5 class="fw-bold mb-3 border-start border-primary border-4 ps-3">Fasilitas Umum</h5>
+                                <p class="text-muted small mb-3">Klik untuk memilih fasilitas yang tersedia di ruangan ini.</p>
+                                
+                                <div class="row g-3">
+                                    @php
+                                        $facilities = [
+                                            ['id' => 'ac', 'label' => 'AC Central', 'icon' => 'bi-snow'],
+                                            ['id' => 'wifi', 'label' => 'Free Wi-Fi', 'icon' => 'bi-wifi'],
+                                            ['id' => 'sound', 'label' => 'Sound System', 'icon' => 'bi-speaker'],
+                                            ['id' => 'mic', 'label' => 'Wireless Mic', 'icon' => 'bi-mic'],
+                                            ['id' => 'projector', 'label' => 'Projector', 'icon' => 'bi-projector'],
+                                            ['id' => 'led_wall', 'label' => 'LED Wall', 'icon' => 'bi-display'],
+                                            ['id' => 'parking', 'label' => 'Area Parkir', 'icon' => 'bi-p-circle'],
+                                            ['id' => 'restroom', 'label' => 'Restroom Executive', 'icon' => 'bi-door-closed'], // Perubahan Ikon & Label
+                                            ['id' => 'musholla', 'label' => 'Musholla', 'icon' => 'bi-moon-stars'],
+                                            ['id' => 'vip_room', 'label' => 'Holding Room', 'icon' => 'bi-person-workspace'],
+                                            ['id' => 'stage', 'label' => 'Panggung', 'icon' => 'bi-layers'],
+                                            ['id' => 'cctv', 'label' => 'Keamanan CCTV', 'icon' => 'bi-camera-video'],
+                                        ];
+                                        $selected = old('facilities', isset($room) ? $room->facilities->pluck('id')->toArray() : []);
+                                    @endphp
+
+                                    @foreach($facilities as $f)
+                                        <div class="col-6 col-md-4 col-lg-3">
+                                            <input type="checkbox" name="facilities[]" value="{{ $f['id'] }}" 
+                                                   class="btn-check" id="fac-{{ $f['id'] }}"
+                                                   {{ in_array($f['id'], $selected) ? 'checked' : '' }}>
+                                            <label class="btn btn-outline-light text-dark border shadow-sm w-100 py-3 d-flex flex-column align-items-center gap-2 rounded-4 facility-label" 
+                                                   for="fac-{{ $f['id'] }}">
+                                                <i class="bi {{ $f['icon'] }} fs-3 text-primary"></i>
+                                                <span class="fw-bold text-center">{{ $f['label'] }}</span>
+                                            </label>
+                                        </div>
+                                    @endforeach
+                                </div>
                             </div>
 
                             <!-- Upload Gambar -->

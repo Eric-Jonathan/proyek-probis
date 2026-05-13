@@ -17,6 +17,10 @@ class PenyediaController extends Controller
         return view('penyedia.form');
     }
 
+    public function detail_history($id) {
+        return view('penyedia.detail_history', compact('id'));
+    }
+
     public function show_booking(Request $request) {
         $penyediaId = auth::id();
 

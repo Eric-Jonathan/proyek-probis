@@ -1,142 +1,147 @@
 @extends('layout.layout')
 
-@section('custom_css')
-    <style>
-        /* Desain Header Form - Biru Muda Soft sesuai Tema */
-        .card-header-form {
-            background-color: #dbeafe !important;
-            border-bottom: 1px solid #bfdbfe !important;
-            padding: 1.25rem 1.5rem !important;
-        }
-        
-        .card-header-form h5 {
-            color: #1e3a8a !important;
-            font-weight: 700;
-            margin-bottom: 0;
-            font-size: 1.1rem;
-        }
-
-        /* Styling Input agar Clean */
-        .form-label {
-            font-size: 0.85rem;
-            font-weight: 600;
-            color: #475569;
-            margin-bottom: 0.5rem;
-        }
-
-        .form-control, .form-select {
-            border: 1px solid #e2e8f0;
-            padding: 0.75rem 1rem;
-            border-radius: 0.6rem;
-            font-size: 0.9rem;
-            background-color: #fcfcfd;
-            transition: all 0.2s ease;
-        }
-
-        .form-control:focus, .form-select:focus {
-            background-color: #ffffff;
-            border-color: #4338ca;
-            box-shadow: 0 0 0 4px rgba(67, 56, 202, 0.1);
-            outline: none;
-        }
-
-        /* Button Styling */
-        .btn-save {
-            background-color: #1e3a8a !important;
-            border: none;
-            padding: 0.75rem 2rem;
-            border-radius: 0.6rem;
-            font-weight: 600;
-            transition: all 0.2s;
-        }
-
-        .btn-save:hover {
-            background-color: #172554 !important;
-            transform: translateY(-1px);
-        }
-
-        .btn-cancel {
-            background-color: #f1f5f9;
-            color: #64748b;
-            border: none;
-            padding: 0.75rem 2rem;
-            border-radius: 0.6rem;
-            font-weight: 600;
-        }
-    </style>
-@endsection
-
 @section('content')
-<div class="container-fluid py-2">
-    <nav aria-label="breadcrumb" class="mb-4">
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="{{ url('/admin/users') }}" class="text-decoration-none" style="color: #1e3a8a;">Daftar Pengguna</a></li>
-            <li class="breadcrumb-item active" aria-current="page">Tambah Pengguna</li>
-        </ol>
-    </nav>
-
+<div class="container py-2">
     <div class="row justify-content-center">
-        <div class="col-lg-8">
-            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
-                <div class="card-header-form">
-                    <div class="d-flex align-items-center">
-                        <i class="bi bi-person-plus-fill me-2 fs-5" style="color: #1e3a8a;"></i>
-                        <h5>Tambah Pengguna</h5>
+        <div class="col-lg-10">
+            
+            {{-- Header Navigasi --}}
+            <div class="d-flex align-items-center mb-4">
+                <a href="javascript:history.back()" class="btn btn-light rounded-circle me-3 shadow-sm border">
+                    <i class="bi bi-arrow-left"></i>
+                </a>
+                <div>
+                    <h3 class="fw-bold mb-0">Tambah Pengguna Baru</h3>
+                    <p class="text-secondary mb-0">Kelola akses sistem dengan mendaftarkan entitas baru ke dalam platform</p>
+                </div>
+            </div>
+
+            <form action="{{ url('/admin/users/insert') }}" method="POST">
+                @csrf
+                
+                {{-- Card Header Gradien --}}
+                <div class="card border-0 shadow-sm mb-4" style="border-radius: 15px; background: linear-gradient(135deg, #0064D2 0%, #004a99 100%);">
+                    <div class="card-body p-4 text-white">
+                        <div class="d-flex align-items-center">
+                            <div class="me-3 fs-1">
+                                <i class="bi bi-person-plus-fill"></i>
+                            </div>
+                            <div>
+                                <h5 class="fw-bold mb-1">Manajemen Hak Akses</h5>
+                                <p class="mb-0 small opacity-75">Pastikan email dan role yang dipilih sesuai untuk menjaga keamanan integritas data sistem.</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <div class="card-body p-3 p-md-4">
-                    <form action="{{ url('/admin/users/insert') }}" method="POST">
-                        @csrf
+                {{-- Card Body Form --}}
+                <div class="card border-0 shadow-sm mb-4" style="border-radius: 15px;">
+                    <div class="card-body p-4">
+                        <h5 class="fw-bold mb-4 border-start border-primary border-4 ps-3">Informasi Akun</h5>
                         
                         <div class="row g-4">
                             <div class="col-md-6">
-                                <label for="username" class="form-label">Username</label>
-                                <input type="text" class="form-control" id="username" name="username" placeholder="Masukkan username" required>
+                                <label class="form-label small text-uppercase fw-bold">Username *</label>
+                                <input type="text" name="username" class="form-control bg-light border-0 py-2" placeholder="Masukkan username" required>
                             </div>
 
                             <div class="col-md-6">
-                                <label for="email" class="form-label">Alamat Email</label>
-                                <input type="email" class="form-control" id="email" name="email" placeholder="contoh@email.com" required>
+                                <label class="form-label small text-uppercase fw-bold">Alamat Email *</label>
+                                <input type="email" name="email" class="form-control bg-light border-0 py-2" placeholder="contoh@email.com" required>
                             </div>
 
-                            <div class="col-md-12">
-                                <label for="password" class="form-label">Password</label>
+                            <div class="col-md-6">
+                                <label class="form-label small text-uppercase fw-bold">Password *</label>
                                 <div class="input-group">
-                                    <input type="password" class="form-control border-end-0" id="password" name="password" placeholder="Minimal 6 karakter" required>
-                                    <span class="input-group-text bg-transparent border-start-0" style="cursor: pointer;">
+                                    <input type="password" name="password" id="password" class="form-control bg-light border-0 py-2" placeholder="Minimal 6 karakter" required>
+                                    <span class="input-group-text bg-light border-0" style="cursor: pointer;" id="togglePassword">
                                         <i class="bi bi-eye-slash text-muted"></i>
                                     </span>
                                 </div>
                             </div>
 
                             <div class="col-md-6">
-                                <label for="phone" class="form-label">Nomor Telepon</label>
-                                <input type="text" class="form-control" id="phone" name="phone" placeholder="0812xxxxxx">
+                                <label class="form-label small text-uppercase fw-bold">Nomor Telepon</label>
+                                <input type="text" name="phone" class="form-control bg-light border-0 py-2" placeholder="0812xxxxxx">
                             </div>
 
+                            <hr class="my-4 opacity-25">
+                            <h5 class="fw-bold mb-2 border-start border-success border-4 ps-3 text-success">Level Akses & Organisasi</h5>
+
                             <div class="col-md-6">
-                                <label for="role" class="form-label">Role Akses</label>
-                                <select class="form-select" id="role" name="role" required>
+                                <label class="form-label small text-uppercase fw-bold">Role Akses *</label>
+                                <select name="role" id="role" class="form-select bg-light border-0 py-2" required>
                                     <option value="" selected disabled>Pilih Hak Akses</option>
                                     <option value="admin">Admin</option>
                                     <option value="penyedia">Penyedia</option>
                                     <option value="penyewa">Penyewa</option>
-                                    <option value="outsource">Outsource</option>
+                                    <option value="outsource">Outsource (Surveyor)</option>
                                 </select>
                             </div>
 
-                            <div class="col-12 mt-5 d-flex justify-content-end gap-2">
-                                <a href="{{ url('/admin/users') }}" class="btn btn-cancel">Batal</a>
-                                <button type="submit" class="btn btn-primary btn-save text-white shadow-sm">
-                                    <i class="bi bi-check2-circle me-2"></i>Simpan Data
-                                </button>
+                            {{-- Dropdown Company - Muncul jika role outsource dipilih --}}
+                            <div class="col-md-6" id="company_field" style="display: none;">
+                                <label class="form-label small text-uppercase fw-bold">Perusahaan (Company) *</label>
+                                <select name="company" id="company" class="form-select bg-light border-0 py-2">
+                                    <option value="" selected disabled>Pilih Perusahaan</option>
+                                    <option value="DNet">DNet</option>
+                                    <option value="Lintasarta">Lintasarta</option>
+                                    <option value="Telkom">Telkom</option>
+                                </select>
                             </div>
                         </div>
-                    </form>
+                    </div>
                 </div>
-            </div>
+
+                {{-- Action Buttons --}}
+                <div class="d-flex gap-2 mb-5">
+                    <button type="submit" class="btn btn-primary px-5 py-3 rounded-pill fw-bold shadow-sm flex-grow-1">
+                        Simpan Data Pengguna <i class="bi bi-check-circle-fill ms-2"></i>
+                    </button>
+                    <a href="{{ url('/admin/users') }}" class="btn btn-light px-4 py-3 rounded-pill fw-bold shadow-sm text-secondary border">
+                        Batal
+                    </a>
+                </div>
+            </form>
         </div>
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const roleSelect = document.getElementById('role');
+        const companyField = document.getElementById('company_field');
+        const companySelect = document.getElementById('company');
+        const togglePassword = document.getElementById('togglePassword');
+        const passwordInput = document.getElementById('password');
+
+        // Logika Tampil/Sembunyi Dropdown Company
+        roleSelect.addEventListener('change', function () {
+            if (this.value === 'outsource') {
+                companyField.style.display = 'block';
+                companySelect.setAttribute('required', 'required');
+            } else {
+                companyField.style.display = 'none';
+                companySelect.removeAttribute('required');
+                companySelect.value = ""; 
+            }
+        });
+
+        // Toggle Show/Hide Password
+        togglePassword.addEventListener('click', function () {
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            this.querySelector('i').classList.toggle('bi-eye');
+            this.querySelector('i').classList.toggle('bi-eye-slash');
+        });
+    });
+</script>
+
+<style>
+    .form-control:focus, .form-select:focus {
+        background-color: #fff !important;
+        border: 1px solid #0064D2 !important;
+        box-shadow: none;
+    }
+</style>
 @endsection
