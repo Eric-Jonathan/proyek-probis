@@ -147,7 +147,8 @@
                                 <input type="text" 
                                     id="address-search" 
                                     class="form-control bg-light py-2" 
-                                    data-url="{{ route('autocompleteLocation') }}" 
+                                    data-url="{{ route('autocompleteLocation') }}"
+                                    value="{{ old('location', isset($room) ? $room->location : '') }}"
                                     placeholder="Cari lokasi..."
                                     autocomplete="off">
                                 
@@ -158,9 +159,9 @@
 
                                 <div id="autocomplete-results" class="list-group position-absolute w-100 shadow-sm" style="z-index: 1050; max-height: 250px; overflow-y: auto;"></div>
                                 
-                                <input type="hidden" name="latitude" id="lat">
-                                <input type="hidden" name="longitude" id="lon">
-                                <input type="hidden" name="location" id="full-address">
+                                <input type="hidden" name="latitude" id="latitude-input" value="{{ old('latitude', isset($room) ? $room->latitude : '') }}">
+                                <input type="hidden" name="longitude" id="longitude-input" value="{{ old('longitude', isset($room) ? $room->longitude : '') }}">
+                                <input type="hidden" name="location" id="full-address" value="{{ old('location', isset($room) ? $room->location : '') }}">
                             </div>
 
                             <!-- Kapasitas -->
@@ -244,65 +245,122 @@
                             </div>
 
                             <!-- Peraturan -->
+                            <div class="col-12">
+                                <label class="form-label fw-bold small text-uppercase">Peraturan Khusus *</label>
+                                <div id="editor" style="height: 200px;"></div>
+                                <input type="hidden" name="rules" id="rules-input" value="{{ old('rules', isset($room) ? $room->rules : '') }}">
+                                @error('rules') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            </div>
+
+                            {{-- Fasilitas --}}
                             <div class="col-12 mt-5">
-                                <h5 class="fw-bold mb-3 border-start border-primary border-4 ps-3">Fasilitas Umum</h5>
-                                <p class="text-muted small mb-3">Klik untuk memilih fasilitas yang tersedia di ruangan ini.</p>
+                                <label class="form-label fw-bold medium text-uppercase">Fasilitas Umum</label>
+                                <p class="text-muted small mb-3">Klik untuk memilih fasilitas yang tersedia di ruangan ini atau tambahkan fasilitas kustom Anda sendiri.</p>
                                 
-                                <div class="row g-3">
+                                <div class="row g-3" id="dynamic-facilities-container">
                                     @php
-                                        $facilities = [
-                                            ['id' => 'ac', 'label' => 'AC Central', 'icon' => 'bi-snow'],
-                                            ['id' => 'wifi', 'label' => 'Free Wi-Fi', 'icon' => 'bi-wifi'],
-                                            ['id' => 'sound', 'label' => 'Sound System', 'icon' => 'bi-speaker'],
-                                            ['id' => 'mic', 'label' => 'Wireless Mic', 'icon' => 'bi-mic'],
-                                            ['id' => 'projector', 'label' => 'Projector', 'icon' => 'bi-projector'],
-                                            ['id' => 'led_wall', 'label' => 'LED Wall', 'icon' => 'bi-display'],
-                                            ['id' => 'parking', 'label' => 'Area Parkir', 'icon' => 'bi-p-circle'],
-                                            ['id' => 'restroom', 'label' => 'Restroom Executive', 'icon' => 'bi-door-closed'], // Perubahan Ikon & Label
-                                            ['id' => 'musholla', 'label' => 'Musholla', 'icon' => 'bi-moon-stars'],
-                                            ['id' => 'vip_room', 'label' => 'Holding Room', 'icon' => 'bi-person-workspace'],
-                                            ['id' => 'stage', 'label' => 'Panggung', 'icon' => 'bi-layers'],
-                                            ['id' => 'cctv', 'label' => 'Keamanan CCTV', 'icon' => 'bi-camera-video'],
+                                        // 1. Daftar fasilitas default/master aplikasi
+                                        $masterFacilities = [
+                                            ['id' => 'ac', 'label' => 'AC'],
+                                            ['id' => 'wifi', 'label' => 'Free Wi-Fi'],
+                                            ['id' => 'sound', 'label' => 'Sound System'],
+                                            ['id' => 'mic', 'label' => 'Wireless Mic'],
+                                            ['id' => 'projector', 'label' => 'Proyektor'],
+                                            ['id' => 'snack', 'label' => 'Snack'],
+                                            ['id' => 'galon', 'label' => 'Galon'],
+                                            ['id' => 'parking', 'label' => 'Area Parkir'],
+                                            ['id' => 'musholla', 'label' => 'Musholla'],
+                                            ['id' => 'stage', 'label' => 'Panggung'],
+                                            ['id' => 'cctv', 'label' => 'Keamanan CCTV'],
                                         ];
-                                        $selected = old('facilities', isset($room) ? $room->facilities->pluck('id')->toArray() : []);
+
+                                        // 2. Ambil data yang sudah terpilih di DB (atau dari old input jika validasi gagal)
+                                        if (old('facilities')) {
+                                            $selectedFacilities = old('facilities');
+                                        } elseif (isset($room)) {
+                                            // Ambil semua nama fasilitas yang terikat dengan room ini
+                                            $selectedFacilities = $room->facilities->pluck('name')->toArray();
+                                        } else {
+                                            $selectedFacilities = [];
+                                        }
+
+                                        // Ambil array berisi list label/nama dari master agar mudah memisahkan data kustom
+                                        $masterLabels = array_column($masterFacilities, 'label');
                                     @endphp
 
-                                    @foreach($facilities as $f)
-                                        <div class="col-6 col-md-4 col-lg-3">
-                                            <input type="checkbox" name="facilities[]" value="{{ $f['id'] }}" 
-                                                   class="btn-check" id="fac-{{ $f['id'] }}"
-                                                   {{ in_array($f['id'], $selected) ? 'checked' : '' }}>
+                                    {{-- Loop 1: Tampilkan Fasilitas Master (Otomatis Checked jika ada di DB) --}}
+                                    @foreach($masterFacilities as $f)
+                                        <div class="col-6 col-md-4 col-lg-3 facility-item-wrapper">
+                                            <input type="checkbox" name="facilities[]" value="{{ $f['label'] }}" 
+                                                class="btn-check" id="fac-{{ $f['id'] }}"
+                                                {{ in_array($f['label'], $selectedFacilities) ? 'checked' : '' }}>
                                             <label class="btn btn-outline-light text-dark border shadow-sm w-100 py-3 d-flex flex-column align-items-center gap-2 rounded-4 facility-label" 
-                                                   for="fac-{{ $f['id'] }}">
-                                                <i class="bi {{ $f['icon'] }} fs-3 text-primary"></i>
+                                                for="fac-{{ $f['id'] }}">
                                                 <span class="fw-bold text-center">{{ $f['label'] }}</span>
                                             </label>
                                         </div>
                                     @endforeach
+
+                                    {{-- Loop 2: Autofill Fasilitas Kustom (Jika nama fasilitas tidak ada di daftar master, cetak otomatis di sini) --}}
+                                    @foreach($selectedFacilities as $savedFacility)
+                                        @if(!in_array($savedFacility, $masterLabels))
+                                            @php $cleanId = 'custom-' . Str::slug($savedFacility); @endphp
+                                            <div class="col-6 col-md-4 col-lg-3 facility-item-wrapper">
+                                                <input type="checkbox" name="facilities[]" value="{{ $savedFacility }}" 
+                                                    class="btn-check" id="fac-{{ $cleanId }}" checked>
+                                                <label class="btn btn-outline-light text-dark border shadow-sm w-100 py-3 d-flex flex-column align-items-center gap-2 rounded-4 facility-label" 
+                                                    for="fac-{{ $cleanId }}">
+                                                    <span class="fw-bold text-center">{{ $savedFacility }}</span>
+                                                </label>
+                                            </div>
+                                        @endif
+                                    @endforeach
+
+                                    {{-- Tombol Trigger Tambah Fasilitas Lainnya --}}
+                                    <div class="col-6 col-md-4 col-lg-3" id="btn-add-facility-wrapper">
+                                        <button type="button" 
+                                                class="btn btn-outline-dashed border-primary text-primary w-100 py-3 d-flex flex-column align-items-center justify-content-center gap-2 rounded-4 h-100" 
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#customFacilityModal"
+                                                style="border-style: dashed !important; background: transparent;">
+                                            <span class="fw-bold text-center">+ Fasilitas Lainnya</span>
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
 
-                            <!-- Upload Gambar -->
+                            {{-- Upload gambar --}}
                             <div class="col-12">
-                                <label class="form-label fw-bold small text-uppercase">Foto Ruangan</label>
+                                <label class="form-label fw-bold medium text-uppercase">Foto Ruangan</label>
                                 
                                 {{-- 1. Tampilkan foto lama (Mode Edit) --}}
                                 @if(isset($room) && $room->images->count() > 0)
-                                    <div class="d-flex flex-wrap gap-2 mb-3">
+                                    <div class="d-flex flex-wrap gap-3 mb-3" id="old-images-container">
                                         @foreach($room->images as $img)
-                                            <div class="position-relative">
-                                                {{-- Langsung panggil path dari database --}}
+                                            {{-- Tambahkan id atau class khusus untuk target Javascript --}}
+                                            <div class="position-relative old-image-wrapper" id="image-card-{{ $img->image_id }}">
                                                 <img src="{{ asset($img->path) }}" class="rounded shadow-sm" style="width: 100px; height: 80px; object-fit: cover;">
-                                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-secondary">Lama</span>
+                                                
+                                                {{-- Tombol Silang Hapus Foto --}}
+                                                <button type="button" 
+                                                        class="position-absolute top-0 start-100 translate-middle badge rounded-circle bg-danger border border-white text-white p-1 btn-delete-old-image" 
+                                                        data-image-id="{{ $img->image_id }}"
+                                                        style="cursor: pointer; font-size: 0.75rem; line-height: 1; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; border: none;">
+                                                    &times;
+                                                </button>
                                             </div>
                                         @endforeach
                                     </div>
+
+                                    {{-- Tempat input hidden untuk menampung ID foto yang dihapus --}}
+                                    <div id="deleted-images-inputs"></div>
+
                                     <div class="alert alert-info py-2 small">
-                                        <i class="bi bi-info-circle me-1"></i> Foto baru akan ditambahkan ke koleksi yang sudah ada.
+                                        <i class="bi bi-info-circle me-1"></i> Foto baru akan ditambahkan ke koleksi, dan foto yang disilang akan dihapus saat disimpan.
                                     </div>
                                 @endif
 
-                                {{-- 2. Input File (Jangan masukkan preview ke sini) --}}
+                                {{-- 2. Input File --}}
                                 <div class="input-group">
                                     <input type="file" 
                                         name="images[]" 
@@ -316,7 +374,7 @@
                                 
                                 @error('images.*') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
 
-                                {{-- 3. Container untuk Preview Foto Baru (DI LUAR input-group) --}}
+                                {{-- 3. Container untuk Preview Foto Baru --}}
                                 <div id="preview-container" class="d-flex flex-wrap gap-3 mt-3"></div>
                             </div>
                         </div>
@@ -333,6 +391,24 @@
                     </a>
                 </div>
             </form>
+        </div>
+    </div>
+</div>
+
+{{-- Modal insert Fasilitas --}}
+<div class="modal fade" id="customFacilityModal" data-bs-backdrop="static" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-md">
+        <div class="modal-content border-0 shadow" style="border-radius: 15px;">
+            <div class="modal-body p-4">
+                <h6 class="fw-bold mb-3">Tambah Fasilitas Baru</h6>
+                <input type="text" id="custom-facility-input" class="form-control bg-light" placeholder="Nama fasilitas... (misal: Kursi Tambahan)">
+                <div class="d-flex gap-2 mt-3 justify-content-end">
+                    {{-- Tombol Batal --}}
+                    <button type="button" class="btn btn-light rounded-pill btn-sm px-3" data-bs-dismiss="modal" id="btn-close-modal-facility">Batal</button>
+                    {{-- Tombol Tambat --}}
+                    <button type="button" id="btn-confirm-add-facility" class="btn btn-primary rounded-pill btn-sm px-3">Tambah</button>
+                </div>
+            </div>
         </div>
     </div>
 </div>

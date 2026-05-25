@@ -17,7 +17,7 @@ public function index(Request $request)
     $userId = Auth::id(); 
 
     // Mulai query dengan filter user_id agar data tidak bocor antar penyedia
-    $query = Room::where('user_id', $userId);
+    $query = Room::where('user_id', $userId)->where('status', '>=', 0);
 
     // Filter Pencarian
     if ($request->filled('search')) {
@@ -125,6 +125,16 @@ public function index(Request $request)
             }
         }
 
+        if ($request->has('facilities')) {
+            foreach ($request->facilities as $facilityName) {
+                // Langsung insert baris baru yang mengikat ke room_id tersebut
+                $room->facilities()->create([
+                    'name'   => $facilityName,
+                    'status' => 1 // Status default aktif
+                ]);
+            }
+        }
+
         // Redirect dengan Flash Message
         return redirect()->route('rooms.index')
                         ->with('success', 'Ruangan berhasil dipublikasikan!');
@@ -162,30 +172,86 @@ public function index(Request $request)
  
     public function edit(Room $room)
     {
+        // Load relasi facilities dan images bawaan room
+        $room->load(['facilities', 'images']);
+        
         return view('rooms.form', compact('room'));
     }
     
     public function update(Request $request, Room $room)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'capacity' => 'required|integer|min:1',
-            'price' => 'required|numeric|min:0',
+            'name'            => 'required|string|max:255',
+            'capacity'        => 'required|integer|min:1',
+            'jenis_harga'     => 'required|string',
+            'price'           => 'required|numeric|min:0',
+            'min_order'       => 'required|integer|min:1',
+            'jenis_deposit'   => 'required|string',
             'deposit_percent' => 'nullable|integer|min:0|max:100',
-            'location' => 'required|string|max:255',
-            'rules' => 'nullable|string',
-            'description' => 'nullable|string',
-            'status' => 'required|integer|in:0,1,2',
+            'location'        => 'required|string',
+            'latitude'        => 'required|numeric',
+            'longitude'       => 'required|numeric',
+            'rules'           => 'nullable|string',
+            'description'     => 'nullable|string',
+            'status'          => 'required|in:1,2,3',
+            'facilities'      => 'nullable|array',
+            'deleted_images'  => 'nullable|array', // Validasi field penampung hapus foto
+            'images.*'        => 'image|mimes:jpg,jpeg,png|max:2048',
         ]);
 
+        // 1. Jalankan update data utama ruangan
         $room->update($validated);
 
-        return redirect()->route('rooms.index')
-            ->with('success', 'Ruangan berhasil diupdate!');
+        // 2. PROSES PENGHAPUSAN FOTO YANG DISILANG
+        if ($request->has('deleted_images')) {
+            foreach ($request->deleted_images as $imgId) {
+                // Cari model gambar terkait
+                $image = $room->images()->where('image_id', $imgId)->first();
+                
+                if ($image) {
+                    // Hapus file fisik dari folder public/rooms jika file eksis
+                    $filePath = public_path($image->path);
+                    if (file_exists($filePath)) {
+                        @unlink($filePath);
+                    }
+                    
+                    // Hapus baris dari database
+                    $image->delete();
+                }
+            }
+        }
+
+        // 3. PROSES UPLOAD FOTO BARU (Jika ada)
+        if ($request->hasFile('images')) {
+            foreach ($request->file('images') as $image) {
+                $fileName = time() . '_' . $image->getClientOriginalName();
+                $image->move(public_path('rooms'), $fileName);
+                
+                $room->images()->create([
+                    'path' => 'rooms/' . $fileName
+                ]);
+            }
+        }
+
+        // 4. Sinkronisasi fasilitas (Gunakan logika sinkronisasi sebelumnya)
+        if ($request->has('facilities')) {
+            $room->facilities()->whereNotIn('name', $request->facilities)->delete();
+            foreach ($request->facilities as $facilityName) {
+                $room->facilities()->firstOrCreate([
+                    'name' => $facilityName,
+                    'status' => 1
+                ]);
+            }
+        } else {
+            $room->facilities()->delete();
+        }
+
+        return redirect()->route('rooms.index')->with('success', 'Ruangan berhasil diperbarui!');
     }
+    
     public function destroy(Room $room)
     {
-        $room->delete();
+        $room->update(['status' => -1]);
 
         return redirect()->route('rooms.index')
             ->with('success', 'Ruangan berhasil dihapus!');
