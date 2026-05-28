@@ -164,8 +164,19 @@
                                 <input type="hidden" name="location" id="full-address" value="{{ old('location', isset($room) ? $room->location : '') }}">
                             </div>
 
-                            <!-- Kapasitas -->
-                            <div class="col-md-4">
+                            <!-- Minim Hari Booking -->
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold small text-uppercase">Minimal Hari Booking *</label>
+                                <div class="input-group">
+                                    <input type="number" name="day" class="form-control py-2 @error('day') is-invalid @enderror" 
+                                        value="{{ old('day', $room->day ?? 1) }}">
+                                    <span class="input-group-text">Hari</span>
+                                </div>
+                                @error('day') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            </div>
+
+                            {{-- Kapasitas --}}
+                            <div class="col-md-6">
                                 <label class="form-label fw-bold small text-uppercase">Kapasitas (Pax) *</label>
                                 <input type="number" name="capacity" class="form-control bg-light py-2 @error('capacity') is-invalid @enderror" 
                                        value="{{ old('capacity', $room->capacity ?? 1) }}">
@@ -173,7 +184,7 @@
                             </div>
 
                             <!-- Deposit Percent -->
-                            <div class="col-md-4">
+                            <div class="col-md-6">
                                 <label class="form-label fw-bold small text-uppercase">Jenis Deposit *</label>
                                 <select name="jenis_deposit" id="jenis_deposit" class="form-select bg-light py-2">
                                     <option value="persen">Persen</option>
@@ -181,7 +192,7 @@
                                 </select>
                             </div>
 
-                            <div class="col-md-4 form-deposit">
+                            <div class="col-md-6 form-deposit">
                                 <!-- Input Persen -->
                                 <div id="wrapper-persen">
                                     <label class="form-label fw-bold small text-uppercase">Deposit (%) *</label>
@@ -218,7 +229,7 @@
 
                             <!-- Jenis harga -->
                             <div class="col-md-4">
-                                <label class="form-label fw-bold small text-uppercase">Jenis Harga *</label>
+                                <label class="form-label fw-bold small text-uppercase">Harga Per *</label>
                                 <select name="jenis_harga" id="jenis_harga" class="form-select bg-light py-2">
                                     <option value="Pax" selected>Pax</option>
                                     <option value="Jam">Jam</option>
@@ -246,7 +257,7 @@
 
                             <!-- Peraturan -->
                             <div class="col-12">
-                                <label class="form-label fw-bold small text-uppercase">Peraturan Khusus *</label>
+                                <label class="form-label fw-bold small text-uppercase">Peraturan Khusus</label>
                                 <div id="editor" style="height: 200px;"></div>
                                 <input type="hidden" name="rules" id="rules-input" value="{{ old('rules', isset($room) ? $room->rules : '') }}">
                                 @error('rules') <div class="invalid-feedback">{{ $message }}</div> @enderror
@@ -331,51 +342,51 @@
 
                             {{-- Upload gambar --}}
                             <div class="col-12">
-                                <label class="form-label fw-bold medium text-uppercase">Foto Ruangan</label>
+                                <label class="form-label fw-bold small text-uppercase">Foto Ruangan *</label>
                                 
-                                {{-- 1. Tampilkan foto lama (Mode Edit) --}}
-                                @if(isset($room) && $room->images->count() > 0)
-                                    <div class="d-flex flex-wrap gap-3 mb-3" id="old-images-container">
+                                <div class="d-block mb-3">
+                                    <div class="input-group">
+                                        <input type="file" 
+                                            name="images[]" 
+                                            id="image-input" 
+                                            class="form-control bg-light py-2 @error('images') is-invalid @enderror @error('images.*') is-invalid @enderror" 
+                                            accept="image/png, image/jpeg, image/jpg" 
+                                            multiple>
+                                        <span class="input-group-text bg-light"><i class="bi bi-images"></i></span>
+                                    </div>
+                                    <small class="text-muted d-block mt-1">Format: JPG, JPEG, PNG. Ukuran maks 2MB per foto. (Total minimal 5 foto)</small>
+
+                                    @error('images') 
+                                        <div class="text-danger small mt-2 fw-semibold"><i class="bi bi-exclamation-circle-fill me-1"></i>{{ $message }}</div> 
+                                    @enderror
+                                    @error('images.*') 
+                                        <div class="text-danger small mt-2 fw-semibold"><i class="bi bi-exclamation-circle-fill me-1"></i>{{ $message }}</div> 
+                                    @enderror
+                                </div>
+
+                                <div id="gallery-container" class="d-flex flex-wrap gap-3 p-3 border rounded bg-light align-items-center" style="min-height: 120px;">
+                                    
+                                    @if(isset($room) && $room->images->count() > 0)
                                         @foreach($room->images as $img)
-                                            {{-- Tambahkan id atau class khusus untuk target Javascript --}}
-                                            <div class="position-relative old-image-wrapper" id="image-card-{{ $img->image_id }}">
-                                                <img src="{{ asset($img->path) }}" class="rounded shadow-sm" style="width: 100px; height: 80px; object-fit: cover;">
-                                                
-                                                {{-- Tombol Silang Hapus Foto --}}
-                                                <button type="button" 
-                                                        class="position-absolute top-0 start-100 translate-middle badge rounded-circle bg-danger border border-white text-white p-1 btn-delete-old-image" 
+                                            <div class="image-wrapper old-image text-center position-relative border rounded p-1 bg-white shadow-sm" id="image-card-{{ $img->image_id }}" style="width: 120px;">
+                                                <button type="button" class="btn-delete-old-image btn btn-danger btn-sm p-0 position-absolute rounded-circle shadow" 
                                                         data-image-id="{{ $img->image_id }}"
-                                                        style="cursor: pointer; font-size: 0.75rem; line-height: 1; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; border: none;">
+                                                        style="top: -8px; right: -8px; width: 22px; height: 22px; line-height: 18px; z-index: 10; font-size: 11px; font-weight: bold; border: none;">
                                                     &times;
                                                 </button>
+                                                <img src="{{ asset($img->path) }}" class="rounded w-100" style="height: 85px; object-fit: cover;">
+                                                <div class="small text-muted mt-1 text-truncate px-1" style="font-size: 11px;">Foto Tersimpan</div>
                                             </div>
                                         @endforeach
-                                    </div>
-
-                                    {{-- Tempat input hidden untuk menampung ID foto yang dihapus --}}
-                                    <div id="deleted-images-inputs"></div>
-
-                                    <div class="alert alert-info py-2 small">
-                                        <i class="bi bi-info-circle me-1"></i> Foto baru akan ditambahkan ke koleksi, dan foto yang disilang akan dihapus saat disimpan.
-                                    </div>
-                                @endif
-
-                                {{-- 2. Input File --}}
-                                <div class="input-group">
-                                    <input type="file" 
-                                        name="images[]" 
-                                        id="image-input" 
-                                        class="form-control bg-light py-2 @error('images.*') is-invalid @enderror" 
-                                        accept="image/png, image/jpeg, image/jpg" 
-                                        multiple>
-                                    <span class="input-group-text bg-light"><i class="bi bi-images"></i></span>
+                                    @else
+                                        <div class="text-center w-100 my-3 text-muted placeholder-text">
+                                            <i class="bi bi-image fs-3 d-block mb-1"></i>
+                                            <span class="small">Belum ada foto yang dipilih</span>
+                                        </div>
+                                    @endif
                                 </div>
-                                <small class="text-muted mt-1 d-block">Format: JPG, JPEG, PNG. Tekan CTRL untuk pilih banyak foto.</small>
-                                
-                                @error('images.*') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
 
-                                {{-- 3. Container untuk Preview Foto Baru --}}
-                                <div id="preview-container" class="d-flex flex-wrap gap-3 mt-3"></div>
+                                <div id="deleted-images-inputs"></div>
                             </div>
                         </div>
                     </div>

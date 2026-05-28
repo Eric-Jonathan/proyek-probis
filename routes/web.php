@@ -20,9 +20,9 @@ Route::post('/register', [AuthController::class, 'register'])->name('register.po
 Route::get('/', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
 
-Route::get('/rooms', [RoomController::class, 'index'])->name('rooms.index');
+Route::get('/roomsList', [RoomController::class, 'index'])->name('rooms.index');
 Route::get('/rooms/create', [RoomController::class, 'create'])->name('rooms.create');
-Route::post('/rooms', [RoomController::class, 'store'])->name('rooms.store');
+Route::post('/rooms/store', [RoomController::class, 'store'])->name('rooms.store');
 Route::get('/rooms/{id}/transaction', [RoomController::class, 'transaction'])->name('rooms.transaction');
 Route::get('/rooms/{room}/edit', [RoomController::class, 'edit'])->name('rooms.edit');
 Route::get('/rooms/{id}', [RoomController::class, 'show'])->name('rooms.show');
@@ -76,7 +76,7 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 Route::get('/form_penyewa', [PenyediaController::class, 'form'])->name('form');
 Route::get('/bookings/history', [BookingController::class, 'history'])->name('bookings.history');
 
-Route::get('/room', [RoomController::class, 'show'])->name('room.show');
+// Route::get('/room', [RoomController::class, 'show'])->name('room.show');
 
 Route::get('/booking', [PenyewaController::class, 'show'])->name('booking.show');
 

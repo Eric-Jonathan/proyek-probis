@@ -184,22 +184,40 @@ $(document).on('click', '.btn-delete-old-image', function(e) {
 $(document).on('click', '.btn-save', function(e) {
     let lat = $('#latitude-input').val();
     let lon = $('#longitude-input').val();
+    
+    // 1. Hitung foto lama yang tersisa di halaman (elemen card visual yang belum di-delete)
+    // Asumsi: Box foto lamamu memiliki class '.old-image-card' atau sejenisnya
+    let totalOldImages = $('.facility-item-wrapper, .preview-item').length; 
+    // ^ TIPS: Sesuaikan selector di atas dengan class pembungkus foto lama yang ada di edit form-mu saat ini!
 
+    // 2. Hitung jumlah foto baru yang lolos seleksi di input file
+    const imageInput = $('#image-input')[0];
+    let totalNewFiles = imageInput && imageInput.files ? imageInput.files.length : 0;
+
+    // 3. Hitung Total Akumulasi
+    let totalPhotosAccumulated = totalOldImages + totalNewFiles;
+
+    // Eksekusi Validasi Batas Minimal 5 Foto Secara Kumulatif
+    if (totalPhotosAccumulated < 5) {
+        e.preventDefault(); // Gagalkan submit form ke backend
+        $('#image-input').addClass('is-invalid');
+        alert(`Form gagal dikirim! Total foto ruangan saat ini baru ${totalPhotosAccumulated} foto. Anda wajib mengunggah minimal 5 foto secara keseluruhan.`);
+        $('#image-input').focus();
+        return;
+    }
+
+    // Validasi alamat koordinat maps terdahulu
     if (!lat || !lon || !isSelected) {
-        e.preventDefault(); // Batalkan submit
+        e.preventDefault(); 
         $('#address-search').addClass('is-invalid');
         $('#address-search').focus();
         return;
     }
 
     var rulesHtml = quill.root.innerHTML;
-    
-    // Jika isinya kosong atau hanya menyisakan tag kosong bawaan Quill
     if (quill.getText().trim().length === 0) {
         rulesHtml = '';
     }
-    
-    // Inject HTML ke input hidden sebelum form terkirim
     $('#rules-input').val(rulesHtml);
 });
 
@@ -221,32 +239,95 @@ $(document).on('change', '#jenis_harga', function() {
     $('#satuan_min_order').html($(this).val());
 })
 
+let selectedFilesArray = [];
+
 $(document).on('change', '#image-input', function() {
     const files = this.files;
     const $previewContainer = $('#preview-container');
+    const $inputField = $(this);
     
-    $previewContainer.empty(); 
+    // Jangan kosongkan container jika user ingin mencicil upload (UX lebih baik)
+    // $previewContainer.empty(); 
+    $inputField.removeClass('is-invalid');
+
+    const maxSizeBytes = 2 * 1024 * 1024; // 2MB
+    let hasLargeFile = false;
 
     if (files.length > 0) {
-        // Konversi FileList ke Array agar looping lebih lancar
+        // Gabungkan berkas baru ke dalam array penampung
         Array.from(files).forEach(file => {
-            // Validasi sederhana: hanya gambar
             if (!file.type.startsWith('image/')) return;
 
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const previewHtml = `
-                    <div class="preview-item text-center">
-                        <img src="${e.target.result}" class="rounded shadow-sm border" 
-                             style="width: 120px; height: 90px; object-fit: cover;">
-                        <div class="small text-muted mt-1 text-truncate" style="max-width: 120px;">
-                            ${file.name}
-                        </div>
-                    </div>
-                `;
-                $previewContainer.append(previewHtml);
+            if (file.size > maxSizeBytes) {
+                hasLargeFile = true;
+                return; 
             }
-            reader.readAsDataURL(file);
+
+            selectedFilesArray.push(file);
         });
+
+        if (hasLargeFile) {
+            alert('Beberapa foto dilewati karena ukurannya melebihi 2MB.');
+        }
+
+        // Sinkronisasi ulang isi input file dengan array penampung kita
+        refreshInputFileElements();
+        // Render ulang seluruh kotak preview
+        renderImagePreviews();
     }
+});
+
+// Fungsi untuk merender ulang seluruh komponen kotak preview gambar baru
+function renderImagePreviews() {
+    // Hapus placeholder teks bawaan blade jika ada
+    $('#gallery-container .placeholder-text').remove();
+    
+    // Hapus preview foto baru yang lama agar tidak duplikat saat upload bertahap
+    $('#gallery-container .new-image').remove();
+
+    selectedFilesArray.forEach((file, index) => {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const previewHtml = `
+                <div class="image-wrapper new-image text-center position-relative border rounded p-1 bg-white shadow-sm" style="width: 120px;">
+                    <button type="button" class="btn-remove-new-image btn btn-danger btn-sm p-0 position-absolute rounded-circle shadow" 
+                            style="top: -8px; right: -8px; width: 22px; height: 22px; line-height: 18px; z-index: 10; font-size: 11px; font-weight: bold; border: none;" 
+                            data-index="${index}">
+                        &times;
+                    </button>
+                    <img src="${e.target.result}" class="rounded w-100" style="height: 85px; object-fit: cover;">
+                    <div class="small text-success mt-1 text-truncate px-1" style="font-size: 11px; font-weight: 500;">
+                        ${file.name}
+                    </div>
+                </div>
+            `;
+            $('#gallery-container').append(previewHtml);
+        }
+        reader.readAsDataURL(file);
+    });
+}
+
+// Fungsi krusial untuk menyuntikkan isi array ke dalam FileList input HTML
+function refreshInputFileElements() {
+    const dataTransfer = new DataTransfer();
+    selectedFilesArray.forEach(file => {
+        dataTransfer.items.add(file);
+    });
+    // Timpa berkas asli di input file dengan berkas hasil filter kita
+    $('#image-input')[0].files = dataTransfer.files; 
+}
+
+// Handler saat tombol silang (X) pada preview gambar baru diklik
+$(document).on('click', '.btn-remove-new-image', function(e) {
+    e.preventDefault();
+    
+    // Ambil indeks array dari properti data
+    const targetIndex = $(this).data('index');
+    
+    // Hapus 1 item dari array penampung
+    selectedFilesArray.splice(targetIndex, 1);
+    
+    // Sinkronisasikan ulang berkas ke input HTML dan render ulang tampilannya
+    refreshInputFileElements();
+    renderImagePreviews();
 });

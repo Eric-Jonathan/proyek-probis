@@ -15,6 +15,7 @@ return new class extends Migration
             $table->integerIncrements('room_id');
             $table->integer('user_id');
             $table->string('name');
+            $table->integer('day')->default(1);
             $table->integer('capacity');
             $table->string('jenis_harga');
             $table->integer('price');

@@ -11,39 +11,38 @@ use Midtrans\Config;
 use Midtrans\Snap;
 class RoomController extends Controller
 {
-public function index(Request $request)
-{
-    // Ambil ID user yang sedang login
-    $userId = Auth::id(); 
+    public function index(Request $request)
+    {
+        // Ambil ID user yang sedang login
+        $userId = Auth::id(); 
 
-    // Mulai query dengan filter user_id agar data tidak bocor antar penyedia
-    $query = Room::where('user_id', $userId)->where('status', '>=', 0);
+        // 1. Mulai query builder (Tanpa ->get() di awal agar filter di bawahnya berfungsi)
+        $query = Room::where('user_id', $userId)->where('status', '>=', 0);
 
-    // Filter Pencarian
-    if ($request->filled('search')) {
-        $query->where(function ($q) use ($request) {
-            $q->where('name', 'like', '%' . $request->search . '%')
-              ->orWhere('location', 'like', '%' . $request->search . '%'); // Ganti floor ke location sesuai struktur DB
-        });
+        // 2. Filter Pencarian
+        if ($request->filled('search')) {
+            $query->where(function ($q) use ($request) {
+                $q->where('name', 'like', '%' . $request->search . '%')
+                ->orWhere('location', 'like', '%' . $request->search . '%');
+            });
+        }
+
+        // 3. Filter Status
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        // 4. Ambil data dengan pagination di akhir rangkaian filter
+        $rooms = $query->latest()->paginate(10)->withQueryString();
+
+        return view('rooms.room', [
+            'rooms'         => $rooms,
+            'totalRooms'    => Room::where('user_id', $userId)->count(),
+            'activeRooms'   => Room::where('user_id', $userId)->where('status', 2)->count(),
+            'diajukan'      => Room::where('user_id', $userId)->where('status', 1)->count(),
+            'inactiveRooms' => Room::where('user_id', $userId)->where('status', 0)->count(),
+        ]);
     }
-
-    // Filter Status
-    if ($request->filled('status')) {
-        $query->where('status', $request->status);
-    }
-
-    // Ambil data dengan pagination
-    $rooms = $query->latest()->paginate(10)->withQueryString();
-
-    return view('rooms.room', [
-        'rooms'            => $rooms,
-        // Statistik juga harus difilter berdasarkan user_id yang login
-        'totalRooms'       => Room::where('user_id', $userId)->count(),
-        'activeRooms'      => Room::where('user_id', $userId)->where('status', 2)->count(),
-        'diajukan' => Room::where('user_id', $userId)->where('status', 1)->count(),
-        'inactiveRooms'    => Room::where('user_id', $userId)->where('status', 0)->count(),
-    ]);
-}
  
     public function create()
     {
@@ -84,90 +83,84 @@ public function index(Request $request)
  
     public function store(Request $request)
     {
-        // 1. Validasi Input
+        // 1. Validasi Input Dasar
         $validated = $request->validate([
             'name'            => 'required|string|max:255',
             'capacity'        => 'required|integer|min:1',
-            'deposit_percent' => 'nullable|integer|min:0|max:100', // deposit biasanya bisa 0
+            'deposit_percent' => 'required|integer|min:0|max:100',
             'jenis_deposit'   => 'required',
-            'price'           => 'required|numeric|min:0',
+            'price'           => 'required|numeric|min:1000',
             'jenis_harga'     => 'required',
-            'min_order'       => 'required|numeric|min:0',
+            'min_order'       => 'required|numeric|min:1',
+            'day'             => 'required|numeric|min:0',
             'description'     => 'nullable|string',
             'status'          => 'required|in:1,2,3',
-            'location'        => 'required', // Nama alamat
-            'latitude'        => 'required|numeric', // Wajib ada hasil dari API
+            'location'        => 'required',
+            'latitude'        => 'required|numeric',
             'longitude'       => 'required|numeric',
             'rules'           => 'nullable|string',
-            'images.*' => 'image|mimes:jpg,jpeg,png|max:2048',
+            'images.*'        => 'image|mimes:jpeg,png,jpg|max:2048',
         ], [
             'latitude.required' => 'Lokasi harus dipilih dari saran autocomplete.',
+            'images.*.image'    => 'Berkas yang diunggah harus berupa gambar.',
+            'images.*.max'      => 'Ukuran setiap foto tidak boleh melebihi 2MB.',
         ]);
 
-        // Masukkan User ID dari Session Login
+        // 2. HITUNG & VALIDASI JUMLAH FOTO DI AWAL (Sebelum Sentuh Database)
+        $newPhotosCount = $request->hasFile('images') ? count($request->file('images')) : 0;
+
+        if ($newPhotosCount < 5) {
+            return back()->withErrors(['images' => 'Total keseluruhan foto ruangan kurang dari 5.'])->withInput();
+        }
+
+        // 3. Masukkan User ID dari Session Login setelah dipastikan foto aman
         $validated['user_id'] = Auth::id();
 
+        // 4. EKSEKUSI INSERT DATA RUANGAN (Aman dari data sampah)
         $room = Room::create($validated);
 
-        // Handle Upload Gambar (Setelah Room tersimpan)
+        // 5. Handle Upload Gambar (Karena Room sudah pasti punya ID)
         if ($request->hasFile('images')) {
             foreach ($request->file('images') as $image) {
                 // Buat nama file unik
                 $fileName = time() . '_' . $image->getClientOriginalName();
                 
-                // Pindahkan file langsung ke folder public/upload_room
+                // Pindahkan file ke folder public/upload_room
                 $image->move(public_path('upload_room'), $fileName);
                 
-                // Simpan path ke database (cukup 'rooms/namafile.jpg')
+                // Simpan path hubungannya ke table room_images
                 $room->images()->create([
                     'path' => 'upload_room/' . $fileName
                 ]);
             }
         }
 
+        // 6. Handle Insert Fasilitas Ruangan
         if ($request->has('facilities')) {
             foreach ($request->facilities as $facilityName) {
-                // Langsung insert baris baru yang mengikat ke room_id tersebut
                 $room->facilities()->create([
                     'name'   => $facilityName,
-                    'status' => 1 // Status default aktif
+                    'status' => 1
                 ]);
             }
         }
 
-        // Redirect dengan Flash Message
+        // Redirect dengan Flash Message Sukses
         return redirect()->route('rooms.index')
                         ->with('success', 'Ruangan berhasil dipublikasikan!');
     }
 
-    // public function show(Room $room)
-    // {
-    //     return view('rooms.show', compact('room'));
-    // }
-
-    // public function show($id)
-    // {
-    //     $room = Room::with('images')->findOrFail($id);
-    //     return view('rooms.room_detail', compact('room'));
-    // }
-    public function show()
+    public function show($id)
     {
-        $room = (object)[
-        'name' => 'Kontena Hotel',
-        'capacity' => 50,
-        'price' => 100000,
-        'deposit_percent' => 30,
-        'location' => "KH. Agus Salim No.106, Sisir, Kec. Batu, Kota Batu, Jawa Timur 65314",
-        'rules' => [
-            'Dilarang merokok di dalam kamar',
-            'Tidak diperbolehkan membawa hewan peliharaan',
-            'Check-in mulai pukul 14:00',
-            'Menunjukkan identitas saat check-in'
-        ],
-        'description' => "tempatnya bagus mungkin",
-        'embed_url' => "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d10872.509987186995!2d112.52550598185628!3d-7.886403981190083!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e78812756d6007b%3A0x5a7d48319c393cb3!2sKontena%20Hotel!5e0!3m2!1sen!2sid!4v1775574543337!5m2!1sen!2sid"
-        ];
-        return view('rooms/room_detail', compact('room'));
+        // Ambil data ruangan beserta gambar dan fasilitasnya yang aktif
+        $room = Room::with(['images', 'facilities' => function($query) {
+            $query->where('status', 1); // Hanya ambil fasilitas yang tersedia/aktif
+        }])->findOrFail($id);
+
+        // Konversi string teks aturan HTML (Quill) menjadi array baris teks biasa jika diperlukan
+        // Atau jika disimpan dalam bentuk HTML list, kita bisa langsung render di blade.
+        
+        return view('rooms.room_detail', compact('room'));
     }
  
     public function edit(Room $room)
@@ -183,21 +176,36 @@ public function index(Request $request)
         $validated = $request->validate([
             'name'            => 'required|string|max:255',
             'capacity'        => 'required|integer|min:1',
-            'jenis_harga'     => 'required|string',
-            'price'           => 'required|numeric|min:0',
-            'min_order'       => 'required|integer|min:1',
-            'jenis_deposit'   => 'required|string',
-            'deposit_percent' => 'nullable|integer|min:0|max:100',
-            'location'        => 'required|string',
+            'deposit_percent' => 'required|integer|min:0|max:100',
+            'jenis_deposit'   => 'required',
+            'price'           => 'required|numeric|min:1000',
+            'jenis_harga'     => 'required',
+            'min_order'       => 'required|numeric|min:1',
+            'day'             => 'required|numeric|min:0',
+            'description'     => 'nullable|string',
+            'status'          => 'required|in:1,2,3',
+            'location'        => 'required',
             'latitude'        => 'required|numeric',
             'longitude'       => 'required|numeric',
             'rules'           => 'nullable|string',
-            'description'     => 'nullable|string',
-            'status'          => 'required|in:1,2,3',
-            'facilities'      => 'nullable|array',
-            'deleted_images'  => 'nullable|array', // Validasi field penampung hapus foto
-            'images.*'        => 'image|mimes:jpg,jpeg,png|max:2048',
+            'images.*'        => 'image|mimes:jpeg,png,jpg|max:2048',
+        ], [
+            'latitude.required' => 'Lokasi harus dipilih dari saran autocomplete.',
+            'images.*.image'    => 'Berkas yang diunggah harus berupa gambar.',
+            'images.*.max'      => 'Ukuran setiap foto tidak boleh melebihi 2MB.',
         ]);
+
+        $currentOldPhotosCount = 0;
+        $totalDeleted = $request->has('deleted_images') ? count($request->deleted_images) : 0;
+        $currentOldPhotosCount = $room->images()->count() - $totalDeleted;
+
+        // 3. Hitung jumlah file baru yang diunggah
+        $newPhotosCount = $request->hasFile('images') ? count($request->file('images')) : 0;
+
+        // 4. Hitung Total Gabungan Akhir di sisi Server
+        if (($currentOldPhotosCount + $newPhotosCount) < 5) {
+            return back()->withErrors(['images' => 'Total keseluruhan foto ruangan kurang dari 5. Mohon unggah foto tambahan.'])->withInput();
+        }
 
         // 1. Jalankan update data utama ruangan
         $room->update($validated);
