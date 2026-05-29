@@ -378,11 +378,12 @@
                     class="fw-semibold small clickable-box p-2 rounded-3" 
                     data-bs-toggle="modal" 
                     data-bs-target="#datePickerModal"
-                    data-min-day="{{ $room->day ?? 1 }}">
+                    data-min-day="{{ $room->day ?? 1 }}"
+                    data-room-id="{{ $room->room_id }}">
                     Pilih tanggal penyewaan...
                 </span>
             </div>
-            <a href="{{ route('booking.show') }}" class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm" style="background-color: var(--primary-blue);">
+            <a href="" id="btn-trigger-booking" class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm" style="background-color: var(--primary-blue);">
                 Booking Ruangan
             </a>
         </div>

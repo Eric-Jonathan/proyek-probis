@@ -23,9 +23,17 @@ $(document).ready(function() {
             
             // Hitung selisih hari sewa
             const diffTime = Math.abs(endDate - startDate);
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; // Ditambah 1 agar hari masuk hitungan (ex: 28-29 Mei = 2 hari)
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; 
             
             $('#display-date').text(`${startStr} - ${endStr} (${diffDays} hari)`);
+
+            // Tambahan sinkronisasi link dinamis ke form booking yang kita bahas sebelumnya
+            if ($('#btn-trigger-booking').length > 0) {
+                let startIso = startDate.getFullYear() + '-' + String(startDate.getMonth() + 1).padStart(2, '0') + '-' + String(startDate.getDate()).padStart(2, '0');
+                let endIso = endDate.getFullYear() + '-' + String(endDate.getMonth() + 1).padStart(2, '0') + '-' + String(endDate.getDate()).padStart(2, '0');
+                
+                $('#btn-trigger-booking').attr('href', `/booking/${$('#display-date').data('room-id')}?start_date=${startIso}&end_date=${endIso}`);
+            }
         } else {
             $('#display-date').text("Pilih tanggal penyewaan...");
         }
@@ -177,5 +185,19 @@ $(document).ready(function() {
                 $(this).attr('class', 'nav-link active text-primary fw-bold border-0 border-bottom border-primary border-3');
             }
         });
+    });
+
+    $('#btn-trigger-booking').on('click', function(e) {
+        const currentHref = $(this).attr('href');
+
+        // Jika href masih bawaan asli (#) berarti user belum memilih tanggal di kalender
+        if (currentHref === '#' || currentHref === '') {
+            e.preventDefault(); // Cegah reload/pindah halaman kosong
+            
+            alert('Mohon tentukan tanggal sewa terlebih dahulu pada kalender!');
+            
+            // Paksa buka modal picker tanggal secara otomatis demi kemudahan UX
+            $('#datePickerModal').modal('show');
+        }
     });
 });

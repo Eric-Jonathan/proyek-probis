@@ -234,6 +234,7 @@
                                     <option value="Pax" selected>Pax</option>
                                     <option value="Jam">Jam</option>
                                     <option value="Hari">Hari</option>
+                                    <option value="Pax_jam">Pax & Jam</option>
                                 </select>
                             </div>
 

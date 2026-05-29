@@ -78,7 +78,9 @@ Route::get('/bookings/history', [BookingController::class, 'history'])->name('bo
 
 // Route::get('/room', [RoomController::class, 'show'])->name('room.show');
 
-Route::get('/booking', [PenyewaController::class, 'show'])->name('booking.show');
+// Route::get('/booking', [PenyewaController::class, 'show'])->name('booking.show');
+Route::get('/booking/{room_id}', [BookingController::class, 'showBookingForm'])->name('booking.show');
+Route::post('/booking/{room_id}/store', [BookingController::class, 'storeBooking'])->name('booking.store');
 
 Route::get('/test-rating', function () {
 
