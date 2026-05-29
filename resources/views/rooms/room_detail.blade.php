@@ -257,13 +257,26 @@
                         IDR {{ number_format($room->price, 0, ',', '.') }}
                     </h2>
                     <span class="text-dark fw-bold text-uppercase" style="font-size: 1.2rem; color: #222 !important;">
-                        / {{ $room->jenis_harga }}
+                        @if($room->jenis_harga === 'pax_jam')
+                            / Pax / Jam
+                        @else
+                            / {{ ucfirst($room->jenis_harga) }}
+                        @endif
                     </span>
                 </div>
                 
                 <!-- Keterangan Minimal Order yang Diperjelas -->
                 <p class="text-muted small mb-4">
-                    <i class="bi bi-info-circle me-1 text-secondary"></i>Min. Order: <span class="fw-semibold text-dark">{{ $room->min_order }} {{ $room->jenis_harga }}</span>
+                    @php
+                        $labelMapping = [
+                            'pax' => 'Pax',
+                            'hari' => 'Hari',
+                            'jam' => 'Jam',
+                            'pax_jam' => 'Pax' // Untuk pax_jam, minimal ordernya dihitung per orang (pax)
+                        ];
+                        $cleanUnit = $labelMapping[strtolower($room->jenis_harga)] ?? $room->jenis_harga;
+                    @endphp
+                    <span><i class="bi bi-info-circle"></i> Min. Order: {{ $room->min_order }} {{ $cleanUnit }}</span>
                 </p>
                 
                 <!-- Tombol Aksi -->
@@ -379,8 +392,8 @@
                     data-bs-toggle="modal" 
                     data-bs-target="#datePickerModal"
                     data-min-day="{{ $room->day ?? 1 }}"
-                    data-room-id="{{ $room->room_id }}">
-                    Pilih tanggal penyewaan...
+                    data-room-id="{{ $room->room_id }}"
+                    data-jenis-harga="{{ $room->jenis_harga }}"> Pilih tanggal penyewaan...
                 </span>
             </div>
             <a href="" id="btn-trigger-booking" class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm" style="background-color: var(--primary-blue);">
@@ -398,6 +411,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body p-4">
+                    <div id="calendar-info-note" class="alert alert-warning py-2 px-3 small d-none shadow-sm mb-3"></div>
                     <div class="row">
                         <div class="col-md-6 border-end position-relative">
                             <div class="d-flex justify-content-center align-items-center mb-4">

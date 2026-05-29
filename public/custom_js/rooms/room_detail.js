@@ -10,9 +10,13 @@ $(document).ready(function() {
 
     // Ambil data minimal hari sewa dari atribut HTML secara dinamis
     const minBookingDays = parseInt($('#display-date').data('min-day')) || 1;
+    
+    // Ganti baris pengambilan data-jenis-harga menjadi super aman seperti ini:
+    const jenisHargaRaw = $('#display-date').data('jenis-harga') || '';
+    const jenisHargaRuangan = String(jenisHargaRaw).trim().toLowerCase(); 
 
     // =========================================================================
-    // 1. LOGIKA RANGE KALENDER PENYEWAAN DENGAN VALIDASI MINIMAL HARI
+    // 1. LOGIKA RANGE KALENDER PENYEWAAN 
     // =========================================================================
     function updateDisplayDate() {
         if (startDate && !endDate) {
@@ -21,13 +25,18 @@ $(document).ready(function() {
             const startStr = startDate.toLocaleDateString('id-ID', dateOptions);
             const endStr = endDate.toLocaleDateString('id-ID', dateOptions);
             
-            // Hitung selisih hari sewa
             const diffTime = Math.abs(endDate - startDate);
             const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; 
             
-            $('#display-date').text(`${startStr} - ${endStr} (${diffDays} hari)`);
+            let infoKeterangan = "";
+            if (jenisHargaRuangan === 'jam' || jenisHargaRuangan === 'pax_jam') {
+                infoKeterangan = " (Sewa Per Jam - Maks 1 Hari)";
+            } else {
+                infoKeterangan = ` (${diffDays} Hari - Mendukung Multi-Hari)`;
+            }
 
-            // Tambahan sinkronisasi link dinamis ke form booking yang kita bahas sebelumnya
+            $('#display-date').text(`${startStr} - ${endStr}${infoKeterangan}`);
+
             if ($('#btn-trigger-booking').length > 0) {
                 let startIso = startDate.getFullYear() + '-' + String(startDate.getMonth() + 1).padStart(2, '0') + '-' + String(startDate.getDate()).padStart(2, '0');
                 let endIso = endDate.getFullYear() + '-' + String(endDate.getMonth() + 1).padStart(2, '0') + '-' + String(endDate.getDate()).padStart(2, '0');
@@ -60,9 +69,12 @@ $(document).ready(function() {
         }
 
         const minSelectableDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
+        minSelectableDate.setHours(0, 0, 0, 0);
 
         for (let d = 1; d <= totalDays; d++) {
             const loopDate = new Date(year, month, d);
+            loopDate.setHours(0, 0, 0, 0); 
+            
             const isToday = (d === today.getDate() && month === today.getMonth() && year === today.getFullYear());
             
             const $btn = $('<button></button>')
@@ -72,8 +84,17 @@ $(document).ready(function() {
             if (loopDate < minSelectableDate) {
                 $btn.prop('disabled', true);
             }
-            if (startDate && !endDate && loopDate.getTime() === startDate.getTime()) $btn.addClass('selected');
-            if (startDate && endDate && loopDate >= startDate && loopDate <= endDate) $btn.addClass('selected');
+
+            // PEWARNAAN RENTANG SELECTION (IN-BETWEEN)
+            const checkTime = loopDate.getTime();
+            const startTime = startDate ? new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate()).getTime() : null;
+            const endTime = endDate ? new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate()).getTime() : null;
+
+            if (startTime && !endTime) {
+                if (checkTime === startTime) $btn.addClass('selected');
+            } else if (startTime && endTime) {
+                if (checkTime >= startTime && checkTime <= endTime) $btn.addClass('selected');
+            }
 
             $btn.html(`
                 ${isToday ? '<span class="today-label">Hari Ini</span>' : ''}
@@ -81,29 +102,60 @@ $(document).ready(function() {
                 <span class="price" style="color:var(--success-green)">Tersedia</span>
             `);
 
-            // EVENT KLIK DENGAN CEK MINIMAL DURASI HARI SEWA
+            // SATU-SATUNYA EVENT KLIK TOMBOL TANGGAL YANG AKTIF
             $btn.on('click', function() {
-                if (!startDate || (startDate && endDate)) {
-                    startDate = loopDate; 
-                    endDate = null;
-                } else {
-                    if (loopDate.getTime() === startDate.getTime()) {
-                        startDate = null;
-                    } else if (loopDate < startDate) {
-                        startDate = loopDate;
-                    } else {
-                        // Cek apakah rentang yang dipilih memenuhi syarat minimal hari sewa
-                        const checkTime = Math.abs(loopDate - startDate);
-                        const totalSelectedDays = Math.ceil(checkTime / (1000 * 60 * 60 * 24)) + 1;
-
-                        if (totalSelectedDays < minBookingDays) {
-                            alert(`Gagal memilih tanggal! Ruangan ini memiliki batas minimal sewa selama ${minBookingDays} hari.`);
-                            return; // Batalkan pemilihan rentang jika kurang dari minimal sewa
-                        }
+                // Skenario A: Jika berbasis jam, langsung kunci di hari yang sama (Maksimal 1 Hari)
+                if (jenisHargaRuangan === 'jam' || jenisHargaRuangan === 'pax_jam') {
+                    startDate = loopDate;
+                    endDate = loopDate;
+                    
+                    // GANTI ALERT MENJADI TEKS HTML INTERAKTIF:
+                    $('#calendar-info-note')
+                        .html('<i class="bi bi-info-circle-fill me-2"></i><strong>Mode Per Jam:</strong> Tanggal selesai otomatis disamakan dengan tanggal mulai (Maksimal 1 Hari penggunaan).')
+                        .removeClass('d-none alert-success')
+                        .addClass('alert-warning');
+                } 
+                // Skenario B: Jika berbasis harian atau per pax, izinkan rentang multi-hari
+                else {
+                    if (!startDate || (startDate && endDate)) {
+                        startDate = loopDate; 
+                        endDate = null;
                         
-                        endDate = loopDate;
+                        // Beri tahu user untuk memilih tanggal selesai
+                        $('#calendar-info-note')
+                            .html('<i class="bi bi-calendar-event me-2"></i>Silakan tentukan <strong>Tanggal Selesai</strong> penyewaan Anda.')
+                            .removeClass('d-none alert-warning')
+                            .addClass('alert-success');
+                    } else {
+                        if (loopDate.getTime() === startDate.getTime()) {
+                            startDate = null;
+                            $('#calendar-info-note').addClass('d-none'); // Sembunyikan jika batal
+                        } else if (loopDate < startDate) {
+                            startDate = loopDate;
+                            endDate = null;
+                        } else {
+                            // Cek syarat minimal hari sewa
+                            const checkTimeDiff = Math.abs(loopDate - startDate);
+                            const totalSelectedDays = Math.ceil(checkTimeDiff / (1000 * 60 * 60 * 24)) + 1;
+
+                            if (totalSelectedDays < minBookingDays) {
+                                $('#calendar-info-note')
+                                    .html(`<i class="bi bi-exclamation-triangle-fill me-2"></i>Gagal memilih! Ruangan ini memiliki batas minimal sewa selama <strong>${minBookingDays} hari</strong>.`)
+                                    .removeClass('d-none alert-success')
+                                    .addClass('alert-warning');
+                                return; 
+                            }
+                            
+                            endDate = loopDate;
+                            // Informasikan rentang sukses dipilih
+                            $('#calendar-info-note')
+                                .html(`<i class="bi bi-check-circle-fill me-2"></i>Rentang tanggal sewa berhasil ditentukan (${totalSelectedDays} Hari).`)
+                                .removeClass('d-none alert-warning')
+                                .addClass('alert-success');
+                        }
                     }
                 }
+                
                 updateDisplayDate(); 
                 renderDoubleCalendar();
             });
@@ -111,6 +163,10 @@ $(document).ready(function() {
             $grid.append($btn);
         }
     }
+
+    $('#datePickerModal').on('hidden.bs.modal', function () {
+        $('#calendar-info-note').addClass('d-none').empty();
+    });
 
     function renderDoubleCalendar() {
         renderSingleMonth('gridLeft', 'labelMonthLeft', new Date(currentViewDate));
@@ -149,16 +205,11 @@ $(document).ready(function() {
         updateGalleryView(parseInt($(this).attr('data-index')));
     });
 
-    $('#nextPhoto').on('click', function() {
-        updateGalleryView((currentIndex + 1) % photoList.length);
-    });
-
-    $('#prevPhoto').on('click', function() {
-        updateGalleryView((currentIndex - 1 + photoList.length) % photoList.length);
-    });
+    $('#nextPhoto').on('click', function() { updateGalleryView((currentIndex + 1) % photoList.length); });
+    $('#prevPhoto').on('click', function() { updateGalleryView((currentIndex - 1 + photoList.length) % photoList.length); });
 
     // =========================================================================
-    // 3. WIDGET LOGIKA TAMBAHAN (WISHLIST & SCROLLSPY)
+    // 3. WIDGET LOGIKA TAMBAHAN (WISHLIST & ACTION BUTTON)
     // =========================================================================
     $('#btn-wishlist').on('click', function() {
         const $icon = $('#icon-wishlist');
@@ -189,14 +240,9 @@ $(document).ready(function() {
 
     $('#btn-trigger-booking').on('click', function(e) {
         const currentHref = $(this).attr('href');
-
-        // Jika href masih bawaan asli (#) berarti user belum memilih tanggal di kalender
         if (currentHref === '#' || currentHref === '') {
-            e.preventDefault(); // Cegah reload/pindah halaman kosong
-            
+            e.preventDefault();
             alert('Mohon tentukan tanggal sewa terlebih dahulu pada kalender!');
-            
-            // Paksa buka modal picker tanggal secara otomatis demi kemudahan UX
             $('#datePickerModal').modal('show');
         }
     });

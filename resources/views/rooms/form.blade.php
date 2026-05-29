@@ -231,20 +231,21 @@
                             <div class="col-md-4">
                                 <label class="form-label fw-bold small text-uppercase">Harga Per *</label>
                                 <select name="jenis_harga" id="jenis_harga" class="form-select bg-light py-2">
-                                    <option value="Pax" selected>Pax</option>
-                                    <option value="Jam">Jam</option>
-                                    <option value="Hari">Hari</option>
-                                    <option value="Pax_jam">Pax & Jam</option>
+                                    <option value="pax" selected>Pax</option>
+                                    <option value="jam">Jam</option>
+                                    <option value="hari">Hari</option>
+                                    <option value="pax_jam">Pax & Jam</option>
                                 </select>
                             </div>
 
-                            <!-- Minimal Order -->
                             <div class="col-md-4">
                                 <label class="form-label fw-bold small text-uppercase">Minimal Order *</label>
                                 <div class="input-group">
-                                    <input type="number" name="min_order" class="form-control @error('min_order') is-invalid @enderror" 
-                                            value="{{ old('min_order', $room->min_order ?? 1) }}">
-                                    <span class="input-group-text" id="satuan_min_order">Pax</span>
+                                    <input type="number" name="min_order" class="form-control py-2" value="1" min="1">
+                                    
+                                    <span class="input-group-text bg-white text-muted small fw-medium" id="addon-minimal-order" style="font-size: 13px;">
+                                        Pax
+                                    </span>
                                 </div>
                             </div>
 

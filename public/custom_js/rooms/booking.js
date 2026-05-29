@@ -6,18 +6,20 @@ $(document).ready(function() {
     
     // Ambil kontrol skema pricing dari elemen invoice sejak halaman pertama dimuat
     const $priceElement = $('#render-base-price');
-    const jenisHarga = $priceElement.data('jenis-harga'); // Membaca data-jenis-harga baju HTML
+    
+    // PERBAIKAN: Langsung paksa ke huruf kecil sejak awal agar sinkron dengan database
+    const jenisHarga = String($priceElement.data('jenis-harga') || '').trim().toLowerCase(); 
 
     // =========================================================================
-    // CODE BARU: PROTEKSI OTOMATIS PILIHAN WAKTU BERDASARKAN DATABASE (UX LOCK)
+    // CODE FIX: PROTEKSI OTOMATIS PILIHAN WAKTU BERDASARKAN DATABASE (UX LOCK)
     // =========================================================================
-    if (jenisHarga === 'Hari' || jenisHarga === 'Pax') {
+    if (jenisHarga === 'hari' || jenisHarga === 'pax') {
         // Jika kebijakan flat harian/pax, kunci ke radio button Harian
         $('#tipe-hari').prop('checked', true);
         $('#tipe-jam').prop('disabled', true); // Kunci opsi jam
         $('#container-input-jam').addClass('d-none'); // Sembunyikan inputan jam
         
-    } else if (jenisHarga === 'Jam' || jenisHarga === 'Pax_jam') {
+    } else if (jenisHarga === 'jam' || jenisHarga === 'pax_jam') {
         // Jika kebijakan wajib per jam, kunci ke radio button Sistem Jam
         $('#tipe-jam').prop('checked', true);
         $('#tipe-hari').prop('disabled', true); // Kunci opsi harian
@@ -34,68 +36,89 @@ $(document).ready(function() {
         calculateTotalPrice(); // Hitung ulang harga jika tipe sewa bergeser
     });
 
-    // 2. Bersihkan Duplikasi: Cukup SAtu Event Listener untuk Seluruh Form Input
-    $(document).on('input change', '#input-capacity, #jam-mulai, #jam-selesai, .addon-service-checkbox', function() {
+    // 2. Cukup Satu Event Listener untuk Seluruh Form Input
+    $(document).on('input change keyup blur', '#input-capacity, #jam_mulai, #jam_selesai, .addon-service-checkbox', function() {
         calculateTotalPrice();
     });
 
     // 3. Fungsi Utama Kalkulator Multi-Skema Pricing ERP
     function calculateTotalPrice() {
-        // Ambil metadata skema dari atribut data HTML
         let $priceElement = $('#render-base-price');
-        let jenisHarga = $priceElement.data('jenis-harga'); // 'pax', 'hari', 'jam', 'pax_jam'
+        let jenisHargaRaw = $priceElement.data('jenis-harga'); // 'pax', 'hari', 'jam', 'pax_jam'
+        let jenisHarga = String(jenisHargaRaw).trim().toLowerCase(); 
+        
         let rawPrice = parseInt($priceElement.data('raw-price')) || 0;
-        let totalDays = parseInt($priceElement.data('total-days')) || 1; // Menangkap jumlah hari booking
+        let totalDays = parseInt($priceElement.data('total-days')) || 1;
         let minOrder = parseInt($priceElement.data('min-order')) || 1;
 
-        // Ambil data input dinamis dari form yang diisi user
+        // Ambil nilai input kapasitas
         let totalPaxInput = parseInt($('#input-capacity').val()) || 0;
         
-        // Proteksi minimal order
-        if (totalPaxInput < minOrder && totalPaxInput !== 0) {
-            totalPaxInput = minOrder;
+        // Evaluasi penentu jumlah pengali orang (pax) untuk hitungan berbasis kapasitas
+        let paxMultiplier = totalPaxInput;
+        if (paxMultiplier < minOrder) {
+            // Jika form kosong (0) atau di bawah ketentuan, paksa gunakan batas minimal order database
+            paxMultiplier = minOrder; 
         }
 
         let basePriceCalculated = 0;
-        let durationHours = 1;
+        let durationHours = 1; 
 
-        // Hitung durasi jam jika container input jam aktif
-        let timeStart = $('#jam-mulai').val();
-        let timeEnd = $('#jam-selesai').val();
+        // =========================================================================
+        // REVISI TOTAL: NORMALISASI STRING FORMAT JAM UNTUK OBJECT DATE
+        // =========================================================================
+        let timeStartRaw = $('#jam_mulai').val() || "08:00"; 
+        let timeEndRaw = $('#jam_selesai').val() || "16:00";
+
+        // Ganti pemisah titik (.) menjadi titik dua (:) agar lolos parsing standarisasi mesin JavaScript
+        let timeStart = timeStartRaw.replace('.', ':');
+        let timeEnd = timeEndRaw.replace('.', ':');
+
         if (timeStart && timeEnd) {
             let dateStart = new Date("01/01/2026 " + timeStart);
             let dateEnd = new Date("01/01/2026 " + timeEnd);
-            let diff = dateEnd.getTime() - dateStart.getTime();
-            durationHours = Math.ceil(diff / (1000 * 60 * 60));
-            if (durationHours <= 0) durationHours = 1;
+            
+            // Periksa apakah konversi objek tanggal berhasil dan valid
+            if (!isNaN(dateStart.getTime()) && !isNaN(dateEnd.getTime())) {
+                let diffMs = dateEnd.getTime() - dateStart.getTime();
+                durationHours = Math.ceil(diffMs / (1000 * 60 * 60)); // Konversi ke satuan Jam
+            }
+
+            // Proteksi UX jika jam terbalik atau salah ketik mundur
+            if (durationHours <= 0) {
+                durationHours = 1; 
+                $('#jam_selesai').addClass('is-invalid');
+            } else {
+                $('#jam_selesai').removeClass('is-invalid');
+            }
         }
 
         // =========================================================================
-        // PERBAIKAN: FORMULA HARGA DASAR DIKALI TOTAL HARI BOOKING
+        // EKSEKUSI DATA 4 FORMULA PRICING (SINKRONISASI BIAYA PER PAX DAN JAM)
         // =========================================================================
-        if (jenisHarga === 'Pax') {
-            // Skema Per Pax: Harga x Jumlah Orang x Total Hari Booking
-            basePriceCalculated = rawPrice * (totalPaxInput || minOrder) * totalDays;
-            $('#label-sewa-utama').text(`Sewa Ruangan (${totalPaxInput || minOrder} Pax x ${totalDays} Hari)`);
+        if (jenisHarga === 'pax') {
+            // Skema Cuma Per Pax: Harga x Pengali Orang x Total Hari
+            basePriceCalculated = rawPrice * paxMultiplier * totalDays;
+            $('#label-sewa-utama').text(`Sewa Ruangan (${paxMultiplier} Pax x ${totalDays} Hari)`);
             
-        } else if (jenisHarga === 'Hari') {
-            // Skema Per Hari: Harga x Total Hari Booking
+        } else if (jenisHarga === 'hari') {
+            // Skema Cuma Per Hari: Harga x Total Hari
             basePriceCalculated = rawPrice * totalDays;
             $('#label-sewa-utama').text(`Sewa Ruangan (${totalDays} Hari)`);
             
-        } else if (jenisHarga === 'Jam') {
-            // Skema Per Jam: Harga x Durasi Jam x Total Hari Booking
-            basePriceCalculated = rawPrice * durationHours * totalDays;
-            $('#label-sewa-utama').text(`Sewa Ruangan (${durationHours} Jam x ${totalDays} Hari)`);
+        } else if (jenisHarga === 'jam') {
+            // Skema Cuma Per Jam: Harga x Durasi Jam
+            basePriceCalculated = rawPrice * durationHours;
+            $('#label-sewa-utama').text(`Sewa Ruangan (${durationHours} Jam)`);
             
-        } else if (jenisHarga === 'Pax_jam') {
-            // Skema Kombinasi: Harga x Jumlah Orang x Durasi Jam x Total Hari Booking
-            basePriceCalculated = rawPrice * (totalPaxInput || minOrder) * durationHours * totalDays;
-            $('#label-sewa-utama').text(`Sewa Ruangan (${totalPaxInput || minOrder} Pax x ${durationHours} Jam x ${totalDays} Hari)`);
+        } else if (jenisHarga === 'pax_jam') {
+            // Skenario Gabungan: Harga x Pengali Orang x Durasi Jam x Total Hari
+            basePriceCalculated = rawPrice * paxMultiplier * durationHours * totalDays;
+            $('#label-sewa-utama').text(`Sewa Ruangan (${paxMultiplier} Pax x ${durationHours} Jam)`);
         }
 
         // =========================================================================
-        // PERBAIKAN: HITUNG LAYANAN TAMBAHAN BERDASARKAN SIFAT BIAYA
+        // HITUNG LAYANAN TAMBAHAN (ADDONS)
         // =========================================================================
         let extraCost = 0;
         $('#render-extra-services-cost').empty();
@@ -105,18 +128,13 @@ $(document).ready(function() {
             let pricePerItem = parseInt($(this).data('price')) || 0;
             let costCalculated = pricePerItem;
 
-            // KATERING: Bersifat variabel per orang dan harus disediakan setiap hari acara
             if ($(this).attr('id') === 'catering') {
-                costCalculated = pricePerItem * (totalPaxInput || minOrder) * totalDays; // Dikali orang DAN dikali total hari
-            } 
-            // DEKORASI / IT SUPPORT: Biasanya berupa flat rate / setup cost sekali bayar di awal acara
-            else {
-                costCalculated = pricePerItem; // Tetap flat sewa per event
+                costCalculated = pricePerItem * paxMultiplier * totalDays;
+            } else {
+                costCalculated = pricePerItem;
             }
-            
             extraCost += costCalculated;
 
-            // Render rincian biaya ke invoice kiri
             $('#render-extra-services-cost').append(`
                 <div class="d-flex justify-content-between mb-2 small text-secondary">
                     <span>+ ${serviceName}</span>
@@ -125,7 +143,7 @@ $(document).ready(function() {
             `);
         });
 
-        // Render hasil kalkulasi kumulatif ke komponen invoice halaman web
+        // Perbarui visual teks invoice pada template Tempat-In
         $('#render-base-price').text('Rp ' + basePriceCalculated.toLocaleString('id-ID'));
         
         let finalTotal = basePriceCalculated + extraCost;
@@ -145,6 +163,8 @@ $(document).ready(function() {
         }
     });
 
-    // Eksekusi kalkulasi perdana saat halaman dimuat pertama kali
+    // =========================================================================
+    // TRIGGER KALKULASI AWAL SAAT HALAMAN PERTAMA KALI DIJALANKAN
+    // =========================================================================
     calculateTotalPrice();
 });

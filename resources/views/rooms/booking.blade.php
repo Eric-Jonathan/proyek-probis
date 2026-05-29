@@ -28,7 +28,7 @@
                     <p class="text-muted small mb-3"><i class="bi bi-geo-alt"></i> {{ $room->location }}</p>
                     
                     <div class="row g-2 small text-dark border-top pt-3">
-                        @foreach($room->facilities->take(4) as $facility)
+                        @foreach($room->facilities as $facility)
                             <div class="col-6"><i class="bi bi-patch-check text-primary me-1"></i> {{ $facility->name }}</div>
                         @endforeach
                     </div>
@@ -158,11 +158,11 @@
                         <div class="col-12 row g-2 mt-1 d-none" id="container-input-jam">
                             <div class="col-md-6">
                                 <label class="form-label small fw-medium">Waktu Mulai Acara</label>
-                                <input type="time" name="jam_mulai" class="form-control" value="08:00">
+                                <input type="time" name="jam_mulai" id="jam_mulai" class="form-control" value="08:00">
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label small fw-medium">Waktu Selesai Acara</label>
-                                <input type="time" name="jam_selesai" class="form-control" value="16:00">
+                                <input type="time" name="jam_selesai" id="jam_selesai" class="form-control" value="16:00">
                             </div>
                         </div>
 

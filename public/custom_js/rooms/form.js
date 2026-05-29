@@ -235,9 +235,23 @@ $(document).on('change', '#jenis_deposit', function(){
     }
 });
 
+// EVENT LISTENER PERUBAHAN DROPDOWN HARGA PER
 $(document).on('change', '#jenis_harga', function() {
-    $('#satuan_min_order').html($(this).val());
-})
+    let selectedValue = $(this).val(); // Mengambil nilai mentah: 'pax', 'hari', 'jam', 'pax_jam'
+
+    const labelMapping = {
+        'pax': 'Pax',
+        'hari': 'Hari',
+        'jam': 'Jam',
+        'pax_jam': 'Pax / Jam'
+    };
+
+    let cleanLabel = labelMapping[selectedValue] || selectedValue;
+    $('#addon-minimal-order').text(cleanLabel);
+});
+
+// Pemicu otomatis saat halaman pertama kali dijalankan (Taruh ini di dalam $(document).ready Anda)
+$('#jenis_harga').trigger('change');
 
 let selectedFilesArray = [];
 
