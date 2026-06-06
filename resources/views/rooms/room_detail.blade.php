@@ -173,13 +173,19 @@
         white-space: nowrap;
     }
     .custom-btn-opacity:hover { background-color: rgba(0, 0, 0, 0.8) !important; color: white; transform: scale(1.05); }
+
+    .btn-back-search:hover {
+        background-color: #f8f9fa !important;
+        transform: translateX(-3px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.08) !important;
+    }
 </style>
 @endsection
 
 @section('content')
 <body class="bg-white">
     <!-- Sticky Sub-Navbar -->
-    <div class="sticky-top bg-white border-bottom shadow-sm" style="z-index: 900; top: 70px;">
+    <div class="sticky-top bg-white border-bottom shadow-sm d-flex justify-content-between" style="z-index: 900; top: 70px;">
         <div class="container">
             <ul id="main-nav" class="nav nav-tabs border-0 mb-0 text-nowrap flex-nowrap overflow-auto py-2">
                 <li class="nav-item"><a class="nav-link active text-primary fw-bold border-0 border-bottom border-primary border-3" href="#section-info">Info Umum</a></li>
@@ -188,6 +194,11 @@
                 <li class="nav-item"><a class="nav-link text-muted border-0" href="#section-lokasi">Lokasi & Peraturan</a></li>
                 <li class="nav-item"><a class="nav-link text-muted border-0" href="#section-tentang">Tentang</a></li>
             </ul>
+        </div>
+        <div class="container pt-3 text-end">
+            <button class="btn btn-white rounded-pill shadow-sm border px-3 mb-3 fw-medium btn-back-search" style="transition: all 0.2s ease;">
+                <i class="bi bi-arrow-left me-1"></i> Kembali ke Pencarian
+            </button>
         </div>
     </div>
 
@@ -280,9 +291,11 @@
                 </p>
                 
                 <!-- Tombol Aksi -->
-                <a href="#section-rooms" class="btn btn-primary px-5 py-2 fw-bold shadow-sm rounded-pill w-100 w-md-auto" style="background-color: var(--primary-blue);">
-                    Pesan Sekarang
-                </a>
+                @if (Auth::user()->role == "admin")
+                    <a href="#section-rooms" class="btn btn-primary px-5 py-2 fw-bold shadow-sm rounded-pill w-100 w-md-auto" style="background-color: var(--primary-blue);">
+                        Pesan Sekarang
+                    </a>
+                @endif
             </div>
         </div>
     </div>
@@ -351,7 +364,7 @@
                             <div class="bg-primary bg-opacity-10 p-2 rounded-circle me-3"><i class="bi bi-people-fill text-primary fs-5"></i></div>
                             <div>
                                 <p class="text-muted mb-0" style="font-size: 0.75rem;">Maksimal Kapasitas</p>
-                                <p class="fw-bold mb-0 small">{{ $room->capacity }} Orang (Pax)</p>
+                                <p class="fw-bold mb-0 small">{{ $room->capacity }} Orang</p>
                             </div>
                         </div>
                         <div class="flex-grow-1">
@@ -380,27 +393,29 @@
     </div>
 
     <!-- Section Booking Trigger -->
-    <div id="section-rooms" class="container py-5">
-        <h4 class="fw-bold mb-4">Pilihan Tanggal Penggunaan</h4>
-        <div class="d-flex align-items-center justify-content-between p-3 border rounded-4 shadow-sm bg-white mb-4">
-            <div class="d-flex align-items-center flex-grow-1 gap-3 px-2">
-                <i class="bi bi-calendar3 text-primary"></i>
-                
-                <!-- TAMBAHKAN data-min-day DI SINI -->
-                <span id="display-date" 
-                    class="fw-semibold small clickable-box p-2 rounded-3" 
-                    data-bs-toggle="modal" 
-                    data-bs-target="#datePickerModal"
-                    data-min-day="{{ $room->day ?? 1 }}"
-                    data-room-id="{{ $room->room_id }}"
-                    data-jenis-harga="{{ $room->jenis_harga }}"> Pilih tanggal penyewaan...
-                </span>
+    @if (Auth::user()->role == "admin")
+        <div id="section-rooms" class="container py-5">
+            <h4 class="fw-bold mb-4">Pilihan Tanggal Penggunaan</h4>
+            <div class="d-flex align-items-center justify-content-between p-3 border rounded-4 shadow-sm bg-white mb-4">
+                <div class="d-flex align-items-center flex-grow-1 gap-3 px-2">
+                    <i class="bi bi-calendar3 text-primary"></i>
+                    
+                    <!-- TAMBAHKAN data-min-day DI SINI -->
+                    <span id="display-date" 
+                        class="fw-semibold small clickable-box p-2 rounded-3" 
+                        data-bs-toggle="modal" 
+                        data-bs-target="#datePickerModal"
+                        data-min-day="{{ $room->day ?? 1 }}"
+                        data-room-id="{{ $room->room_id }}"
+                        data-jenis-harga="{{ $room->jenis_harga }}"> Pilih tanggal penyewaan...
+                    </span>
+                </div>
+                <a href="" id="btn-trigger-booking" class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm" style="background-color: var(--primary-blue);">
+                    Booking Ruangan
+                </a>
             </div>
-            <a href="" id="btn-trigger-booking" class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm" style="background-color: var(--primary-blue);">
-                Booking Ruangan
-            </a>
         </div>
-    </div>
+    @endif
 
     <!-- Modal Kalender -->
     <div class="modal fade" id="datePickerModal" tabindex="-1" aria-hidden="true">

@@ -37,4 +37,9 @@ class Room extends Model
     {
         return $this->hasMany(Facility::class, 'room_id', 'room_id');
     }
+
+    public function outsourceAssignments()
+    {
+        return $this->hasMany(OutsourceAssignment::class, 'room_id', 'room_id');
+    }
 }

@@ -247,3 +247,9 @@ $(document).ready(function() {
         }
     });
 });
+
+$(document).on('click', '.btn-back-search', function(e) {
+    e.preventDefault();
+    
+    window.history.back();
+});

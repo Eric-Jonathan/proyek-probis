@@ -6,7 +6,7 @@
         
         <div class="ms-auto d-flex align-items-center">
             <span class="me-3 text-muted">Welcome, {{ Auth::user()->username }}</span>
-            <div class="dropdown">
+            <div class="dropdown" style="cursor: pointer">
                 <i class="bi bi-person-circle fs-4 cursor-pointer" data-bs-toggle="dropdown"></i>
                 <ul class="dropdown-menu dropdown-menu-end">
                     <li><a class="dropdown-item" href="#">Profil</a></li>

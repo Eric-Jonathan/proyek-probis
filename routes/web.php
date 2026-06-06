@@ -34,7 +34,10 @@ Route::get('/autocompleteLocation', [ApiController::class, 'autocompleteLocation
 Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/admin/dashboard', [AdminController::class, 'index'])->name('admin.dashboard');
     Route::get('/admin/acc_room', [AdminController::class, 'acc_room'])->name('admin.acc_room');
-    Route::get('/admin/assign_outsource', [AdminController::class, 'assign_outsource'])->name('admin.assign_outsource');
+    
+    Route::get('/admin/assign_outsource', [AdminController::class, 'outsourceAssignment'])->name('admin.assign_outsource');
+    Route::post('/admin/outsource/assign/{assignment_id}', [AdminController::class, 'assignSurveyor'])->name('outsource.assign');
+    Route::post('/admin/outsource/cancel/{assignment_id}', [AdminController::class, 'cancelAssignment'])->name('outsource.cancel');
 
     Route::get('/admin/users', [PeopleController::class, 'people'])->name('admin.users');
     Route::post('/admin/users/insert', [PeopleController::class, 'insertPeople'])->name('users.insert');
