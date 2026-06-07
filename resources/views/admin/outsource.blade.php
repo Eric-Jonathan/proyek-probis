@@ -244,25 +244,25 @@
                 </div>
                 <div class="modal-body px-4 pb-4">
                     <div class="row g-3">
-                        <div class="col-md-4">
+                        <div class="col-md-6">
                             <small class="text-muted text-uppercase d-block fw-bold small">Nama Perusahaan</small>
                             <p class="fw-bold text-dark id-company">-</p>
                         </div>
-                        <div class="col-md-4">
-                            <small class="text-muted text-uppercase d-block fw-bold small">Bidang Jasa</small>
-                            <p class="text-dark id-type">-</p>
+                        <div class="col-md-6">
+                            <small class="text-muted text-uppercase d-block fw-bold small">Alamat Kantor</small>
+                            <p class="text-dark id-address">-</p>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-6">
                             <small class="text-muted text-uppercase d-block fw-bold small">Nomor NIB</small>
                             <p class="text-dark id-nib">-</p>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-6">
                             <small class="text-muted text-uppercase d-block fw-bold small">Nomor NPWP</small>
                             <p class="text-dark id-npwp">-</p>
                         </div>
-                        <div class="col-md-8">
-                            <small class="text-muted text-uppercase d-block fw-bold small">Alamat Kantor</small>
-                            <p class="text-dark id-address">-</p>
+                        <div class="col-md-6">
+                            <small class="text-muted text-uppercase d-block fw-bold small">Bidang Jasa</small>
+                            <p class="text-dark id-type">-</p>
                         </div>
                         <hr class="my-2">
                         <div class="col-md-6">
