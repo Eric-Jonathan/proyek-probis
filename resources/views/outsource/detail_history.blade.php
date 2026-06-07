@@ -20,7 +20,7 @@
                 </div>
                 <div class="col-md-5 text-md-end">
                     <div class="small opacity-75">HONOR PROJECT</div>
-                    <h4 class="fw-bold mb-0">Rp {{ number_format($job->fee, 0, ',', '.') }}</h4>
+                    <h4 class="fw-bold mb-0">Rp 500.000</h4>
                 </div>
             </div>
         </div>

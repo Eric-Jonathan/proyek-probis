@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Outsource;
 use App\Models\OutsourceAssignment;
 use App\Models\People;
 use App\Models\Room;
@@ -21,12 +22,129 @@ class AdminController extends Controller
         return view('admin.assign_outsource');
     }
     
-    public function outsource(){
-        return view('admin.outsource');
+    public function outsource(Request $request)
+    {
+        $query = Outsource::with('account')->where('status', '>=', 0);
+
+        // Fitur Pencarian Dinamis berdasarkan nama vendor atau layanan
+        if ($request->has('search') && $request->search != '') {
+            $search = $request->search;
+            
+            $query->where(function($q) use ($search) {
+                $q->where('company_name', 'like', '%' . $search . '%')
+                ->orWhere('business_type', 'like', '%' . $search . '%');
+            });
+        }
+
+        // Ambil data dengan pagination
+        $partners = $query->paginate(10);
+
+        // Menghitung data statistik box atas secara real-time
+        $totalMitra    = Outsource::where('status', '>=', 0)->count();
+        $mitraAktif    = Outsource::where('status', 1)->count();
+        $mitraNonaktif = Outsource::where('status', 0)->count();
+
+        return view('admin.outsource', compact('partners', 'totalMitra', 'mitraAktif', 'mitraNonaktif'));
     }
 
-    public function create_outsource(){
+    // Menampilkan halaman form pendaftaran vendor
+    public function create_outsource()
+    {
         return view('admin.form_outsource');
+    }
+
+    // Memproses penyimpanan data pendaftaran vendor baru (Database Transaction Safe)
+    public function store_outsource(Request $request)
+    {
+        $request->validate([
+            'company_name'    => 'required|string|max:255',
+            'nib'             => 'required|numeric|digits:13',
+            'npwp'            => 'required|numeric',
+            'business_type'   => 'required|string',
+            'company_address' => 'required|string',
+            'pic_name'        => 'required|string|max:255',
+            'pic_position'    => 'required|string|max:255',
+            'pic_phone'       => 'required|numeric',
+            'pic_email'           => 'required|email',
+            'bank_name'       => 'required|string',
+            'bank_account'    => 'required|numeric',
+        ]);
+
+        Outsource::create([
+            'company_name'    => $request->company_name,
+            'nib'             => $request->nib,
+            'npwp'            => $request->npwp,
+            'business_type'   => $request->business_type,
+            'company_address' => $request->company_address,
+            'pic_name'        => $request->pic_name,
+            'pic_position'    => $request->pic_position,
+            'pic_email'       => $request->pic_email,
+            'pic_phone'       => $request->pic_phone,
+            'bank_name'       => $request->bank_name,
+            'bank_account'    => $request->bank_account,
+            'status'          => 1
+        ]);
+
+        return redirect()->route('admin.outsource')->with('success', 'Perusahaan Mitra Berhasil Didaftarkan!');
+    }
+
+    // Menampilkan halaman form edit dengan data lama yang sudah terisi
+    public function edit_outsource($outsource_id)
+    {
+        // Cari data vendor berdasarkan ID, jika tidak ketemu langsung error 404
+        $vendor = Outsource::findOrFail($outsource_id);
+
+        return view('admin.form_outsource', compact('vendor'));
+    }
+
+    // Memproses perubahan data dari form edit
+    public function update_outsource(Request $request, $outsource_id)
+    {
+        $request->validate([
+            'company_name'    => 'required|string|max:255',
+            'nib'             => 'required|numeric|digits:13',
+            'npwp'            => 'required|numeric',
+            'business_type'   => 'required|string',
+            'company_address' => 'required|string',
+            'pic_name'        => 'required|string|max:255',
+            'pic_position'    => 'required|string|max:255',
+            'pic_phone'       => 'required|numeric',
+            'pic_email'       => 'required|email',
+            'bank_name'       => 'required|string',
+            'bank_account'    => 'required|numeric',
+        ]);
+
+        $vendor = Outsource::findOrFail($outsource_id);
+
+        // Update data vendor di database
+        $vendor->update([
+            'company_name'    => $request->company_name,
+            'nib'             => $request->nib,
+            'npwp'            => $request->npwp,
+            'business_type'   => $request->business_type,
+            'company_address' => $request->company_address,
+            'pic_name'        => $request->pic_name,
+            'pic_position'    => $request->pic_position,
+            'pic_email'       => $request->pic_email,
+            'pic_phone'       => $request->pic_phone,
+            'bank_name'       => $request->bank_name,
+            'bank_account'    => $request->bank_account,
+        ]);
+
+        // Redirect kembali ke halaman utama list master outsource dengan alert sukses
+        return redirect()->route('admin.outsource')->with('success', 'Data perusahaan mitra berhasil diperbarui!');
+    }
+
+    // Fungsi memutus kontrak / mengubah status keaktifan mitra
+    public function terminate_outsource($id)
+    {
+        $partner = Outsource::findOrFail($id);
+        // Toggle status keaktifan vendor
+        $partner->update([
+            'status' => $partner->status == 1 ? 0 : 1
+        ]);
+
+        return back()->with('success', 'Status keaktifan kemitraan vendor berhasil diperbarui.');
     }
 
     public function outsourceAssignment()

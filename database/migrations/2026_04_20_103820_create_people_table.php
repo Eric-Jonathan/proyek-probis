@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('people', function (Blueprint $table) {
             $table->integerIncrements('user_id');
+            $table->integer('outsource_id')->nullable()->default(null);
             $table->string('username', 100)->unique();
             $table->string('password');
             $table->string('phone', 255);

@@ -45,8 +45,13 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::post('/admin/users/delete', [PeopleController::class, 'deletePeople'])->name('users.delete');
 
     Route::get('/admin/formPeople', [PeopleController::class, 'formPeople'])->name('admin.formPeople');
+
     Route::get('/admin/outsource', [AdminController::class, 'outsource'])->name('admin.outsource');
     Route::get('/admin/outsource/create', [AdminController::class, 'create_outsource'])->name('admin.outsource.form');
+    Route::post('/admin/outsource/store', [AdminController::class, 'store_outsource'])->name('admin.outsource.store');
+    Route::get('/admin/outsource/edit/{outsource_id}', [AdminController::class, 'edit_outsource'])->name('admin.outsource.edit');
+    Route::put('/admin/outsource/update/{outsource_id}', [AdminController::class, 'update_outsource'])->name('admin.outsource.update');
+    Route::post('/admin/outsource/terminate/{id}', [AdminController::class, 'terminate_outsource'])->name('admin.outsource.terminate');
 });
 
 Route::middleware(['auth', 'role:penyedia'])->group(function () {

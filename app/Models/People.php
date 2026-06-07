@@ -22,4 +22,9 @@ class People extends Authenticatable
     protected $hidden = [
         'password', 'remember_token',
     ];
+
+    public function partner()
+    {
+        return $this->belongsTo(Outsource::class, 'outsource_id', 'outsource_id');
+    }
 }
