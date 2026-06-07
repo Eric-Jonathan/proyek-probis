@@ -41,8 +41,8 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
 
     Route::get('/admin/users', [PeopleController::class, 'people'])->name('admin.users');
     Route::post('/admin/users/insert', [PeopleController::class, 'insertPeople'])->name('users.insert');
-    Route::post('/admin/users/update', [PeopleController::class, 'updatePeople'])->name('users.update');
-    Route::post('/admin/users/delete', [PeopleController::class, 'deletePeople'])->name('users.delete');
+    Route::post('/admin/users/update/{id}', [PeopleController::class, 'updatePeople'])->name('users.update');
+    Route::post('/admin/users/delete/{id}', [PeopleController::class, 'deletePeople'])->name('users.delete');
 
     Route::get('/admin/formPeople', [PeopleController::class, 'formPeople'])->name('admin.formPeople');
 

@@ -22,3 +22,13 @@ function init(){
         }
     });
 }
+
+$(document).on('click', '.btn-view-user', function() {
+    let modal = $('#modalViewUser');
+    modal.find('.field-username').text($(this).data('username'));
+    modal.find('.field-email').text($(this).data('email'));
+    modal.find('.field-phone').text($(this).data('phone'));
+    modal.find('.field-role').text($(this).data('role'));
+    modal.find('.field-company').text($(this).data('company'));
+    modal.modal('show');
+});
