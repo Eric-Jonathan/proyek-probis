@@ -2,54 +2,6 @@
 
 @section('content')
 <div class="container py-3">
-    @php
-        // DATA DUMMY HISTORI (Ditaruh langsung di View)
-        $allJobs = collect([
-            (object)[
-                'id' => 101, 
-                'room' => 'Cozy Meeting Room', 
-                'tgl_kirim' => '2026-05-10', 
-                'fee' => 500000, 
-                'status' => 'Diterima'
-            ],
-            (object)[
-                'id' => 102, 
-                'room' => 'Grand Ballroom Kencana', 
-                'tgl_kirim' => '2026-05-11', 
-                'fee' => 5500000, 
-                'status' => 'Pending'
-            ],
-            (object)[
-                'id' => 103, 
-                'room' => 'Diponegoro Suite', 
-                'tgl_kirim' => '2026-05-09', 
-                'fee' => 750000, 
-                'status' => 'Diterima'
-            ],
-            (object)[
-                'id' => 104, 
-                'room' => 'Studio Foto Malang', 
-                'tgl_kirim' => '2026-05-08', 
-                'fee' => 300000, 
-                'status' => 'Ditolak'
-            ],
-            (object)[
-                'id' => 105, 
-                'room' => 'Lab Komputer Bisnis', 
-                'tgl_kirim' => '2026-05-07', 
-                'fee' => 150000, 
-                'status' => 'Diterima'
-            ],
-        ]);
-
-        // Hitung Statistik Berdasarkan Data Dummy di Atas
-        $stats = [
-            ['label' => 'Total Terkirim', 'val' => $allJobs->count(), 'color' => 'primary', 'icon' => 'bi-send-check'],
-            ['label' => 'Disetujui', 'val' => $allJobs->where('status', 'Diterima')->count(), 'color' => 'success', 'icon' => 'bi-patch-check'],
-            ['label' => 'Perlu Revisi', 'val' => $allJobs->where('status', 'Ditolak')->count(), 'color' => 'danger', 'icon' => 'bi-exclamation-octagon'],
-            ['label' => 'Menunggu', 'val' => $allJobs->where('status', 'Pending')->count(), 'color' => 'warning', 'icon' => 'bi-hourglass-split'],
-        ];
-    @endphp
 
     <div class="row mb-4 align-items-center">
         <div class="col">
@@ -81,24 +33,31 @@
 
     <div class="card border-0 shadow-sm mb-4" style="border-radius: 15px;">
         <div class="card-body p-3">
-            <form action="#" method="GET">
+            <form action="{{ route('outsource.history') }}" method="GET">
                 <div class="row g-2">
                     <div class="col-md-7">
                         <div class="input-group input-group-sm">
                             <span class="input-group-text bg-transparent border-end-0"><i class="bi bi-search text-muted"></i></span>
-                            <input type="text" class="form-control border-start-0 ps-0 shadow-none" placeholder="Cari laporan...">
+                            <input type="text" name="search" class="form-control border-start-0 ps-0 shadow-none" placeholder="Cari laporan berdasarkan nama ruangan atau ID..." value="{{ request('search') }}">
                         </div>
                     </div>
                     <div class="col-md-3">
-                        <select class="form-select form-select-sm shadow-none">
-                            <option selected>Semua Status</option>
-                            <option>Diterima</option>
-                            <option>Ditolak</option>
-                            <option>Pending</option>
+                        <select name="status" class="form-select form-select-sm shadow-none">
+                            <option value="Semua Status" {{ request('status') == 'Semua Status' ? 'selected' : '' }}>Semua Status</option>
+                            <option value="Diterima" {{ request('status') == 'Diterima' ? 'selected' : '' }}>Diterima</option>
+                            <option value="Ditolak" {{ request('status') == 'Ditolak' ? 'selected' : '' }}>Ditolak</option>
+                            <option value="Pending" {{ request('status') == 'Pending' ? 'selected' : '' }}>Pending</option>
                         </select>
                     </div>
                     <div class="col-md-2">
-                        <button type="submit" class="btn btn-primary btn-sm w-100 fw-bold rounded-pill shadow-sm">Filter</button>
+                        <div class="d-flex gap-1">
+                            <button type="submit" class="btn btn-primary btn-sm w-100 fw-bold rounded-pill shadow-sm">Filter</button>
+                            @if(request()->filled('search') || (request()->filled('status') && request('status') !== 'Semua Status'))
+                                <a href="{{ route('outsource.history') }}" class="btn btn-light btn-sm rounded-pill d-flex align-items-center justify-content-center px-3" title="Reset Filter">
+                                    <i class="bi bi-x-circle text-secondary"></i>
+                                </a>
+                            @endif
+                        </div>
                     </div>
                 </div>
             </form>
@@ -118,7 +77,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach($allJobs as $job)
+                    @forelse($allJobs as $job)
                     <tr>
                         <td class="ps-4 py-4 text-start">
                             <div class="fw-bold text-dark">{{ $job->room }}</div>
@@ -147,7 +106,17 @@
                             </a>
                         </td>
                     </tr>
-                    @endforeach
+                    @empty
+                    <tr>
+                        <td colspan="5" class="py-5 text-center text-muted">
+                            <i class="bi bi-file-earmark-x fs-1 d-block mb-2 text-secondary"></i>
+                            <span class="fw-semibold">Tidak ada data histori laporan ditemukan</span>
+                            @if(request()->filled('search') || (request()->filled('status') && request('status') !== 'Semua Status'))
+                                <p class="small text-secondary mt-1">Coba sesuaikan kata kunci pencarian atau status filter Anda.</p>
+                            @endif
+                        </td>
+                    </tr>
+                    @endforelse
                 </tbody>
             </table>
         </div>

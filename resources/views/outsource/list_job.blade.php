@@ -2,6 +2,16 @@
 
 @section('content')
 <div class="container py-3">
+    @if(session('success'))
+        <div class="alert alert-success alert-dismissible fade show border-0 rounded-3 shadow-sm mb-4" role="alert">
+            <div class="d-flex align-items-center">
+                <i class="bi bi-check-circle-fill me-2 fs-5"></i>
+                <div>{{ session('success') }}</div>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
     <div class="row mb-4 align-items-center">
         <div class="col">
             <h3 class="fw-bold m-0 text-dark">Manajemen Penugasan</h3>
@@ -10,14 +20,6 @@
     </div>
 
     <div class="row g-3 mb-4">
-        @php
-            $stats = [
-                ['label' => 'Tugas Tersedia', 'val' => 5, 'color' => 'primary', 'icon' => 'bi-briefcase'],
-                ['label' => 'Sedang Berjalan', 'val' => 2, 'color' => 'warning', 'icon' => 'bi-clock-history'],
-                ['label' => 'Total Honor', 'val' => 'Rp 1.2M', 'color' => 'success', 'icon' => 'bi-wallet2'],
-                ['label' => 'Perlu Tindakan', 'val' => 1, 'color' => 'danger', 'icon' => 'bi-bell'],
-            ];
-        @endphp
         @foreach($stats as $s)
         <div class="col-12 col-sm-6 col-lg-3">
             <div class="card stat-card shadow-sm rounded-4 p-3 h-100 border-0">
@@ -48,13 +50,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @php
-                        $allJobs = collect([
-                            (object)['id' => 101, 'room' => 'Cozy Meeting Room', 'city' => 'Batu', 'fee' => 500000, 'deadline' => '2026-05-15', 'is_taken' => true],
-                            (object)['id' => 102, 'room' => 'Grand Ballroom Kencana', 'city' => 'Batu', 'fee' => 5500000, 'deadline' => '2026-05-18', 'is_taken' => false],
-                            (object)['id' => 105, 'room' => 'Studio Foto Malang', 'city' => 'Malang', 'fee' => 175000, 'deadline' => '2026-05-20', 'is_taken' => false],
-                        ]);
-                    @endphp
+
 
                     @foreach($allJobs as $job)
                     <tr>
@@ -83,7 +79,7 @@
                                                 
                                                 <div class="d-flex gap-2 justify-content-center">
                                                     <button type="button" class="btn btn-light rounded-pill px-4 fw-bold" data-bs-dismiss="modal">Batal</button>
-                                                    <form action="#" method="POST">
+                                                    <form action="{{ route('outsource.job.take', $job->id) }}" method="POST">
                                                         @csrf
                                                         <button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold">Ya, Saya Siap!</button>
                                                     </form>

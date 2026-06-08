@@ -38,6 +38,8 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/admin/assign_outsource', [AdminController::class, 'outsourceAssignment'])->name('admin.assign_outsource');
     Route::post('/admin/outsource/assign/{assignment_id}', [AdminController::class, 'assignSurveyor'])->name('outsource.assign');
     Route::post('/admin/outsource/cancel/{assignment_id}', [AdminController::class, 'cancelAssignment'])->name('outsource.cancel');
+    Route::post('/admin/room/approve/{room_id}', [AdminController::class, 'approveRoom'])->name('admin.room.approve');
+    Route::post('/admin/room/reject/{room_id}', [AdminController::class, 'rejectRoom'])->name('admin.room.reject');
 
     Route::get('/admin/users', [PeopleController::class, 'people'])->name('admin.users');
     Route::post('/admin/users/insert', [PeopleController::class, 'insertPeople'])->name('users.insert');
@@ -72,8 +74,10 @@ Route::middleware(['auth', 'role:admin,outsource'])->group(function () {
 Route::middleware(['auth', 'role:outsource'])->group(function () {
     Route::prefix('outsource')->name('outsource.')->group(function () {
         Route::get('/', [OutsourceController::class, 'index'])->name('dashboard');
-        Route::get('/form', [OutsourceController::class, 'form'])->name('form');
+        Route::get('/form/{assignment_id}', [OutsourceController::class, 'form'])->name('form');
         Route::get('/list_job', [OutsourceController::class, 'jobList'])->name('job');
+        Route::post('/job/take/{assignment_id}', [OutsourceController::class, 'takeJob'])->name('job.take');
+        Route::post('/job/submit/{assignment_id}', [OutsourceController::class, 'submitReport'])->name('job.submit');
 
         // Halaman Tabel History
         Route::get('/history', [OutsourceController::class, 'history'])->name('history');

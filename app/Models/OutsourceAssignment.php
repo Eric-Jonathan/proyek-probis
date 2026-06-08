@@ -21,4 +21,10 @@ class OutsourceAssignment extends Model
     {
         return $this->belongsTo(People::class, 'surveyor_id', 'user_id');
     }
+
+    // Relasi mendapatkan laporan kelayakan jika sudah selesai diisi
+    public function report()
+    {
+        return $this->hasOne(OutsourceReport::class, 'assignment_id', 'assignment_id');
+    }
 }

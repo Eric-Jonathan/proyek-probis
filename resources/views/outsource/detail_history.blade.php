@@ -20,7 +20,7 @@
                 </div>
                 <div class="col-md-5 text-md-end">
                     <div class="small opacity-75">HONOR PROJECT</div>
-                    <h4 class="fw-bold mb-0">Rp 500.000</h4>
+                    <h4 class="fw-bold mb-0">Rp 200.000</h4>
                 </div>
             </div>
         </div>
@@ -167,12 +167,21 @@
                 <p class="text-muted small mb-0">Bandingkan laporan di atas dan tentukan kelayakan unit.</p>
             </div>
             <div class="col-md-6 text-center text-md-end">
-                <button class="btn btn-danger rounded-pill px-4 py-2 fw-bold me-2 shadow-sm">
-                    <i class="bi bi-x-circle me-1"></i> Tolak
-                </button>
-                <button class="btn btn-success rounded-pill px-4 py-2 fw-bold shadow-sm">
-                    <i class="bi bi-check-circle me-1"></i> Setujui
-                </button>
+                <div class="d-inline-flex justify-content-center justify-content-md-end gap-2 w-100">
+                    <form action="{{ route('admin.room.reject', $job->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menolak pengajuan sewa ruangan ini?')">
+                        @csrf
+                        <button type="submit" class="btn btn-danger rounded-pill px-4 py-2 fw-bold shadow-sm">
+                            <i class="bi bi-x-circle me-1"></i> Tolak
+                        </button>
+                    </form>
+                    
+                    <form action="{{ route('admin.room.approve', $job->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menyetujui pengajuan sewa ruangan ini?')">
+                        @csrf
+                        <button type="submit" class="btn btn-success rounded-pill px-4 py-2 fw-bold shadow-sm">
+                            <i class="bi bi-check-circle me-1"></i> Setujui
+                        </button>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
