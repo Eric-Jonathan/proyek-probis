@@ -25,14 +25,18 @@ Route::get('/rooms/create', [RoomController::class, 'create'])->name('rooms.crea
 Route::post('/rooms/store', [RoomController::class, 'store'])->name('rooms.store');
 Route::get('/rooms/{id}/transaction', [RoomController::class, 'transaction'])->name('rooms.transaction');
 Route::get('/rooms/{room}/edit', [RoomController::class, 'edit'])->name('rooms.edit');
-Route::get('/rooms/{id}', [RoomController::class, 'show'])->name('rooms.show');
 Route::put('/rooms/{room}', [RoomController::class, 'update'])->name('rooms.update');
 Route::delete('/rooms/{room}', [RoomController::class, 'destroy'])->name('rooms.destroy');
 
 Route::get('/autocompleteLocation', [ApiController::class, 'autocompleteLocation'])->name('autocompleteLocation');
 
+Route::middleware(['auth', 'role:penyewa,penyedia,admin'])->group(function () {
+    Route::get('/rooms/{id}', [RoomController::class, 'show'])->name('rooms.show');
+});
+
 Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/admin/dashboard', [AdminController::class, 'index'])->name('admin.dashboard');
+    Route::get('/admin/dashboard/chart-data', [AdminController::class, 'getChartData'])->name('admin.dashboard.chart');
     Route::get('/admin/acc_room', [AdminController::class, 'acc_room'])->name('admin.acc_room');
     
     Route::get('/admin/assign_outsource', [AdminController::class, 'outsourceAssignment'])->name('admin.assign_outsource');
@@ -69,6 +73,7 @@ Route::middleware(['auth', 'role:penyewa'])->group(function () {
 
 Route::middleware(['auth', 'role:admin,outsource'])->group(function () {
     Route::get('/outsource/history/{id}', [OutsourceController::class, 'historyDetail'])->name('outsource.history.detail');
+    Route::get('/outsource/history/{id}/pdf', [OutsourceController::class, 'downloadPDF'])->name('outsource.history.pdf');
 });
 
 Route::middleware(['auth', 'role:outsource'])->group(function () {

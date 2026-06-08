@@ -1,5 +1,9 @@
-$(document).on('click', '.hotel-card', function(){
-    window.location.href = "/room";
+$(document).on('click', '.hotel-card', function(e){
+    if ($(e.target).closest('.btn-favorite').length) {
+        return;
+    }
+    let roomId = $(this).data('id');
+    window.location.href = "/rooms/" + roomId;
 })
 
 $(document).on('click', '.btn-favorite', function(){

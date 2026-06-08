@@ -16,6 +16,7 @@ return new class extends Migration
             $table->integer('user_id');
             $table->integer('total');
             $table->string('method_payment', 50);
+            $table->string('event', 255);
             $table->string('photo')->nullable();
             $table->dateTime('start_date');
             $table->dateTime('end_date');

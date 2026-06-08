@@ -49,12 +49,32 @@
                         </div>
                         <p class="text-secondary small bg-light p-3 rounded-3 mb-3 italic">"{{ $job->pengaju->catatan }}"</p>
                         
+                        {{-- Facilities checklist comparison for owner --}}
+                        @if(isset($allFacilitiesList))
+                            <h6 class="mt-4 fw-bold">Fasilitas Diajukan:</h6>
+                            <div class="d-flex flex-wrap gap-2 mb-3">
+                                @foreach($allFacilitiesList as $facility)
+                                    @if(in_array($facility, $job->pengaju->facilities ?? []))
+                                        <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-3 py-2 fw-semibold" style="font-size: 0.75rem;">
+                                            <i class="bi bi-check-circle-fill me-1"></i> {{ $facility }}
+                                        </span>
+                                    @else
+                                        <span class="badge bg-light text-muted border rounded-pill px-3 py-2 fw-normal" style="font-size: 0.75rem;">
+                                            <i class="bi bi-x-circle me-1"></i> {{ $facility }}
+                                        </span>
+                                    @endif
+                                @endforeach
+                            </div>
+                        @endif
+
                         <h6>Media Lampiran:</h6>
                         <div class="row g-2">
                             @foreach($job->pengaju->media as $m)
-                                <div class="col-4">
-                                    <img src="{{ $m['url'] }}" class="img-fluid rounded-3 shadow-sm" style="height: 80px; width: 100%; object-fit: cover;">
-                                </div>
+                                @if($m['type'] == 'image')
+                                    <div class="col-4">
+                                        <img src="{{ $m['url'] }}" class="img-fluid rounded-3 shadow-sm" style="height: 80px; width: 100%; object-fit: cover;">
+                                    </div>
+                                @endif
                             @endforeach
                         </div>
                     </div>
@@ -81,23 +101,42 @@
                         </div>
                         <p class="text-secondary small bg-light p-3 rounded-3 mb-3 italic border-start border-primary border-4">"{{ $job->surveyor->catatan }}"</p>
                         
-                        <h6>Galeri Temuan Lapangan:</h6>
-                        <div class="row g-2">
-                            @foreach($job->surveyor->media as $m)
-                                <div class="col-4 position-relative">
-                                    @if($m['type'] == 'image')
-                                        <img src="{{ $m['url'] }}" class="img-fluid rounded-3 shadow-sm" style="height: 80px; width: 100%; object-fit: cover;">
+                        {{-- Facilities checklist comparison for surveyor --}}
+                        @if(isset($allFacilitiesList))
+                            <h6 class="mt-4 fw-bold">Fasilitas Terverifikasi:</h6>
+                            <div class="d-flex flex-wrap gap-2 mb-3">
+                                @foreach($allFacilitiesList as $facility)
+                                    @if(in_array($facility, $job->surveyor->facilities ?? []))
+                                        <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-3 py-2 fw-semibold" style="font-size: 0.75rem;">
+                                            <i class="bi bi-check-circle-fill me-1"></i> {{ $facility }}
+                                        </span>
                                     @else
-                                        <video class="img-fluid rounded-3 shadow-sm" style="height: 80px; width: 100%; object-fit: cover;">
-                                            <source src="{{ $m['url'] }}" type="video/mp4">
-                                        </video>
-                                        <div class="position-absolute top-50 start-50 translate-middle text-white">
-                                            <i class="bi bi-play-circle-fill fs-4 shadow"></i>
-                                        </div>
+                                        <span class="badge bg-light text-muted border rounded-pill px-3 py-2 fw-normal" style="font-size: 0.75rem;">
+                                            <i class="bi bi-x-circle me-1"></i> {{ $facility }}
+                                        </span>
                                     @endif
-                                </div>
+                                @endforeach
+                            </div>
+                        @endif
+
+                        <h6>Galeri Temuan Lapangan:</h6>
+                        <div class="row g-2 mb-3">
+                            @foreach($job->surveyor->media as $m)
+                                @if($m['type'] == 'image')
+                                    <div class="col-4">
+                                        <img src="{{ $m['url'] }}" class="img-fluid rounded-3 shadow-sm" style="height: 80px; width: 100%; object-fit: cover;">
+                                    </div>
+                                @endif
                             @endforeach
                         </div>
+
+                        {{-- HTML5 Surveyor Video Player --}}
+                        @if(!empty($job->surveyor->video))
+                            <h6 class="fw-bold text-dark mb-2">Video Hasil Survei:</h6>
+                            <video controls class="rounded w-100 shadow-sm" style="max-height: 200px; object-fit: contain;">
+                                <source src="{{ $job->surveyor->video }}" type="video/mp4">
+                            </video>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -132,31 +171,54 @@
                     </div>
                 </div>
 
-                <h6 class="fw-bold text-dark mb-3">Dokumentasi Media:</h6>
-                <div class="row g-3">
-                    @foreach($job->surveyor->media as $m)
-                        <div class="col-md-3 col-6 position-relative">
-                            @if($m['type'] == 'image')
-                                <img src="{{ $m['url'] }}" class="img-fluid rounded-4 shadow-sm w-100" style="height: 160px; object-fit: cover;">
+                {{-- Surveyor verified facilities checklist in single view --}}
+                @if(isset($allFacilitiesList))
+                <div class="mb-4">
+                    <h6 class="fw-bold text-dark mb-2">Fasilitas Terverifikasi:</h6>
+                    <div class="d-flex flex-wrap gap-2">
+                        @foreach($allFacilitiesList as $facility)
+                            @if(in_array($facility, $job->surveyor->facilities ?? []))
+                                <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-3 py-2 fw-semibold" style="font-size: 0.75rem;">
+                                    <i class="bi bi-check-circle-fill me-1"></i> {{ $facility }}
+                                </span>
                             @else
-                                <video class="img-fluid rounded-4 shadow-sm w-100" style="height: 160px; object-fit: cover;">
-                                    <source src="{{ $m['url'] }}" type="video/mp4">
-                                </video>
-                                <div class="position-absolute top-50 start-50 translate-middle text-white">
-                                    <i class="bi bi-play-circle-fill fs-1 shadow"></i>
-                                </div>
+                                <span class="badge bg-light text-muted border rounded-pill px-3 py-2 fw-normal" style="font-size: 0.75rem;">
+                                    <i class="bi bi-x-circle me-1"></i> {{ $facility }}
+                                </span>
                             @endif
-                        </div>
+                        @endforeach
+                    </div>
+                </div>
+                @endif
+
+                <h6 class="fw-bold text-dark mb-3">Dokumentasi Media:</h6>
+                <div class="row g-3 mb-4">
+                    @foreach($job->surveyor->media as $m)
+                        @if($m['type'] == 'image')
+                            <div class="col-md-3 col-6">
+                                <img src="{{ $m['url'] }}" class="img-fluid rounded-4 shadow-sm w-100" style="height: 160px; object-fit: cover;">
+                            </div>
+                        @endif
                     @endforeach
                 </div>
+
+                {{-- Surveyor Video Player in single view --}}
+                @if(!empty($job->surveyor->video))
+                <div class="mb-2">
+                    <h6 class="fw-bold text-dark mb-2">Video Hasil Survei:</h6>
+                    <video controls class="rounded w-100 shadow-sm" style="max-height: 250px; object-fit: contain;">
+                        <source src="{{ $job->surveyor->video }}" type="video/mp4">
+                    </video>
+                </div>
+                @endif
             </div>
         </div>
     @endif
 
     {{-- Tombol Cetak (Tetap ada untuk kedua role) --}}
-    <button class="btn btn-white w-100 py-3 rounded-pill fw-bold shadow-sm mb-4 border" onclick="window.print()">
-        <i class="bi bi-printer me-2"></i> Cetak Laporan Resmi
-    </button>
+    <a href="{{ route('outsource.history.pdf', $job->id) }}" target="_blank" class="btn btn-white w-100 py-3 rounded-pill fw-bold shadow-sm mb-4 border text-secondary text-decoration-none d-block text-center">
+        <i class="bi bi-file-earmark-pdf-fill me-2 text-danger"></i> Cetak Laporan Resmi (PDF)
+    </a>
 
     {{-- Konfirmasi Keputusan Admin (Hanya muncul jika Role Admin dan Status Pending) --}}
     @if(Auth::user()->role == 'admin' && $job->status == 'Pending')
@@ -168,14 +230,14 @@
             </div>
             <div class="col-md-6 text-center text-md-end">
                 <div class="d-inline-flex justify-content-center justify-content-md-end gap-2 w-100">
-                    <form action="{{ route('admin.room.reject', $job->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menolak pengajuan sewa ruangan ini?')">
+                    <form action="{{ route('admin.room.reject', $job->room_id ?? $job->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menolak pengajuan sewa ruangan ini?')">
                         @csrf
                         <button type="submit" class="btn btn-danger rounded-pill px-4 py-2 fw-bold shadow-sm">
                             <i class="bi bi-x-circle me-1"></i> Tolak
                         </button>
                     </form>
                     
-                    <form action="{{ route('admin.room.approve', $job->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menyetujui pengajuan sewa ruangan ini?')">
+                    <form action="{{ route('admin.room.approve', $job->room_id ?? $job->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menyetujui pengajuan sewa ruangan ini?')">
                         @csrf
                         <button type="submit" class="btn btn-success rounded-pill px-4 py-2 fw-bold shadow-sm">
                             <i class="bi bi-check-circle me-1"></i> Setujui

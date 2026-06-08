@@ -160,95 +160,66 @@
             <div class="container mb-5 mt-4">
                 <div class="row justify-content-center">
                     <div class="col-lg-11 col-xl-10">
-                        <div class="search-wrapper d-lg-flex align-items-center">
+                        <form action="{{ route('penyewa.search') }}" method="GET">
+                            {{-- hidden sort parameter so sorting is preserved on search submissions --}}
+                            <input type="hidden" name="sort" value="{{ request('sort', 'recommended') }}">
                             
-                            <div class="search-item flex-grow-1">
-                                <label class="search-label">Location</label>
-                                <div class="d-flex align-items-center mt-1">
-                                    <i class="bi bi-geo-alt text-primary me-2"></i>
-                                    <input type="text" class="search-input-custom" placeholder="Where are you going?" value="">
+                            <div class="search-wrapper d-lg-flex align-items-center">
+                                
+                                <div class="search-item flex-grow-1">
+                                    <label class="search-label">Location</label>
+                                    <div class="d-flex align-items-center mt-1">
+                                        <i class="bi bi-geo-alt text-primary me-2"></i>
+                                        <input type="text" name="location" class="search-input-custom" placeholder="Where are you going?" value="{{ request('location') }}">
+                                    </div>
                                 </div>
-                            </div>
 
-                            <div class="search-item" style="flex: 1.5;">
-                                <label class="search-label">Check-in - Check-out</label>
-                                <div class="d-flex align-items-center mt-1 date-container">
-                                    <input type="date" class="search-input-custom" value="2026-04-18">
-                                    <span class="mx-2 text-muted fw-light">|</span>
-                                    <input type="date" class="search-input-custom" value="2026-04-20">
+                                <div class="search-item" style="flex: 1.5;">
+                                    <label class="search-label">Check-in - Check-out</label>
+                                    <div class="d-flex align-items-center mt-1 date-container">
+                                        <input type="date" name="start_date" class="search-input-custom" value="{{ request('start_date', '2026-04-18') }}">
+                                        <span class="mx-2 text-muted fw-light">|</span>
+                                        <input type="date" name="end_date" class="search-input-custom" value="{{ request('end_date', '2026-04-20') }}">
+                                    </div>
                                 </div>
-                            </div>
 
-                            <div class="search-item" style="flex: 1.5;">
-                                <label class="search-label">Guests</label>
-                                <div class="d-flex align-items-center mt-1">
-                                    <i class="bi bi-people text-primary me-2"></i>
-                                    <input type="text" class="search-input-custom" value="20">
-                                    <span class="fw-semibold fs-6">People</span>
+                                <div class="search-item" style="flex: 1.5;">
+                                    <label class="search-label">Guests</label>
+                                    <div class="d-flex align-items-center mt-1">
+                                        <i class="bi bi-people text-primary me-2"></i>
+                                        <input type="number" name="capacity" class="search-input-custom" value="{{ request('capacity', 20) }}" style="max-width: 80px;">
+                                        <span class="fw-semibold fs-6 ms-1">People</span>
+                                    </div>
                                 </div>
-                            </div>
 
-                            <div class="ps-lg-2 w-100-mobile">
-                                <button class="btn btn-primary btn-search-round shadow-sm w-100-mobile">
-                                    <i class="bi bi-search d-none d-lg-inline"></i>
-                                    <span class="d-lg-none fw-bold">Search Now</span> </button>
+                                <div class="ps-lg-2 w-100-mobile">
+                                    <button type="submit" class="btn btn-primary btn-search-round shadow-sm w-100-mobile">
+                                        <i class="bi bi-search d-none d-lg-inline"></i>
+                                        <span class="d-lg-none fw-bold">Search Now</span>
+                                    </button>
+                                </div>
+                                
                             </div>
-                            
-                        </div>
+                        </form>
                     </div>
                 </div>
             </div>
             <div class="mb-3">
                 <span class="me-2 text-muted small">Sort by:</span>
-                <span class="badge-filter active">Recommended</span>
-                <span class="badge-filter">Highest price</span>
-                <span class="badge-filter">Highest star</span>
-                <span class="badge-filter">Highest rating</span>
-                <span class="badge-filter">Lowest price</span>
+                <a href="{{ request()->fullUrlWithQuery(['sort' => 'recommended']) }}" class="badge-filter {{ request('sort', 'recommended') == 'recommended' ? 'active' : '' }} text-decoration-none">Recommended</a>
+                <a href="{{ request()->fullUrlWithQuery(['sort' => 'highest_price']) }}" class="badge-filter {{ request('sort') == 'highest_price' ? 'active' : '' }} text-decoration-none">Highest price</a>
+                <a href="{{ request()->fullUrlWithQuery(['sort' => 'highest_rating']) }}" class="badge-filter {{ in_array(request('sort'), ['highest_rating', 'highest_star']) ? 'active' : '' }} text-decoration-none">Highest rating</a>
+                <a href="{{ request()->fullUrlWithQuery(['sort' => 'lowest_price']) }}" class="badge-filter {{ request('sort') == 'lowest_price' ? 'active' : '' }} text-decoration-none">Lowest price</a>
             </div>
 
-            <div class="card hotel-card">
+            @forelse($rooms as $room)
+            <div class="card hotel-card" data-id="{{ $room->room_id }}">
                 <div class="row g-0">
                     <div class="col-md-4 position-relative">
-                        <img src="{{ asset('upload_room/great_diponegoro.jpg') }}" class="room-img" alt="Room Image">
-                        <button class="btn btn-light btn-sm position-absolute top-0 end-0 m-2 rounded-circle btn-favorite" data-id="1">
-                            <i class="bi bi-heart-fill text-danger"></i>
-                        </button>
-                    </div>
-                    <div class="col-md-8">
-                        <div class="card-body h-100 d-flex flex-column">
-                            <div class="row">
-                                <div class="col-8">
-                                    <h5 class="card-title fw-bold mb-1">Great Diponegoro Ballroom</h5>
-                                    <div class="text-warning mb-1">
-                                        <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
-                                        <span class="text-muted small">Diponegoro, Surabaya</span>
-                                    </div>
-                                    <p class="text-primary small mb-2 fw-bold">Capacity : Max 20 people</p>
-                                    <p class="text-success small mb-0">Speaker, Microphone, Free Snack, Free Wifi</p>
-                                </div>
-                                <div class="col-4 text-end">
-                                    <div class="fw-bold">4.5/5 <span class="fw-normal text-muted small">(1,238)</span></div>
-                                </div>
-                            </div>
-
-                            <div class="mt-auto pt-3 border-top d-flex justify-content-between align-items-end">
-                                <div class="small text-primary"></div>
-                                <div class="text-end">
-                                    <div class="price-text">IDR 300,000 <span class="text-muted fw-light">/pax</span></div>
-                                    {{-- <div class="tax-text">(after taxes: IDR 1,932,380)</div> --}}
-                                </div>
-                            </div>
+                        <div class="room-img-container">
+                            <img src="{{ $room->images->isNotEmpty() ? asset($room->images->first()->path) : 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=600&q=80' }}" class="room-img" alt="{{ $room->name }}">
                         </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="card hotel-card">
-                <div class="row g-0">
-                    <div class="col-md-4 position-relative">
-                        <img src="{{ asset('upload_room/bg_junction.jpg') }}" class="room-img" alt="Room Image">
-                        <button class="btn btn-light btn-sm position-absolute top-0 end-0 m-2 rounded-circle btn-favorite" data-id="2">
+                        <button class="btn btn-light btn-sm position-absolute top-0 end-0 m-2 rounded-circle btn-favorite" data-id="{{ $room->room_id }}">
                             <i class="bi bi-heart"></i>
                         </button>
                     </div>
@@ -256,30 +227,68 @@
                         <div class="card-body h-100 d-flex flex-column">
                             <div class="row">
                                 <div class="col-8">
-                                    <h5 class="card-title fw-bold mb-1">BG Junction Ballroom</h5>
-                                    <div class="text-warning mb-1">
-                                        <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
-                                        <span class="text-muted small">Bubutan, Surabaya</span>
+                                    <h5 class="card-title fw-bold mb-1 text-dark">{{ $room->name }}</h5>
+                                    
+                                    {{-- Dynamic star rating display --}}
+                                    <div class="text-warning mb-1" style="font-size: 0.9rem;">
+                                        @php
+                                            $fullStars = floor($room->average_rating);
+                                            $hasHalf = ($room->average_rating - $fullStars) >= 0.5;
+                                            $emptyStars = 5 - $fullStars - ($hasHalf ? 1 : 0);
+                                        @endphp
+                                        @for($i = 0; $i < $fullStars; $i++)
+                                            <i class="bi bi-star-fill"></i>
+                                        @endfor
+                                        @if($hasHalf)
+                                            <i class="bi bi-star-half"></i>
+                                        @endif
+                                        @for($i = 0; $i < $emptyStars; $i++)
+                                            <i class="bi bi-star"></i>
+                                        @endfor
+                                        
+                                        <span class="text-secondary small ms-2"><i class="bi bi-geo-alt-fill text-danger"></i> {{ \Illuminate\Support\Str::limit($room->location, 35) }}</span>
                                     </div>
-                                    <p class="text-primary small mb-2 fw-bold">Capacity : Max 50 people</p>
-                                    <p class="text-success small mb-0">Speaker, Microphone, Free Wifi</p>
+                                    
+                                    <p class="text-primary small mb-2 fw-bold">Capacity : Max {{ $room->capacity }} people</p>
+                                    
+                                    @if($room->facilities->isNotEmpty())
+                                        <p class="text-success small mb-0 fw-semibold">
+                                            {{ implode(', ', $room->facilities->pluck('name')->toArray()) }}
+                                        </p>
+                                    @else
+                                        <p class="text-muted small mb-0 italic">Tidak ada informasi fasilitas</p>
+                                    @endif
                                 </div>
                                 <div class="col-4 text-end">
-                                    <div class="fw-bold">4.7/5 <span class="fw-normal text-muted small">(996)</span></div>
+                                    <div class="fw-bold fs-6">
+                                        {{ number_format($room->average_rating, 1) }}/5 
+                                        <span class="fw-normal text-muted small" style="font-size: 0.75rem;">({{ $room->rating_count }})</span>
+                                    </div>
                                 </div>
                             </div>
 
                             <div class="mt-auto pt-3 border-top d-flex justify-content-between align-items-end">
                                 <div class="small text-primary"></div>
                                 <div class="text-end">
-                                    <div class="price-text">IDR 200,000 <span class="text-muted fw-light">/pax</span></div>
-                                    {{-- <div class="tax-text">(after taxes: IDR 1,932,380)</div> --}}
+                                    <div class="price-text">IDR {{ number_format($room->price, 0, ',', '.') }} <span class="text-muted fw-light">/{{ str_replace('/', '', $room->jenis_harga) }}</span></div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
+            @empty
+            <div class="card p-5 text-center text-muted border-0 shadow-sm rounded-4">
+                <div class="card-body">
+                    <i class="bi bi-house-exclamation fs-1 d-block mb-3 text-secondary"></i>
+                    <h5 class="fw-bold text-dark">Tidak Ada Ruangan Ditemukan</h5>
+                    <p class="small text-secondary mb-0">Coba gunakan kata kunci pencarian atau filter kapasitas yang lain.</p>
+                    @if(request()->filled('location') || request()->filled('capacity') || (request()->filled('sort') && request('sort') !== 'recommended'))
+                        <a href="{{ route('penyewa.search') }}" class="btn btn-primary btn-sm rounded-pill px-4 fw-bold mt-3 shadow-sm">Reset Filter</a>
+                    @endif
+                </div>
+            </div>
+            @endforelse
         </div>
     </div>
 @endsection

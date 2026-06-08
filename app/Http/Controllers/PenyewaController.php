@@ -10,8 +10,63 @@ class PenyewaController extends Controller
         return view('penyewa.dashboard');
     }
 
-    public function searchPage() {
-        return view('rooms.search_room');
+    public function searchPage(Request $request) {
+        $query = \App\Models\Room::with(['images', 'facilities', 'ratings'])
+            ->where('status', 2); // Hanya ruangan yang disetujui Admin
+
+        // Filter lokasi (pencarian nama ruangan atau alamat detail)
+        if ($request->filled('location')) {
+            $location = $request->location;
+            $query->where(function($q) use ($location) {
+                $q->where('location', 'like', '%' . $location . '%')
+                  ->orWhere('name', 'like', '%' . $location . '%');
+            });
+        }
+
+        // Filter kapasitas minimum
+        if ($request->filled('capacity')) {
+            $capacity = (int)$request->capacity;
+            $query->where('capacity', '>=', $capacity);
+        }
+
+        // Urutkan di tingkat database (jika bukan berdasarkan rating)
+        $sort = $request->input('sort', 'recommended');
+        if ($sort === 'highest_price') {
+            $query->orderBy('price', 'desc');
+        } elseif ($sort === 'lowest_price') {
+            $query->orderBy('price', 'asc');
+        } else {
+            $query->orderBy('created_at', 'desc');
+        }
+
+        $rooms = $query->get();
+
+        // Hitung rata-rata rating secara dinamis untuk masing-masing ruangan
+        $rooms = $rooms->map(function($room) {
+            $ratings = $room->ratings;
+            $count = $ratings->count();
+            
+            if ($count > 0) {
+                // Rata-rata dari ketiga metrik kenyamanan, pelayanan, dan kebersihan
+                $totalSum = $ratings->sum(function($r) {
+                    return ($r->kebersihan + $r->pelayanan + $r->kenyamanan) / 3;
+                });
+                $average = round($totalSum / $count, 1);
+            } else {
+                $average = 0.0;
+            }
+            
+            $room->average_rating = $average;
+            $room->rating_count = $count;
+            return $room;
+        });
+
+        // Urutkan berdasarkan rating di memori jika diminta
+        if ($sort === 'highest_rating' || $sort === 'highest_star') {
+            $rooms = $rooms->sortByDesc('average_rating')->values();
+        }
+
+        return view('rooms.search_room', compact('rooms'));
     }
 
     public function show()

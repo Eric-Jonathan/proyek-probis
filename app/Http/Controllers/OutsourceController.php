@@ -290,15 +290,12 @@ class OutsourceController extends Controller
         if ($assignment && $assignment->report) {
             $report = $assignment->report;
             
-            // Konversi media lampiran foto dan video ke format array detail_history
+            // Konversi media lampiran foto ke format array detail_history (hanya gambar)
             $mediaList = [];
             if (is_array($report->photos)) {
                 foreach ($report->photos as $path) {
                     $mediaList[] = ['type' => 'image', 'url' => asset($path)];
                 }
-            }
-            if ($report->video) {
-                $mediaList[] = ['type' => 'video', 'url' => asset($report->video)];
             }
 
             // Siapkan media pengaju dari foto ruangan terdaftar
@@ -309,9 +306,28 @@ class OutsourceController extends Controller
                 }
             }
 
+            // Daftar fasilitas untuk komparasi
+            $masterFacilities = [
+                'AC',
+                'Free Wi-Fi',
+                'Sound System',
+                'Wireless Mic',
+                'Proyektor',
+                'Snack',
+                'Galon',
+                'Area Parkir',
+                'Musholla',
+                'Stage',
+                'Keamanan CCTV'
+            ];
+            $roomFacilities = $assignment->room ? $assignment->room->facilities->pluck('name')->toArray() : [];
+            $surveyorFacilities = is_array($report->facilities) ? $report->facilities : [];
+            $allFacilitiesList = array_values(array_unique(array_merge($masterFacilities, $roomFacilities, $surveyorFacilities)));
+
             // Map data DB ke struktur visual detail_history
             $job = (object)[
                 'id' => $assignment->assignment_id,
+                'room_id' => $assignment->room_id,
                 'room' => $assignment->room->name ?? 'N/A',
                 'city' => \Illuminate\Support\Str::limit(implode(', ', array_slice(explode(',', $assignment->room->location ?? ''), 0, 1)), 25),
                 'address' => $assignment->room->location ?? 'N/A',
@@ -322,118 +338,110 @@ class OutsourceController extends Controller
                     'kondisi' => $report->kondisi . ' (Berdasarkan Cek Lapangan)',
                     'kebersihan' => $report->kebersihan,
                     'catatan' => $report->catatan,
+                    'facilities' => $surveyorFacilities,
+                    'video' => $report->video ? asset($report->video) : null,
                     'media' => $mediaList
                 ],
                 'pengaju' => (object)[
                     'kondisi' => 'Sangat Baik',
                     'kebersihan' => 'Sangat Bersih',
                     'catatan' => $assignment->room->description ?? 'Deskripsi pengaju unit.',
+                    'facilities' => $roomFacilities,
                     'media' => $pengajuMedia
                 ]
             ];
 
-            return view('outsource.detail_history', compact('job', 'id'));
+            return view('outsource.detail_history', compact('job', 'id', 'allFacilitiesList'));
         }
 
-        // 2. FALLBACK: Koleksi Data Dummy Lengkap dengan Struktur Komparasi (jika tidak ketemu di DB)
-        $allJobs = collect([
-            // ID 101: SUDAH DITERIMA
-            (object)[
-                'id' => 101,
-                'room' => 'Cozy Meeting Room',
-                'city' => 'Batu',
-                'address' => 'Jl. KH. Agus Salim No. 106, Kota Batu',
-                'fee' => 500000,
-                'tgl_kirim' => '10 May 2026',
-                'status' => 'Diterima',
-                'surveyor' => (object)[
-                    'kondisi' => 'Sangat Baik (9/10)',
-                    'kebersihan' => 'Sangat Bersih',
-                    'catatan' => 'Fasilitas lengkap, AC dingin, dan pencahayaan sangat baik.',
-                    'media' => [['type' => 'image', 'url' => 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1000&q=80']]
-                ],
-                'pengaju' => (object)[
-                    'kondisi' => 'Sangat Baik (9/10)',
-                    'kebersihan' => 'Bersih',
-                    'catatan' => 'Ruang rapat minimalis yang nyaman untuk tim kecil.',
-                    'media' => [['type' => 'image', 'url' => 'https://images.unsplash.com/photo-1497366811353-6870744d04b2?auto=format&fit=crop&w=1000&q=80']]
-                ]
-            ],
+        abort(404, 'Detail laporan tidak ditemukan.');
+    }
 
-            // ID 102: SEDANG DICEK (PENDING)
-            (object)[
-                'id' => 102,
-                'room' => 'Grand Ballroom Kencana',
-                'city' => 'Batu',
-                'address' => 'Jl. Ir. Soekarno No. 15, Kota Batu',
-                'fee' => 5500000,
-                'tgl_kirim' => '11 May 2026',
-                'status' => 'Pending',
-                'surveyor' => (object)[
-                    'kondisi' => 'Baik (8/10)',
-                    'kebersihan' => 'Bersih',
-                    'catatan' => 'Ruangan sangat luas, karpet baru saja dibersihkan. Namun ada sedikit lecet di dinding pojok.',
-                    'media' => [
-                        ['type' => 'image', 'url' => 'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?auto=format&fit=crop&w=1000&q=80'],
-                        ['type' => 'video', 'url' => 'https://www.w3schools.com/html/mov_bbb.mp4']
-                    ]
-                ],
-                'pengaju' => (object)[
-                    'kondisi' => 'Sangat Baik (10/10)',
-                    'kebersihan' => 'Sangat Bersih',
-                    'catatan' => 'Ballroom mewah dalam kondisi prima, fasilitas premium, siap pakai tanpa kendala.',
-                    'media' => [['type' => 'image', 'url' => 'https://images.unsplash.com/photo-1431540015161-0bf868a2d407?auto=format&fit=crop&w=1000&q=80']]
-                ]
-            ],
+    public function downloadPDF($id)
+    {
+        // 1. Ambil data asli dari database beserta relasi detail laporan dan ruangan
+        $assignment = \App\Models\OutsourceAssignment::with(['room.images', 'room.facilities', 'surveyor', 'report'])->findOrFail($id);
+        $report = $assignment->report;
 
-            // ID 103: SUDAH DITERIMA
-            (object)[
-                'id' => 103,
-                'room' => 'Diponegoro Suite',
-                'city' => 'Malang',
-                'address' => 'Jl. Diponegoro No. 2, Kota Malang',
-                'fee' => 750000,
-                'tgl_kirim' => '09 May 2026',
-                'status' => 'Diterima',
-                'surveyor' => (object)[
-                    'kondisi' => 'Sangat Baik (9/10)',
-                    'kebersihan' => 'Sangat Bersih',
-                    'catatan' => 'Kondisi interior sangat mewah, semua elektronik berfungsi normal.',
-                    'media' => [['type' => 'image', 'url' => 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1000&q=80']]
-                ],
-                'pengaju' => (object)[
-                    'kondisi' => 'Sangat Baik (10/10)',
-                    'kebersihan' => 'Sangat Bersih',
-                    'catatan' => 'Kamar tipe suite terbaik dengan pemandangan kota.',
-                    'media' => [['type' => 'image', 'url' => 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=1000&q=80']]
-                ]
-            ],
+        if (!$report) {
+            return back()->with('error', 'Laporan belum diisi untuk penugasan ini.');
+        }
 
-            // ID 104: SUDAH DITOLAK
-            (object)[
-                'id' => 104,
-                'room' => 'Studio Foto Malang',
-                'city' => 'Malang',
-                'address' => 'Jl. Borobudur No. 12, Malang',
-                'fee' => 300000,
-                'tgl_kirim' => '08 May 2026',
-                'status' => 'Ditolak',
-                'surveyor' => (object)[
-                    'kondisi' => 'Kurang (5/10)',
-                    'kebersihan' => 'Kotor',
-                    'catatan' => 'Banyak debu di area studio dan lampu beberapa ada yang mati, tidak sesuai deskripsi pengaju.',
-                    'media' => [['type' => 'image', 'url' => 'https://images.unsplash.com/photo-1524758631624-e2822e304c36?auto=format&fit=crop&w=1000&q=80']]
-                ],
-                'pengaju' => (object)[
-                    'kondisi' => 'Baik (8/10)',
-                    'kebersihan' => 'Bersih',
-                    'catatan' => 'Studio foto lengkap dengan berbagai background.',
-                    'media' => [['type' => 'image', 'url' => 'https://images.unsplash.com/photo-1598425237654-4fc758e50a93?auto=format&fit=crop&w=1000&q=80']]
-                ]
-            ],
-        ]);
+        // Konversi media lampiran foto ke format array (hanya gambar, dengan local path untuk Dompdf)
+        $mediaList = [];
+        if (is_array($report->photos)) {
+            foreach ($report->photos as $path) {
+                // Gunakan path lokal agar Dompdf bisa meload gambar offline
+                $mediaList[] = [
+                    'type' => 'image',
+                    'url' => asset($path),
+                    'url_local' => public_path($path)
+                ];
+            }
+        }
 
-        $job = $allJobs->firstWhere('id', (int)$id) ?? $allJobs->first();
-        return view('outsource.detail_history', compact('job', 'id'));
+        // Siapkan media pengaju dari foto ruangan terdaftar
+        $pengajuMedia = [];
+        if ($assignment->room && $assignment->room->images) {
+            foreach ($assignment->room->images as $img) {
+                $pengajuMedia[] = [
+                    'type' => 'image',
+                    'url' => asset($img->path),
+                    'url_local' => public_path($img->path)
+                ];
+            }
+        }
+
+        // Daftar fasilitas untuk komparasi
+        $masterFacilities = [
+            'AC',
+            'Free Wi-Fi',
+            'Sound System',
+            'Wireless Mic',
+            'Proyektor',
+            'Snack',
+            'Galon',
+            'Area Parkir',
+            'Musholla',
+            'Stage',
+            'Keamanan CCTV'
+        ];
+        $roomFacilities = $assignment->room ? $assignment->room->facilities->pluck('name')->toArray() : [];
+        $surveyorFacilities = is_array($report->facilities) ? $report->facilities : [];
+        $allFacilitiesList = array_values(array_unique(array_merge($masterFacilities, $roomFacilities, $surveyorFacilities)));
+
+        // Map data DB ke struktur visual detail_history
+        $job = (object)[
+            'id' => $assignment->assignment_id,
+            'room' => $assignment->room->name ?? 'N/A',
+            'address' => $assignment->room->location ?? 'N/A',
+            'tgl_kirim' => $report->created_at ? $report->created_at->format('d M Y') : date('d M Y'),
+            'status' => $assignment->room->status == 2 ? 'Diterima' : ($assignment->room->status == 3 ? 'Ditolak' : 'Pending'),
+            'surveyor_name' => $assignment->surveyor->username ?? 'Outsource Partner',
+            'surveyor' => (object)[
+                'kondisi' => $report->kondisi,
+                'kebersihan' => $report->kebersihan,
+                'catatan' => $report->catatan,
+                'rekomendasi' => $report->rekomendasi,
+                'facilities' => $surveyorFacilities,
+                'media' => $mediaList
+            ],
+            'pengaju' => (object)[
+                'kondisi' => 'Sangat Baik',
+                'kebersihan' => 'Sangat Bersih',
+                'catatan' => $assignment->room->description ?? 'Deskripsi pengaju unit.',
+                'facilities' => $roomFacilities,
+                'media' => $pengajuMedia
+            ]
+        ];
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('outsource.pdf_report', compact('job', 'allFacilitiesList'))
+                  ->setPaper('a4', 'portrait')
+                  ->setOption([
+                      'isHtml5ParserEnabled' => true,
+                      'isRemoteEnabled' => true
+                  ]);
+
+        return $pdf->stream('Laporan_Survei_SRV-' . $id . '.pdf');
     }
 }

@@ -197,7 +197,12 @@
         </div>
         <div class="container pt-3 text-end">
             <button class="btn btn-white rounded-pill shadow-sm border px-3 mb-3 fw-medium btn-back-search" style="transition: all 0.2s ease;">
-                <i class="bi bi-arrow-left me-1"></i> Kembali ke Pencarian
+                <i class="bi bi-arrow-left me-1"></i> 
+                @if(Auth::check() && Auth::user()->role == 'admin')
+                    Kembali
+                @else
+                    Kembali ke Pencarian
+                @endif
             </button>
         </div>
     </div>
@@ -246,13 +251,19 @@
             <div class="col-md-8">
                 <div class="d-flex align-items-center gap-2 mb-1">
                     <div class="text-warning small d-flex gap-1">
-                        <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
+                        @for($i = 1; $i <= 5; $i++)
+                            @if($i <= round($averageRating))
+                                <i class="bi bi-star-fill"></i>
+                            @else
+                                <i class="bi bi-star"></i>
+                            @endif
+                        @endfor
                     </div>
                 </div>
                 <h2 class="fw-bold mb-1" style="font-size: 2.2rem; letter-spacing: -0.5px;">{{ $room->name }}</h2>
                 <div class="d-flex align-items-center gap-2 small">
-                    <span class="fw-bold">4.8<span class="text-muted fw-normal">/5</span></span>
-                    <a href="#section-review" class="text-decoration-none fw-semibold" style="color: var(--primary-blue);">(32 Review)</a>
+                    <span class="fw-bold">{{ number_format($averageRating, 1) }}<span class="text-muted fw-normal">/5</span></span>
+                    <a href="#section-review" class="text-decoration-none fw-semibold" style="color: var(--primary-blue);">({{ $totalReview }} Review)</a>
                     <span class="text-muted mx-1">•</span>
                     <span class="text-muted fw-medium"><i class="bi bi-geo-alt"></i> {{ $room->location }}</span>
                 </div>
@@ -291,7 +302,7 @@
                 </p>
                 
                 <!-- Tombol Aksi -->
-                @if (Auth::user()->role == "admin")
+                @if (Auth::check() && Auth::user()->role == "penyewa")
                     <a href="#section-rooms" class="btn btn-primary px-5 py-2 fw-bold shadow-sm rounded-pill w-100 w-md-auto" style="background-color: var(--primary-blue);">
                         Pesan Sekarang
                     </a>
@@ -303,15 +314,33 @@
     <!-- Section Review -->
     <div id="section-review" class="container py-4">
         <ul class="nav nav-tabs border-bottom border-light mb-4"></ul>
-        <h4 class="fw-bold mb-4">Review Pengguna</h4>
+        <h4 class="fw-bold mb-4">Review Pengguna ({{ $totalReview }})</h4>
         <div class="d-flex overflow-auto gap-3 pb-3" style="scrollbar-width: none;">
-            <div class="card border-0 shadow-sm flex-shrink-0" style="width: 350px; border-radius: 12px; background-color: #fcfcfc;">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between mb-2"><span class="fw-bold small">5.0<span class="text-muted">/5</span></span><span class="text-muted" style="font-size: 0.75rem;">Mei 2026</span></div>
-                    <p class="small mb-2"><strong>Ahmad Nafii</strong> • Acara Korporat</p>
-                    <p class="text-muted small mb-0">Sangat puas dengan fasilitas dan koordinasi dari tim pengelola ruangan!</p>
+            @forelse($room->ratings as $r)
+                @php
+                    $userAvg = round(($r->kebersihan + $r->pelayanan + $r->kenyamanan) / 3, 1);
+                    $formattedDate = $r->created_at ? $r->created_at->format('M Y') : 'Mei 2026';
+                    $userName = $r->booking->user->username ?? 'Guest User';
+                @endphp
+                <div class="card border-0 shadow-sm flex-shrink-0" style="width: 350px; border-radius: 12px; background-color: #fcfcfc; border: 1px solid #eee !important;">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="fw-bold small text-primary">{{ number_format($userAvg, 1) }}<span class="text-muted">/5</span></span>
+                            <span class="text-muted" style="font-size: 0.75rem;">{{ $formattedDate }}</span>
+                        </div>
+                        <p class="small mb-2"><strong>{{ $userName }}</strong></p>
+                        <div class="text-muted small" style="font-size: 0.8rem; line-height: 1.4;">
+                            <div><i class="bi bi-shield-check text-success me-1"></i>Kebersihan: {{ $r->kebersihan }}/5</div>
+                            <div><i class="bi bi-shield-check text-success me-1"></i>Pelayanan: {{ $r->pelayanan }}/5</div>
+                            <div><i class="bi bi-shield-check text-success me-1"></i>Kenyamanan: {{ $r->kenyamanan }}/5</div>
+                        </div>
+                    </div>
                 </div>
-            </div>
+            @empty
+                <div class="alert alert-light border py-3 w-100 text-center text-muted">
+                    <i class="bi bi-chat-left-text me-1"></i> Belum ada review untuk ruangan ini.
+                </div>
+            @endforelse
         </div>
     </div>
 
@@ -393,7 +422,7 @@
     </div>
 
     <!-- Section Booking Trigger -->
-    @if (Auth::user()->role == "admin")
+    @if (Auth::check() && Auth::user()->role == "penyewa")
         <div id="section-rooms" class="container py-5">
             <h4 class="fw-bold mb-4">Pilihan Tanggal Penggunaan</h4>
             <div class="d-flex align-items-center justify-content-between p-3 border rounded-4 shadow-sm bg-white mb-4">

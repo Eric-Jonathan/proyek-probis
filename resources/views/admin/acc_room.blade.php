@@ -42,59 +42,6 @@
         <p class="text-secondary mb-0">Pantau hasil survei lapangan dan tentukan kelayakan unit secara akurat.</p>
     </div>
 
-    @php
-        /** * DATA DUMMY SINKRON DENGAN CONTROLLER 
-         * Menggunakan properti 'room' (bukan 'name') dan status (Diterima/Pending/Ditolak)
-         */
-        $allRooms = collect([
-            (object)[
-                'id' => 101, 
-                'room' => 'Cozy Meeting Room', 
-                'floor' => 'Lantai 1', 
-                'price' => '500.000', 
-                'status' => 'Diterima', 
-                'outsource' => 'Budi Santoso', 
-                'rek' => 'Layak'
-            ],
-            (object)[
-                'id' => 102, 
-                'room' => 'Grand Ballroom Kencana', 
-                'floor' => 'Lantai 3', 
-                'price' => '5.500.000', 
-                'status' => 'Pending', 
-                'outsource' => 'Siti Aminah', 
-                'rek' => 'Layak'
-            ],
-            (object)[
-                'id' => 103, 
-                'room' => 'Diponegoro Suite', 
-                'floor' => 'Lantai 2', 
-                'price' => '750.000', 
-                'status' => 'Diterima', 
-                'outsource' => 'Budi Santoso', 
-                'rek' => 'Layak'
-            ],
-            (object)[
-                'id' => 104, 
-                'room' => 'Studio Foto Malang', 
-                'floor' => 'Lantai 1', 
-                'price' => '300.000', 
-                'status' => 'Ditolak', 
-                'outsource' => 'Siti Aminah', 
-                'rek' => 'Tidak Layak'
-            ],
-        ]);
-
-        $stats = [
-            ['label' => 'Total Pengajuan', 'val' => $allRooms->count(), 'color' => 'primary', 'icon' => 'bi-list-check'],
-            ['label' => 'Menunggu di Setujui', 'val' => $allRooms->where('status', 'Pending')->count(), 'color' => 'warning', 'icon' => 'bi-clock-history'],
-            ['label' => 'Disetujui', 'val' => $allRooms->where('status', 'Diterima')->count(), 'color' => 'success', 'icon' => 'bi-check-all'],
-            ['label' => 'Ditolak', 'val' => $allRooms->where('status', 'Ditolak')->count(), 'color' => 'danger', 'icon' => 'bi-x-circle'],
-        ];
-
-        $pendingRooms = $allRooms->where('status', 'Pending');
-        $processedRooms = $allRooms->whereIn('status', ['Diterima', 'Ditolak']);
-    @endphp
 
     <div class="row g-3 mb-5">
         @foreach($stats as $s)

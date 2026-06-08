@@ -42,4 +42,9 @@ class Room extends Model
     {
         return $this->hasMany(OutsourceAssignment::class, 'room_id', 'room_id');
     }
+
+    public function ratings()
+    {
+        return $this->hasMany(Rating::class, 'item_id', 'room_id')->where('item_type', 1);
+    }
 }

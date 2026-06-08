@@ -37,7 +37,7 @@ class RoomController extends Controller
 
         return view('rooms.room', [
             'rooms'         => $rooms,
-            'totalRooms'    => Room::where('user_id', $userId)->count(),
+            'totalRooms'    => Room::where('user_id', $userId)->where('status', '>=', 0)->count(),
             'activeRooms'   => Room::where('user_id', $userId)->where('status', 2)->count(),
             'diajukan'      => Room::where('user_id', $userId)->where('status', 1)->count(),
             'inactiveRooms' => Room::where('user_id', $userId)->where('status', 0)->count(),
@@ -152,15 +152,28 @@ class RoomController extends Controller
 
     public function show($id)
     {
-        // Ambil data ruangan beserta gambar dan fasilitasnya yang aktif
-        $room = Room::with(['images', 'facilities' => function($query) {
-            $query->where('status', 1); // Hanya ambil fasilitas yang tersedia/aktif
-        }])->findOrFail($id);
+        // Ambil data ruangan beserta gambar, fasilitas aktif, dan rating dengan user pemberinya
+        $room = Room::with([
+            'images', 
+            'facilities' => function($query) {
+                $query->where('status', 1); // Hanya ambil fasilitas yang tersedia/aktif
+            },
+            'ratings.booking.user'
+        ])->findOrFail($id);
 
-        // Konversi string teks aturan HTML (Quill) menjadi array baris teks biasa jika diperlukan
-        // Atau jika disimpan dalam bentuk HTML list, kita bisa langsung render di blade.
+        $ratings = $room->ratings;
+        $totalReview = $ratings->count();
+        $averageRating = 0.0;
         
-        return view('rooms.room_detail', compact('room'));
+        if ($totalReview > 0) {
+            $sum = 0;
+            foreach ($ratings as $r) {
+                $sum += ($r->kebersihan + $r->pelayanan + $r->kenyamanan) / 3;
+            }
+            $averageRating = round($sum / $totalReview, 1);
+        }
+        
+        return view('rooms.room_detail', compact('room', 'averageRating', 'totalReview'));
     }
  
     public function edit(Room $room)
