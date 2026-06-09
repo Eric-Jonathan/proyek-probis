@@ -49,52 +49,104 @@
             padding: 15px;
             margin-bottom: 15px;
         }
-        .search-wrapper {
-            background: #fff;
-            border-radius: 50px; 
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            padding: 8px 15px;
-            border: 1px solid #e0e0e0;
+        .search-card {
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            border: 1px solid #eef2f5;
+            padding: 24px;
+            margin-bottom: 25px;
             transition: all 0.3s ease;
         }
 
-        .search-item {
-            padding: 5px 15px;
-            border-right: 1px solid #eee;
-        }
-
-        /* Hilangkan border kanan di item terakhir dan di mobile */
-        .search-item:last-child {
-            border-right: none;
-        }
-
-        .search-label {
-            font-size: 0.7rem;
+        .filter-label {
+            font-size: 0.75rem;
             font-weight: 700;
-            color: #717171;
-            display: block;
+            color: #5c677d;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-        }
-
-        .search-input-custom {
-            border: none;
-            padding: 0;
-            font-size: 0.9rem;
-            font-weight: 500;
-            width: 100%;
-            outline: none;
-            color: #222;
-            background: transparent;
-        }
-
-        .btn-search-round {
-            border-radius: 50% !important;
-            width: 48px;
-            height: 48px;
+            margin-bottom: 8px;
             display: flex;
             align-items: center;
-            justify-content: center;
+        }
+
+        .filter-input-group {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 10px;
+            padding: 8px 14px;
+            display: flex;
+            align-items: center;
+            transition: border-color 0.2s, box-shadow 0.2s, background-color 0.2s;
+            height: 45px;
+        }
+
+        .filter-input-group:focus-within {
+            border-color: #0064D2;
+            box-shadow: 0 0 0 3px rgba(0, 100, 210, 0.15);
+            background-color: #fff;
+        }
+
+        .filter-input-field {
+            border: none;
+            background: transparent;
+            outline: none;
+            width: 100%;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #212529;
+            padding: 0;
+        }
+
+        .filter-input-field::placeholder {
+            color: #adb5bd;
+        }
+
+        .filter-input-field:focus {
+            outline: none;
+            box-shadow: none;
+        }
+
+        .filter-select {
+            border: none;
+            background: transparent;
+            outline: none;
+            width: 100%;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #212529;
+            padding: 0;
+            cursor: pointer;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+        }
+
+        .filter-select:focus {
+            outline: none;
+            box-shadow: none;
+        }
+
+        .btn-search-premium {
+            background-color: #0064D2;
+            border-color: #0064D2;
+            color: #fff;
+            font-weight: 600;
+            border-radius: 10px;
+            height: 45px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-search-premium:hover {
+            background-color: #0053b0;
+            border-color: #0053b0;
+            color: #fff;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 100, 210, 0.2);
+        }
+
+        .btn-search-premium:active {
+            transform: translateY(0);
         }
 
         /* Container gambar untuk memastikan aspect ratio tetap terjaga */
@@ -119,38 +171,6 @@
                 height: 200px; /* Lebih pendek sedikit untuk layar HP */
             }
         }
-
-        /* RESPONSIVE BREAKPOINT */
-        @media (max-width: 991.98px) {
-            .search-wrapper {
-                border-radius: 15px; /* Kurangi roundness di mobile */
-                flex-direction: column; /* Tumpuk ke bawah */
-                padding: 15px;
-            }
-            
-            .search-item {
-                border-right: none;
-                border-bottom: 1px solid #eee; /* Ganti border ke bawah */
-                width: 100% !important;
-                padding: 10px 0;
-            }
-
-            .search-item:last-of-type {
-                border-bottom: none;
-            }
-
-            .btn-search-round {
-                border-radius: 10px !important; /* Kotak sedikit tumpul di mobile */
-                width: 100%;
-                margin-top: 10px;
-            }
-            
-            /* Merapikan input date di mobile agar tidak berantakan */
-            .date-container {
-                flex-direction: row;
-                justify-content: space-between;
-            }
-        }
     </style>
 @endsection
 
@@ -159,48 +179,94 @@
         <div class="">
             <div class="container mb-5 mt-4">
                 <div class="row justify-content-center">
-                    <div class="col-lg-11 col-xl-10">
-                        <form action="{{ route('penyewa.search') }}" method="GET">
-                            {{-- hidden sort parameter so sorting is preserved on search submissions --}}
-                            <input type="hidden" name="sort" value="{{ request('sort', 'recommended') }}">
-                            
-                            <div class="search-wrapper d-lg-flex align-items-center">
+                    <div class="col-lg-12">
+                        <div class="search-card shadow-sm">
+                            <form action="{{ route('penyewa.search') }}" method="GET">
+                                {{-- hidden sort parameter so sorting is preserved on search submissions --}}
+                                <input type="hidden" name="sort" value="{{ request('sort', 'recommended') }}">
                                 
-                                <div class="search-item flex-grow-1">
-                                    <label class="search-label">Location</label>
-                                    <div class="d-flex align-items-center mt-1">
-                                        <i class="bi bi-geo-alt text-primary me-2"></i>
-                                        <input type="text" name="location" class="search-input-custom" placeholder="Where are you going?" value="{{ request('location') }}">
+                                <div class="row g-3">
+                                    <!-- Lokasi / Nama Tempat -->
+                                    <div class="col-lg-4 col-md-6 col-12">
+                                        <label class="filter-label">
+                                            <i class="bi bi-geo-alt-fill text-primary me-2"></i>Lokasi / Nama Ruangan
+                                        </label>
+                                        <div class="filter-input-group">
+                                            <input type="text" name="location" class="filter-input-field" placeholder="Cari lokasi atau nama ruangan..." value="{{ request('location') }}">
+                                        </div>
+                                    </div>
+
+                                    <!-- Tanggal Mulai -->
+                                    <div class="col-lg-2 col-md-3 col-6">
+                                        <label class="filter-label">
+                                            <i class="bi bi-calendar3 text-primary me-2"></i>Mulai
+                                        </label>
+                                        <div class="filter-input-group">
+                                            <input type="date" name="start_date" class="filter-input-field text-center" value="{{ request('start_date', date('Y-m-d')) }}">
+                                        </div>
+                                    </div>
+
+                                    <!-- Tanggal Selesai -->
+                                    <div class="col-lg-2 col-md-3 col-6">
+                                        <label class="filter-label">
+                                            <i class="bi bi-calendar3-fill text-primary me-2"></i>Selesai
+                                        </label>
+                                        <div class="filter-input-group">
+                                            <input type="date" name="end_date" class="filter-input-field text-center" value="{{ request('end_date', date('Y-m-d')) }}">
+                                        </div>
+                                    </div>
+
+                                    <!-- Tipe Sewa -->
+                                    <div class="col-lg-4 col-md-6 col-12">
+                                        <label class="filter-label">
+                                            <i class="bi bi-wallet2 text-primary me-2"></i>Tipe Sewa
+                                        </label>
+                                        <div class="filter-input-group position-relative">
+                                            <select name="jenis_harga" class="filter-select w-100 pe-4">
+                                                <option value="all" {{ request('jenis_harga') == 'all' ? 'selected' : '' }}>Semua Tipe</option>
+                                                <option value="Hari" {{ request('jenis_harga') == 'Hari' ? 'selected' : '' }}>Harian</option>
+                                                <option value="Jam" {{ request('jenis_harga') == 'Jam' ? 'selected' : '' }}>Per Jam</option>
+                                                <option value="Pax" {{ request('jenis_harga') == 'Pax' ? 'selected' : '' }}>Per Pax</option>
+                                                <option value="Pax_jam" {{ request('jenis_harga') == 'Pax_jam' ? 'selected' : '' }}>Pax & Jam</option>
+                                            </select>
+                                            <i class="bi bi-chevron-down text-secondary position-absolute end-0 me-3" style="pointer-events: none;"></i>
+                                        </div>
+                                    </div>
+
+                                    <!-- Range Harga -->
+                                    <div class="col-lg-4 col-md-6 col-12">
+                                        <label class="filter-label">
+                                            <i class="bi bi-cash-stack text-primary me-2"></i>Range Harga (Min - Max)
+                                        </label>
+                                        <div class="filter-input-group d-flex align-items-center">
+                                            <span class="text-muted small me-1">Rp</span>
+                                            <input type="number" name="min_price" class="filter-input-field text-end px-1" placeholder="Min" value="{{ request('min_price') }}">
+                                            <span class="mx-2 text-muted fw-light">-</span>
+                                            <span class="text-muted small me-1">Rp</span>
+                                            <input type="number" name="max_price" class="filter-input-field text-end px-1" placeholder="Max" value="{{ request('max_price') }}">
+                                        </div>
+                                    </div>
+
+                                    <!-- Kapasitas Minimum -->
+                                    <div class="col-lg-4 col-md-6 col-12">
+                                        <label class="filter-label">
+                                            <i class="bi bi-people-fill text-primary me-2"></i>Kapasitas Minimum
+                                        </label>
+                                        <div class="filter-input-group">
+                                            <input type="number" name="capacity" class="filter-input-field" placeholder="5" value="{{ request('capacity') }}" autocomplete="off">
+                                            <span class="text-muted small ms-2 fw-semibold">orang</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Tombol Cari -->
+                                    <div class="col-lg-4 col-md-6 col-12 d-flex align-items-end">
+                                        <button type="submit" class="btn btn-search-premium w-100 d-flex align-items-center justify-content-center gap-2">
+                                            <i class="bi bi-search"></i> Cari Ruangan
+                                        </button>
                                     </div>
                                 </div>
-
-                                <div class="search-item" style="flex: 1.5;">
-                                    <label class="search-label">Check-in - Check-out</label>
-                                    <div class="d-flex align-items-center mt-1 date-container">
-                                        <input type="date" name="start_date" class="search-input-custom" value="{{ request('start_date', '2026-04-18') }}">
-                                        <span class="mx-2 text-muted fw-light">|</span>
-                                        <input type="date" name="end_date" class="search-input-custom" value="{{ request('end_date', '2026-04-20') }}">
-                                    </div>
-                                </div>
-
-                                <div class="search-item" style="flex: 1.5;">
-                                    <label class="search-label">Guests</label>
-                                    <div class="d-flex align-items-center mt-1">
-                                        <i class="bi bi-people text-primary me-2"></i>
-                                        <input type="number" name="capacity" class="search-input-custom" value="{{ request('capacity', 20) }}" style="max-width: 80px;">
-                                        <span class="fw-semibold fs-6 ms-1">People</span>
-                                    </div>
-                                </div>
-
-                                <div class="ps-lg-2 w-100-mobile">
-                                    <button type="submit" class="btn btn-primary btn-search-round shadow-sm w-100-mobile">
-                                        <i class="bi bi-search d-none d-lg-inline"></i>
-                                        <span class="d-lg-none fw-bold">Search Now</span>
-                                    </button>
-                                </div>
-                                
-                            </div>
-                        </form>
+                            </form>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -249,7 +315,7 @@
                                         <span class="text-secondary small ms-2"><i class="bi bi-geo-alt-fill text-danger"></i> {{ \Illuminate\Support\Str::limit($room->location, 35) }}</span>
                                     </div>
                                     
-                                    <p class="text-primary small mb-2 fw-bold">Capacity : Max {{ $room->capacity }} people</p>
+                                    <p class="text-primary small mb-2 fw-bold">Kapasitas : Maks. {{ $room->capacity }} orang</p>
                                     
                                     @if($room->facilities->isNotEmpty())
                                         <p class="text-success small mb-0 fw-semibold">

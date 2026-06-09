@@ -97,7 +97,7 @@
                         <i class="bi bi-person-badge fs-4"></i>
                     </div>
                     <div>
-                        <small class="text-muted fw-medium d-block mb-1 text-uppercase" style="font-size: 0.65rem;">Surveyor Aktif</small>
+                        <small class="text-muted fw-medium d-block mb-1 text-uppercase" style="font-size: 0.65rem;">Mitra Outsource</small>
                         <h4 class="fw-bold mb-0 text-dark">{{ $countSurveyor ?? 0 }}</h4>
                     </div>
                 </div>
@@ -117,7 +117,7 @@
                     <tr>
                         <th class="ps-4 py-3" width="35%">Unit / Properti</th>
                         <th width="20%">Wilayah</th>
-                        <th class="text-center" width="25%">Assign Surveyor</th>
+                        <th class="text-center" width="25%">Assign Mitra Outsource</th>
                         <th class="pe-4 text-end" width="20%">Konfirmasi</th>
                     </tr>
                 </thead>
@@ -141,9 +141,9 @@
                                                 style="max-width: 250px;" 
                                                 data-room-id="{{ $item->room_id }}" 
                                                 required>
-                                            <option selected disabled value="">Pilih Surveyor...</option>
+                                            <option selected disabled value="">Pilih Mitra Outsource...</option>
                                             @foreach($mitra as $m)
-                                                <option value="{{ $m->user_id }}">{{ $m->username }}</option>
+                                                <option value="{{ $m->outsource_id }}">{{ $m->company_name }}</option>
                                             @endforeach
                                         </select>
 
@@ -160,7 +160,7 @@
                         @endforeach
                         <form id="hidden-global-assign-form" method="POST" style="display: none;">
                             @csrf
-                            <input type="hidden" name="surveyor_id" id="hidden-surveyor-id">
+                            <input type="hidden" name="outsource_id" id="hidden-outsource-id">
                         </form>
                     @else
                         <tr>
@@ -187,7 +187,7 @@
                 <thead>
                     <tr>
                         <th class="ps-4 py-3" width="35%">Unit Sedang Dicek</th>
-                        <th width="25%">Surveyor Aktif</th>
+                        <th width="25%">Mitra Outsource</th>
                         <th width="25%">Status & Progress</th>
                         <th class="pe-4 text-end" width="15%">Opsi</th>
                     </tr>
@@ -208,8 +208,8 @@
                             </td>
                             <td>
                                 <div class="d-flex align-items-center">
-                                    <div class="avatar-circle me-2">{{ substr($m->surveyor->username ?? 'U', 0, 1) }}</div>
-                                    <span class="small fw-medium">{{ $m->surveyor->username ?? 'Unknown' }}</span>
+                                    <div class="avatar-circle me-2">{{ substr($m->company->company_name ?? 'C', 0, 1) }}</div>
+                                    <span class="small fw-medium">{{ $m->company->company_name ?? 'Unknown' }}</span>
                                 </div>
                             </td>
                             <td>
@@ -229,7 +229,7 @@
                                         <i class="bi bi-three-dots-vertical"></i>
                                     </button>
                                     <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3 mt-2">
-                                        <li><a class="dropdown-item small" href="tel:{{ $m->surveyor->phone ?? '#' }}"><i class="bi bi-telephone me-2 text-primary"></i> Hubungi Surveyor</a></li>
+                                        <li><a class="dropdown-item small" href="tel:{{ $m->company->pic_phone ?? '#' }}"><i class="bi bi-telephone me-2 text-primary"></i> Hubungi Outsource</a></li>
                                         <li><hr class="dropdown-divider"></li>
                                         <li>
                                             <form action="{{ route('outsource.cancel', $m->assignment_id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin membatalkan tugas ini?')">

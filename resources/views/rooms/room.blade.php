@@ -57,7 +57,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach($rooms as $i => $room)
+                    @forelse($rooms as $i => $room)
                     <tr>
                         <td class="ps-4 text-muted">{{ $rooms->firstItem() + $i }}</td>
                         <td>
@@ -110,7 +110,13 @@
                             </div>
                         </td>
                     </tr>
-                    @endforeach
+                    @empty
+                    <tr>
+                        <td colspan="7" class="text-center p-5 text-muted">
+                            <i class="bi bi-inboxes fs-2 d-block mb-2"></i> Belum ada data ruangan terdaftar.
+                        </td>
+                    </tr>
+                    @endforelse
                 </tbody>
             </table>
         </div>

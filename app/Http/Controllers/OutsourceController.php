@@ -7,19 +7,24 @@ use Illuminate\Http\Request;
 class OutsourceController extends Controller
 {
     public function index() {
-        // Ambil ID user outsource yang sedang login
-        $surveyorId = \Illuminate\Support\Facades\Auth::user()->user_id;
+        // Ambil ID outsource yang sedang login
+        $outsourceId = \Illuminate\Support\Facades\Auth::user()->outsource_id;
+        $userId = \Illuminate\Support\Facades\Auth::user()->user_id;
 
         // 1. Ambil data penugasan aktif (on_the_way atau checking)
         $activeAssignments = \App\Models\OutsourceAssignment::with('room')
-            ->where('surveyor_id', $surveyorId)
+            ->where('outsource_id', $outsourceId)
             ->whereIn('assignment_status', ['on_the_way', 'checking'])
+            ->where(function($query) use ($userId) {
+                $query->whereNull('surveyor_id')
+                      ->orWhere('surveyor_id', $userId);
+            })
             ->orderBy('created_at', 'desc')
             ->get();
 
-        // 2. Ambil data penugasan yang sudah diselesaikan (completed) dan memiliki laporan
+        // 2. Ambil data penugasan yang sudah diselesaikan (completed) dan memiliki laporan oleh user ini
         $completedAssignments = \App\Models\OutsourceAssignment::with(['room', 'report'])
-            ->where('surveyor_id', $surveyorId)
+            ->where('surveyor_id', $userId)
             ->where('assignment_status', 'completed')
             ->whereHas('report')
             ->get();
@@ -73,12 +78,13 @@ class OutsourceController extends Controller
     }
 
     public function history(Request $request){
-        // Ambil ID user outsource yang sedang login
-        $surveyorId = \Illuminate\Support\Facades\Auth::user()->user_id;
+        // Ambil ID outsource yang sedang login
+        $outsourceId = \Illuminate\Support\Facades\Auth::user()->outsource_id;
+        $userId = \Illuminate\Support\Facades\Auth::user()->user_id;
 
-        // Query dasar untuk tugas yang sudah diselesaikan (completed) dan memiliki laporan
+        // Query dasar untuk tugas yang sudah diselesaikan (completed) dan memiliki laporan oleh user ini
         $baseQuery = \App\Models\OutsourceAssignment::with(['room', 'report'])
-            ->where('surveyor_id', $surveyorId)
+            ->where('surveyor_id', $userId)
             ->where('assignment_status', 'completed')
             ->whereHas('report');
 
@@ -158,17 +164,28 @@ class OutsourceController extends Controller
 
     public function form($assignment_id) {
         $assignment = \App\Models\OutsourceAssignment::with('room')->findOrFail($assignment_id);
+        
+        // Pengecekan otorisasi: jika sudah diambil oleh orang lain
+        if ($assignment->surveyor_id !== null && $assignment->surveyor_id !== \Illuminate\Support\Facades\Auth::user()->user_id) {
+            return redirect()->route('outsource.job')->with('error', 'Akses ditolak! Tugas ini sudah dikerjakan oleh surveyor lain.');
+        }
+
         return view('outsource.form', compact('assignment'));
     }
 
     public function jobList() {
-        // Ambil ID user outsource yang sedang login
-        $surveyorId = \Illuminate\Support\Facades\Auth::user()->user_id;
+        // Ambil ID outsource yang sedang login
+        $outsourceId = \Illuminate\Support\Facades\Auth::user()->outsource_id;
+        $userId = \Illuminate\Support\Facades\Auth::user()->user_id;
 
         // Ambil data penugasan aktif (on_the_way atau checking)
         $assignments = \App\Models\OutsourceAssignment::with('room')
-            ->where('surveyor_id', $surveyorId)
+            ->where('outsource_id', $outsourceId)
             ->whereIn('assignment_status', ['on_the_way', 'checking'])
+            ->where(function($query) use ($userId) {
+                $query->whereNull('surveyor_id')
+                      ->orWhere('surveyor_id', $userId);
+            })
             ->get();
 
         // Konversi ke format objek yang digunakan oleh list_job.blade.php
@@ -208,9 +225,15 @@ class OutsourceController extends Controller
     {
         $assignment = \App\Models\OutsourceAssignment::findOrFail($assignment_id);
         
-        // Update status ke checking (dalam pemeriksaan) dan progress ke 50%
+        // Pengecekan konkurensi: jika tugas sudah diambil oleh orang lain
+        if ($assignment->surveyor_id !== null) {
+            return redirect()->route('outsource.job')->with('error', 'Gagal! Tugas ini sudah diambil oleh surveyor lain.');
+        }
+
+        // Update status ke checking (dalam pemeriksaan), progress ke 50%, dan isi surveyor_id
         $assignment->update([
             'assignment_status' => 'checking',
+            'surveyor_id' => \Illuminate\Support\Facades\Auth::user()->user_id,
             'progress' => 50
         ]);
 
@@ -230,6 +253,11 @@ class OutsourceController extends Controller
         ]);
 
         $assignment = \App\Models\OutsourceAssignment::with('room')->findOrFail($assignment_id);
+
+        // Pengecekan otorisasi: jika sudah diambil oleh orang lain
+        if ($assignment->surveyor_id !== null && $assignment->surveyor_id !== \Illuminate\Support\Facades\Auth::user()->user_id) {
+            return redirect()->route('outsource.job')->with('error', 'Akses ditolak! Tugas ini sudah dikerjakan oleh surveyor lain.');
+        }
 
         // 1. Proses upload banyak foto
         $photosList = [];
@@ -285,7 +313,15 @@ class OutsourceController extends Controller
     public function historyDetail($id)
     {
         // 1. Ambil data asli dari database beserta relasi detail laporan dan ruangan
-        $assignment = \App\Models\OutsourceAssignment::with(['room.images', 'room.facilities', 'surveyor', 'report'])->find($id);
+        $assignment = \App\Models\OutsourceAssignment::with(['room.images', 'room.facilities', 'company', 'report'])->find($id);
+
+        if ($assignment) {
+            // Pengecekan otorisasi untuk role outsource
+            if (\Illuminate\Support\Facades\Auth::user()->role === 'outsource' && 
+                $assignment->surveyor_id !== \Illuminate\Support\Facades\Auth::user()->user_id) {
+                abort(403, 'Anda tidak memiliki akses ke laporan ini.');
+            }
+        }
 
         if ($assignment && $assignment->report) {
             $report = $assignment->report;
@@ -360,7 +396,14 @@ class OutsourceController extends Controller
     public function downloadPDF($id)
     {
         // 1. Ambil data asli dari database beserta relasi detail laporan dan ruangan
-        $assignment = \App\Models\OutsourceAssignment::with(['room.images', 'room.facilities', 'surveyor', 'report'])->findOrFail($id);
+        $assignment = \App\Models\OutsourceAssignment::with(['room.images', 'room.facilities', 'company', 'report'])->findOrFail($id);
+        
+        // Pengecekan otorisasi untuk role outsource
+        if (\Illuminate\Support\Facades\Auth::user()->role === 'outsource' && 
+            $assignment->surveyor_id !== \Illuminate\Support\Facades\Auth::user()->user_id) {
+            abort(403, 'Anda tidak memiliki akses ke laporan ini.');
+        }
+
         $report = $assignment->report;
 
         if (!$report) {
@@ -417,7 +460,7 @@ class OutsourceController extends Controller
             'address' => $assignment->room->location ?? 'N/A',
             'tgl_kirim' => $report->created_at ? $report->created_at->format('d M Y') : date('d M Y'),
             'status' => $assignment->room->status == 2 ? 'Diterima' : ($assignment->room->status == 3 ? 'Ditolak' : 'Pending'),
-            'surveyor_name' => $assignment->surveyor->username ?? 'Outsource Partner',
+            'surveyor_name' => $assignment->company->company_name ?? 'Outsource Partner',
             'surveyor' => (object)[
                 'kondisi' => $report->kondisi,
                 'kebersihan' => $report->kebersihan,

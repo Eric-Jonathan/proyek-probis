@@ -17,7 +17,10 @@ class Booking extends Model
         'user_id',
         'total',
         'method_payment',
+        'event',
+        'phone',
         'photo',
+        'notes',
         'start_date',
         'end_date',
         'status',
@@ -33,5 +36,23 @@ class Booking extends Model
     public function details()
     {
         return $this->hasOne(BookingDetail::class, 'booking_id', 'booking_id');
+    }
+
+    // Relasi ke detail ruangan (item_type = 1)
+    public function roomDetail()
+    {
+        return $this->hasOne(BookingDetail::class, 'booking_id', 'booking_id')->where('item_type', 1);
+    }
+
+    // Relasi ke detail layanan tambahan (item_type = 2)
+    public function serviceDetails()
+    {
+        return $this->hasMany(BookingDetail::class, 'booking_id', 'booking_id')->where('item_type', 2);
+    }
+
+    // Relasi ke Rating
+    public function rating()
+    {
+        return $this->hasOne(Rating::class, 'booking_id', 'booking_id');
     }
 }

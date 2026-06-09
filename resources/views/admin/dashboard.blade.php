@@ -305,7 +305,7 @@
                                     <tr>
                                         <td class="py-2.5 border-0 ps-0">
                                             <div class="fw-bold text-dark">{{ $m->room->name ?? 'N/A' }}</div>
-                                            <small class="text-muted text-xs">Surveyor: {{ $m->surveyor->username ?? 'Unknown' }}</small>
+                                            <small class="text-muted text-xs">Mitra: {{ $m->company->company_name ?? 'Unknown' }}</small>
                                         </td>
                                         <td class="py-2.5 border-0 pe-0" style="width: 140px;">
                                             <div class="d-flex align-items-center justify-content-between mb-1">

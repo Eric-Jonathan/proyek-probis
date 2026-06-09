@@ -76,7 +76,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach ($users as $user)
+                        @forelse ($users as $user)
                             <tr>
                                 <td class="ps-4 py-4">
                                     <div class="fw-bold text-dark">{{ $user->username }}</div>
@@ -117,7 +117,13 @@
                                     </div>
                                 </td>
                             </tr>
-                        @endforeach
+                        @empty
+                            <tr>
+                                <td colspan="5" class="text-center p-5 text-muted">
+                                    <i class="bi bi-people fs-2 d-block mb-2"></i> Belum ada data pengguna terdaftar.
+                                </td>
+                            </tr>
+                        @endforelse
                     </tbody>
                 </table>
             </div>

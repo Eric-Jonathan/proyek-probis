@@ -13,6 +13,26 @@
         </div>
     </div>
 
+    @if(session('error'))
+        <div class="alert alert-danger alert-dismissible fade show border-0 rounded-3 shadow-sm mb-4" role="alert">
+            <div class="d-flex align-items-center">
+                <i class="bi bi-exclamation-triangle-fill me-2 fs-5"></i>
+                <div>{{ session('error') }}</div>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
+    @if(session('success'))
+        <div class="alert alert-success alert-dismissible fade show border-0 rounded-3 shadow-sm mb-4" role="alert">
+            <div class="d-flex align-items-center">
+                <i class="bi bi-check-circle-fill me-2 fs-5"></i>
+                <div>{{ session('success') }}</div>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
     <div class="row g-4">
         <div class="col-lg-4">
             <div class="card shadow-sm border-0 rounded-4 overflow-hidden mb-4">
@@ -107,8 +127,8 @@
                 
                 <form action="{{ route('booking.store', $room->room_id) }}" method="POST" id="main-booking-form">
                     @csrf
-                    <input type="hidden" name="start_date" value="{{ $startDate->format('Y-m-to') }}">
-                    <input type="hidden" name="end_date" value="{{ $endDate->format('Y-m-to') }}">
+                    <input type="hidden" name="start_date" value="{{ $startDate->format('Y-m-d') }}">
+                    <input type="hidden" name="end_date" value="{{ $endDate->format('Y-m-d') }}">
 
                     <div class="row g-3">
                         <div class="col-md-6">

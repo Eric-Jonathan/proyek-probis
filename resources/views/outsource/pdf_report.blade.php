@@ -173,7 +173,7 @@
     <!-- Header -->
     <table class="header-table">
         <tr>
-            <td class="logo-text">SPOTSHARE</td>
+            <td class="logo-text">TEMPAT-IN</td>
             <td class="report-title">
                 LAPORAN KOMPARASI KELAYAKAN UNIT<br>
                 <span style="font-size: 10px; font-weight: normal; color: #64748b;">ID Penugasan: #SRV-{{ $job->id }}</span>
@@ -338,7 +338,7 @@
             <td>
                 <p>Manajemen Approval (Admin),</p>
                 <div class="signature-line"></div>
-                <p style="font-weight: bold; margin-top: 5px;">Spotshare Administrator</p>
+                <p style="font-weight: bold; margin-top: 5px;">Tempat-In Administrator</p>
             </td>
         </tr>
     </table>

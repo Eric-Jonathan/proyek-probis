@@ -19,7 +19,8 @@ class Rating extends Model
         'item_type',
         'kebersihan',
         'pelayanan',
-        'kenyamanan'
+        'kenyamanan',
+        'komentar'
     ];
 
     public function booking()

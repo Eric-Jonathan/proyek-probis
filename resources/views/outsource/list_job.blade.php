@@ -11,6 +11,15 @@
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     @endif
+    @if(session('error'))
+        <div class="alert alert-danger alert-dismissible fade show border-0 rounded-3 shadow-sm mb-4" role="alert">
+            <div class="d-flex align-items-center">
+                <i class="bi bi-exclamation-triangle-fill me-2 fs-5"></i>
+                <div>{{ session('error') }}</div>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
 
     <div class="row mb-4 align-items-center">
         <div class="col">
@@ -52,7 +61,7 @@
                 <tbody>
 
 
-                    @foreach($allJobs as $job)
+                    @forelse($allJobs as $job)
                     <tr>
                         <td class="ps-4 py-4 text-start">
                             <div class="fw-bold text-dark">{{ $job->room }}</div>
@@ -66,7 +75,7 @@
                                 <button type="button" class="btn btn-dark btn-sm rounded-pill px-4 fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#modalAmbil{{ $job->id }}">
                                     Ambil Tugas <i class="bi bi-plus-circle ms-1"></i>
                                 </button>
-
+ 
                                 <div class="modal fade" id="modalAmbil{{ $job->id }}" tabindex="-1" aria-hidden="true">
                                     <div class="modal-dialog modal-dialog-centered">
                                         <div class="modal-content border-0 rounded-4 shadow">
@@ -95,7 +104,15 @@
                             @endif
                         </td>
                     </tr>
-                    @endforeach
+                    @empty
+                    <tr>
+                        <td colspan="5" class="py-5 text-center text-muted">
+                            <i class="bi bi-inboxes fs-2 d-block mb-2 text-secondary"></i>
+                            <span class="fw-semibold">Tidak ada penugasan yang tersedia saat ini.</span>
+                            <p class="small text-muted mb-0">Silakan hubungi admin atau tunggu hingga penugasan baru dibuat.</p>
+                        </td>
+                    </tr>
+                    @endforelse
                 </tbody>
             </table>
         </div>

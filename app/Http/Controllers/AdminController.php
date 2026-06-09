@@ -21,22 +21,22 @@ class AdminController extends Controller
                     ->get();
 
         // 2. Ambil data tugas AKTIF (yang sedang dikerjakan tim lapangan untuk dipantau progresnya)
-        $monitoring = OutsourceAssignment::with(['room', 'surveyor'])
+        $monitoring = OutsourceAssignment::with(['room', 'company'])
                     ->whereIn('assignment_status', ['on_the_way', 'checking'])
                     ->get();
 
         // 3. Ambil data list pegawai surveyor kustom outsource untuk isi dropdown select
-        $mitra = People::where('role', 'outsource')->get();
+        $mitra = Outsource::where('status', 1)->get();
 
         // 4. Laporan Survei yang sudah diselesaikan Outsource dan menunggu Keputusan Admin
-        $realPendingReports = OutsourceAssignment::with(['room', 'surveyor', 'report'])
+        $realPendingReports = OutsourceAssignment::with(['room', 'company', 'report'])
                     ->where('assignment_status', 'completed')
                     ->whereHas('room', function($q) {
                         $q->where('status', 1);
                     })
                     ->get();
 
-        $realProcessedReports = OutsourceAssignment::with(['room', 'surveyor', 'report'])
+        $realProcessedReports = OutsourceAssignment::with(['room', 'company', 'report'])
                     ->where('assignment_status', 'completed')
                     ->whereHas('room', function($q) {
                         $q->whereIn('status', [2, 3]);
@@ -51,7 +51,7 @@ class AdminController extends Controller
                 'floor' => 'Lantai ' . ($item->room->floor ?? '1'),
                 'price' => $item->room ? number_format($item->room->price, 0, ',', '.') : '0',
                 'status' => 'Pending',
-                'outsource' => $item->surveyor->username ?? 'Outsource Partner',
+                'outsource' => $item->company->company_name ?? 'Outsource Partner',
                 'rek' => $item->report->rekomendasi ?? 'Layak',
                 'is_dummy' => false
             ];
@@ -65,7 +65,7 @@ class AdminController extends Controller
                 'floor' => 'Lantai ' . ($item->room->floor ?? '1'),
                 'price' => $item->room ? number_format($item->room->price, 0, ',', '.') : '0',
                 'status' => $statusText,
-                'outsource' => $item->surveyor->username ?? 'Outsource Partner',
+                'outsource' => $item->company->company_name ?? 'Outsource Partner',
                 'rek' => $item->report->rekomendasi ?? (($item->room->status ?? 0) == 2 ? 'Layak' : 'Tidak Layak'),
                 'is_dummy' => false
             ];
@@ -77,7 +77,7 @@ class AdminController extends Controller
                         $query->whereIn('assignment_status', ['on_the_way', 'checking']);
                     })->count();
         $countActive = OutsourceAssignment::whereIn('assignment_status', ['on_the_way', 'checking'])->count();
-        $countSurveyor = People::where('role', 'outsource')->count();
+        $countSurveyor = Outsource::count();
         
         $countPendingReports = $pendingReports->count();
         $countTotalRooms = Room::where('status', '>=', 0)->count();
@@ -98,14 +98,14 @@ class AdminController extends Controller
 
     public function acc_room(){
         // 1. Ambil data asli dari database
-        $realPendingReports = OutsourceAssignment::with(['room', 'surveyor', 'report'])
+        $realPendingReports = OutsourceAssignment::with(['room', 'company', 'report'])
                     ->where('assignment_status', 'completed')
                     ->whereHas('room', function($q) {
                         $q->where('status', 1);
                     })
                     ->get();
 
-        $realProcessedReports = OutsourceAssignment::with(['room', 'surveyor', 'report'])
+        $realProcessedReports = OutsourceAssignment::with(['room', 'company', 'report'])
                     ->where('assignment_status', 'completed')
                     ->whereHas('room', function($q) {
                         $q->whereIn('status', [2, 3]);
@@ -120,7 +120,7 @@ class AdminController extends Controller
                 'floor' => 'Lantai ' . ($item->room->floor ?? '1'),
                 'price' => number_format($item->room->price ?? 0, 0, ',', '.'),
                 'status' => 'Pending',
-                'outsource' => $item->surveyor->username ?? 'Outsource Partner',
+                'outsource' => $item->company->company_name ?? 'Outsource Partner',
                 'rek' => $item->report->rekomendasi ?? 'Layak'
             ];
         });
@@ -133,7 +133,7 @@ class AdminController extends Controller
                 'floor' => 'Lantai ' . ($item->room->floor ?? '1'),
                 'price' => number_format($item->room->price ?? 0, 0, ',', '.'),
                 'status' => $statusText,
-                'outsource' => $item->surveyor->username ?? 'Outsource Partner',
+                'outsource' => $item->company->company_name ?? 'Outsource Partner',
                 'rek' => $item->report->rekomendasi ?? 'Layak'
             ];
         });
@@ -292,13 +292,12 @@ class AdminController extends Controller
                     ->get();
 
         // 2. Ambil data tugas AKTIF (yang sedang dikerjakan tim lapangan untuk dipantau progresnya)
-        $monitoring = OutsourceAssignment::with(['room', 'surveyor'])
+        $monitoring = OutsourceAssignment::with(['room', 'company'])
                     ->whereIn('assignment_status', ['on_the_way', 'checking'])
                     ->get();
 
-        // 3. Ambil data list pegawai surveyor kustom outsource untuk isi dropdown select
-        // (Misal memfilter user yang memiliki role 'surveyor' atau 'outsource')
-        $mitra = People::where('role', 'outsource')->get(); 
+        // 3. Ambil data list partner outsource untuk isi dropdown select
+        $mitra = Outsource::where('status', 1)->get(); 
 
         // 4. Hitung data statistik box atas secara dinamis dari database
         $countWaiting = Room::where('status', 1)
@@ -306,18 +305,18 @@ class AdminController extends Controller
                         $query->whereIn('assignment_status', ['on_the_way', 'checking']);
                     })->count();
         $countActive = OutsourceAssignment::whereIn('assignment_status', ['on_the_way', 'checking'])->count();
-        $countSurveyor = People::where('role', 'outsource')->count();
+        $countSurveyor = Outsource::count();
 
         return view('admin.assign_outsource', compact('incoming', 'monitoring', 'mitra', 'countWaiting', 'countActive', 'countSurveyor'));
     }
 
-    // Fungsi eksekusi tombol "Tugaskan" saat admin memilih surveyor
+    // Fungsi eksekusi tombol "Tugaskan" saat admin memilih mitra outsource
     public function assignSurveyor(Request $request, $room_id)
     {
         $request->validate([
-            'surveyor_id' => 'required'
+            'outsource_id' => 'required'
         ], [
-            'surveyor_id.required' => 'Wajib memilih salah satu surveyor lapangan.'
+            'outsource_id.required' => 'Wajib memilih salah satu mitra outsource.'
         ]);
         // =========================================================================
         // LOGIKA AMAN ERP: Mencegah Duplikasi Penugasan Aktif untuk Ruangan yang Sama
@@ -335,7 +334,7 @@ class AdminController extends Controller
         // =========================================================================
         OutsourceAssignment::create([
             'room_id'           => $room_id,
-            'surveyor_id'       => $request->surveyor_id,
+            'outsource_id'      => $request->outsource_id,
             'assignment_status' => 'on_the_way', // Langsung aktif menuju lokasi
             'progress'          => 15            // Set awal progres ke 15% sesuai visual template
         ]);
@@ -344,7 +343,7 @@ class AdminController extends Controller
         // di tabel rooms agar tidak muncul lagi di antrean penugasan baru:
         // Room::where('room_id', $room_id)->update(['status' => 2]); 
 
-        return back()->with('success', 'Tugas baru berhasil dibuat dan surveyor lapangan telah ditugaskan!');
+        return back()->with('success', 'Tugas baru berhasil dibuat dan mitra outsource telah ditugaskan!');
     }
 
     // Fungsi menghapus total data penugasan dari database

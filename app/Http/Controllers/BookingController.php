@@ -9,7 +9,66 @@ use Illuminate\Support\Carbon;
 class BookingController extends Controller
 {
     public function history() {
-        return view('rooms.history');
+        $userId = auth()->id();
+
+        // Seeding data dummy booking jika user belum memiliki booking selesai agar bisa mencoba fitur rating
+        $completedBookingExists = \App\Models\Booking::where('user_id', $userId)
+            ->where(function($q) {
+                $q->where('status', 2)
+                  ->orWhere('end_date', '<', now());
+            })
+            ->exists();
+
+        if (!$completedBookingExists) {
+            $room = \App\Models\Room::first();
+            if ($room) {
+                $bookingSelesai = \App\Models\Booking::create([
+                    'user_id'        => $userId,
+                    'total'          => $room->price * 2 + 1000000, // Room + Catering
+                    'method_payment' => 'Manual',
+                    'event'          => 'Reuni Akbar Kuliah',
+                    'phone'          => '8123456789',
+                    'notes'          => 'Mohon sediakan kursi tambahan di barisan depan.',
+                    'start_date'     => now()->subDays(5)->format('Y-m-d') . ' 08:00:00',
+                    'end_date'       => now()->subDays(5)->format('Y-m-d') . ' 17:00:00',
+                    'status'         => 2, // Selesai
+                ]);
+
+                \App\Models\BookingDetail::create([
+                    'booking_id' => $bookingSelesai->booking_id,
+                    'item_id'    => $room->room_id,
+                    'item_name'  => $room->name,
+                    'item_type'  => 1, // Room
+                    'item_price' => $room->price * 2,
+                    'status'     => 1,
+                ]);
+
+                \App\Models\BookingDetail::create([
+                    'booking_id' => $bookingSelesai->booking_id,
+                    'item_id'    => 101, // Catering
+                    'item_name'  => 'Layanan Paket Katering Konsumsi',
+                    'item_type'  => 2, // Service
+                    'item_price' => 1000000,
+                    'status'     => 1,
+                ]);
+            }
+        }
+
+        // 1. Ambil data transaksi riwayat booking penyewa
+        $bookings = \App\Models\Booking::with(['roomDetail.room', 'rating'])
+            ->where('user_id', $userId)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        // 2. Hitung statistik untuk header card
+        $stats = [
+            'total'     => $bookings->count(),
+            'completed' => $bookings->where('status', 2)->count(),
+            'active'    => $bookings->where('status', 1)->count(),
+            'cancelled' => $bookings->where('status', 0)->count(),
+        ];
+
+        return view('rooms.history', compact('bookings', 'stats'));
     }
 
     public function showBookingForm(Request $request, $room_id)
@@ -63,46 +122,163 @@ class BookingController extends Controller
     {
         $room = Room::findOrFail($room_id);
 
-        // Hitung total hari dari input date asli
-        $startDate = \Carbon\Carbon::parse($request->start_date);
-        $endDate = \Carbon\Carbon::parse($request->end_date);
-        $totalDays = max(1, $startDate->diffInDays($endDate) + 1);
+        $request->validate([
+            'start_date' => 'required|date',
+            'end_date' => 'required|date',
+            'instansi' => 'required|string|max:255',
+            'jenis_acara' => 'required|string|max:100',
+            'phone' => 'required|string|max:30',
+            'total_capacity' => 'required|integer|min:1|max:' . $room->capacity,
+            'sewa_tipe' => 'required|in:harian,jam',
+            'payment_method' => 'required|string',
+            'notes' => 'nullable|string',
+            'jam_mulai' => 'nullable|string',
+            'jam_selesai' => 'nullable|string'
+        ]);
 
-        // Ambil input pax dari form
+        $startDateVal = $request->start_date;
+        $endDateVal = $request->end_date;
+
+        if ($request->sewa_tipe === 'jam') {
+            // Kombinasi tanggal dengan jam mulai & selesai
+            $jamMulai = str_replace('.', ':', $request->input('jam_mulai', '08:00'));
+            $jamSelesai = str_replace('.', ':', $request->input('jam_selesai', '16:00'));
+            $reqStart = $startDateVal . ' ' . $jamMulai . ':00';
+            $reqEnd = $startDateVal . ' ' . $jamSelesai . ':00';
+        } else {
+            $reqStart = $startDateVal . ' 00:00:00';
+            $reqEnd = $endDateVal . ' 23:59:59';
+        }
+
+        // =========================================================================
+        // VALIDASI KETERSEDIAAN WAKTU (LOCK & CONCURRENCY CHECK)
+        // =========================================================================
+        $overlap = \App\Models\Booking::whereIn('status', [1, 2])
+            ->whereHas('details', function($q) use ($room_id) {
+                $q->where('item_type', 1)->where('item_id', $room_id);
+            })
+            ->where(function($query) use ($reqStart, $reqEnd) {
+                $query->where('start_date', '<', $reqEnd)
+                      ->where('end_date', '>', $reqStart);
+            })
+            ->exists();
+
+        if ($overlap) {
+            return back()->withInput()->with('error', 'Maaf, ruangan sudah penuh (booked) pada tanggal dan jam tersebut. Silakan pilih waktu lain.');
+        }
+
+        // =========================================================================
+        // KALKULASI HARGA - HARUS PERSIS SAMA DENGAN FORMULA booking.js
+        // =========================================================================
+        $carbonStart = \Illuminate\Support\Carbon::parse($startDateVal);
+        $carbonEnd = \Illuminate\Support\Carbon::parse($endDateVal);
+        $totalDays = max(1, $carbonStart->diffInDays($carbonEnd) + 1);
+
         $totalPax = intval($request->total_capacity);
         if ($totalPax < $room->min_order) {
             $totalPax = $room->min_order;
         }
 
-        // 1. Hitung ulang base price ruangan sesuai jenis_harga di DB dikali totalDays
-        $basePrice = 0;
-        if ($room->jenis_harga === 'pax') {
-            $basePrice = $room->price * $totalPax * $totalDays;
-        } elseif ($room->jenis_harga === 'hari') {
-            $basePrice = $room->price * $totalDays;
-        } // ... tambahkan kondisi skema 'jam' dan 'pax_jam' sesuai durasi jam input jika sewa_tipe == jam
+        // Durasi jam
+        $durationHours = 8; // default
+        if ($request->sewa_tipe === 'jam') {
+            $timeStart = str_replace('.', ':', $request->input('jam_mulai', '08:00'));
+            $timeEnd = str_replace('.', ':', $request->input('jam_selesai', '16:00'));
+            $dateStart = \Illuminate\Support\Carbon::parse("2026-01-01 " . $timeStart);
+            $dateEnd = \Illuminate\Support\Carbon::parse("2026-01-01 " . $timeEnd);
+            $diffMs = $dateEnd->timestamp - $dateStart->timestamp;
+            $durationHours = ceil($diffMs / 3600);
+            if ($durationHours <= 0) {
+                $durationHours = 1;
+            }
+        }
 
-        // 2. Hitung ekstra biaya addons layanan tambahan dikali totalDays (khusus katering)
+        $basePrice = 0;
+        $jenisHarga = strtolower(trim($room->jenis_harga));
+        if ($jenisHarga === 'pax') {
+            $basePrice = $room->price * $totalPax * $totalDays;
+        } elseif ($jenisHarga === 'hari') {
+            $basePrice = $room->price * $totalDays;
+        } elseif ($jenisHarga === 'jam') {
+            $basePrice = $room->price * $durationHours;
+        } elseif ($jenisHarga === 'pax_jam') {
+            $basePrice = $room->price * $totalPax * $durationHours * $totalDays;
+        } else {
+            $basePrice = $room->price;
+        }
+
+        // Hitung ekstra biaya addons
         $extraCost = 0;
+        $addons = [];
         if ($request->has('services')) {
             foreach ($request->services as $service) {
                 if ($service === 'Catering') {
-                    $extraCost += (50000 * $totalPax * $totalDays); // Dikali pax dan hari booking
+                    $cost = 50000 * $totalPax * $totalDays;
+                    $addons[] = [
+                        'name' => 'Layanan Paket Katering Konsumsi',
+                        'price' => $cost,
+                        'item_id' => 101
+                    ];
+                    $extraCost += $cost;
                 } elseif ($service === 'Dekorasi') {
-                    $extraCost += 1500000; // Flat per event
+                    $cost = 1500000;
+                    $addons[] = [
+                        'name' => 'Paket Dekorasi Panggung',
+                        'price' => $cost,
+                        'item_id' => 102
+                    ];
+                    $extraCost += $cost;
                 } elseif ($service === 'IT') {
-                    $extraCost += 750000;  // Flat per event
+                    $cost = 750000;
+                    $addons[] = [
+                        'name' => 'Operator Teknis & Sound Live Streaming',
+                        'price' => $cost,
+                        'item_id' => 103
+                    ];
+                    $extraCost += $cost;
                 }
             }
         }
 
         $grandTotalFinal = $basePrice + $extraCost;
 
-        // 3. Simpan data bersih hasil kalkulator ERP ke tabel bookings
-        // $booking = Booking::create([
-        //     'user_id' => Auth::id(),
-        //     'total' => $grandTotalFinal,
-        //     ...
-        // ]);
+        // =========================================================================
+        // INSERT DATABASE
+        // =========================================================================
+        $booking = \App\Models\Booking::create([
+            'user_id' => \Illuminate\Support\Facades\Auth::id(),
+            'total' => $grandTotalFinal,
+            'method_payment' => $request->payment_method,
+            'event' => $request->instansi . ' - ' . $request->jenis_acara,
+            'phone' => $request->phone,
+            'notes' => $request->notes,
+            'start_date' => $reqStart,
+            'end_date' => $reqEnd,
+            'status' => 1 // Booked
+        ]);
+
+        // Detail 1: Sewa Gedung/Ruangan Utama
+        \App\Models\BookingDetail::create([
+            'booking_id' => $booking->booking_id,
+            'item_name' => $room->name,
+            'item_id' => $room->room_id,
+            'item_type' => 1, // Room
+            'item_price' => $basePrice,
+            'status' => 1 // Active
+        ]);
+
+        // Detail 2+: Addon Services
+        foreach ($addons as $addon) {
+            \App\Models\BookingDetail::create([
+                'booking_id' => $booking->booking_id,
+                'item_name' => $addon['name'],
+                'item_id' => $addon['item_id'],
+                'item_type' => 2, // Facility
+                'item_price' => $addon['price'],
+                'status' => 1 // Active
+            ]);
+        }
+
+        return redirect()->route('bookings.history')->with('success', 'Pemesanan ruangan ' . $room->name . ' berhasil dibuat!');
     }
 }

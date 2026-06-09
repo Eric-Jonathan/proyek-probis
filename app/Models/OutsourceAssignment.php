@@ -8,7 +8,7 @@ class OutsourceAssignment extends Model
 {
     protected $table = 'outsource_assignments';
     protected $primaryKey = 'assignment_id';
-    protected $fillable = ['room_id', 'surveyor_id', 'progress', 'assignment_status'];
+    protected $fillable = ['room_id', 'outsource_id', 'surveyor_id', 'progress', 'assignment_status'];
 
     // Relasi balik mendapatkan data ruangan yang diajukan
     public function room()
@@ -16,7 +16,13 @@ class OutsourceAssignment extends Model
         return $this->belongsTo(Room::class, 'room_id', 'room_id');
     }
 
-    // Relasi mendapatkan data user yang bertindak sebagai surveyor
+    // Relasi mendapatkan data outsource company yang ditugaskan
+    public function company()
+    {
+        return $this->belongsTo(Outsource::class, 'outsource_id', 'outsource_id');
+    }
+
+    // Relasi mendapatkan data surveyor yang mengambil pekerjaan ini
     public function surveyor()
     {
         return $this->belongsTo(People::class, 'surveyor_id', 'user_id');
