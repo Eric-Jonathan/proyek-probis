@@ -285,9 +285,6 @@
                         <div class="room-img-container">
                             <img src="{{ $room->images->isNotEmpty() ? asset($room->images->first()->path) : 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=600&q=80' }}" class="room-img" alt="{{ $room->name }}">
                         </div>
-                        <button class="btn btn-light btn-sm position-absolute top-0 end-0 m-2 rounded-circle btn-favorite" data-id="{{ $room->room_id }}">
-                            <i class="bi bi-heart"></i>
-                        </button>
                     </div>
                     <div class="col-md-8">
                         <div class="card-body h-100 d-flex flex-column">

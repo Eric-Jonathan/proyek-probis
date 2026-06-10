@@ -120,7 +120,7 @@ class PenyewaController extends Controller
             $endDate = $request->end_date;
 
             // Dapatkan ID ruangan yang sudah terbooking di tanggal tsb
-            $bookedRoomIds = \App\Models\Booking::whereIn('status', [1, 2])
+            $bookedRoomIds = \App\Models\Booking::whereIn('status', [1, 2, 3])
                 ->where(function($q) use ($startDate, $endDate) {
                     $q->where('start_date', '<=', $endDate . ' 23:59:59')
                       ->where('end_date', '>=', $startDate . ' 00:00:00');

@@ -10,6 +10,7 @@ use App\Http\Controllers\PenyewaController;
 use App\Http\Controllers\RoomController;
 use App\Http\Controllers\OutsourceController;
 use App\Http\Controllers\RatingController;
+use App\Http\Controllers\ProfileController;
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -23,7 +24,8 @@ Route::post('/login', [AuthController::class, 'login'])->name('login.post');
 Route::get('/roomsList', [RoomController::class, 'index'])->name('rooms.index');
 Route::get('/rooms/create', [RoomController::class, 'create'])->name('rooms.create');
 Route::post('/rooms/store', [RoomController::class, 'store'])->name('rooms.store');
-Route::get('/rooms/{id}/transaction', [RoomController::class, 'transaction'])->name('rooms.transaction');
+Route::get('/booking/{booking_id}/transaction', [BookingController::class, 'transaction'])->name('booking.transaction');
+Route::post('/booking/{booking_id}/payment-callback', [BookingController::class, 'paymentCallback'])->name('booking.payment_callback');
 Route::get('/rooms/{room}/edit', [RoomController::class, 'edit'])->name('rooms.edit');
 Route::put('/rooms/{room}', [RoomController::class, 'update'])->name('rooms.update');
 Route::delete('/rooms/{room}', [RoomController::class, 'destroy'])->name('rooms.destroy');
@@ -62,6 +64,7 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
 
 Route::middleware(['auth', 'role:penyedia'])->group(function () {
     Route::get('/penyedia/dashboard', [PenyediaController::class, 'index'])->name('penyedia.dashboard');
+    Route::get('/penyedia/dashboard/chart', [PenyediaController::class, 'getChartData'])->name('penyedia.dashboard.chart');
     Route::get('/penyedia/history/{id}', [PenyediaController::class, 'detail_history'])->name('penyedia.detail_history');
 });
 
@@ -132,3 +135,8 @@ Route::get('/penyedia/report/{id}', [PenyediaController::class, 'report'])->name
 Route::post('/penyedia/report/store', function () {
     return redirect()->route('bookings.index')->with('success', 'Laporan penggunaan ruangan telah disimpan.');
 })->name('penyedia.report.store');
+
+Route::middleware(['auth'])->group(function () {
+    Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
+    Route::post('/profile/update', [ProfileController::class, 'update'])->name('profile.update');
+});

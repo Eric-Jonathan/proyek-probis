@@ -87,10 +87,12 @@
                                 @if(strtotime($b->end_date) < time())
                                     <span class="badge rounded-pill bg-success-subtle text-success px-3 py-2">Selesai (Acara Lewat)</span>
                                 @else
-                                    <span class="badge rounded-pill bg-primary-subtle text-primary px-3 py-2">Booked</span>
+                                    <span class="badge rounded-pill bg-primary-subtle text-primary px-3 py-2">Terjadwal</span>
                                 @endif
                             @elseif($b->status == 2)
                                 <span class="badge rounded-pill bg-success-subtle text-success px-3 py-2">Selesai</span>
+                            @elseif($b->status == 3)
+                                <span class="badge rounded-pill bg-warning-subtle text-warning px-3 py-2">Belum Bayar</span>
                             @elseif($b->status == 0)
                                 <span class="badge rounded-pill bg-danger-subtle text-danger px-3 py-2">Batal</span>
                             @endif
@@ -103,7 +105,7 @@
                                     @php
                                         $isCompleted = ($b->status == 2 || strtotime($b->end_date) < time());
                                     @endphp
-                                    @if($isCompleted)
+                                    @if($isCompleted && $b->status != 3)
                                         @if($b->rating)
                                             <span class="badge bg-light text-secondary border px-3 py-2"><i class="bi bi-check-circle-fill text-success me-1"></i> Sudah Dinilai</span>
                                         @else
@@ -112,6 +114,10 @@
                                                 <i class="bi bi-star-fill me-1"></i> Beri Rating
                                             </button>
                                         @endif
+                                    @elseif($b->status == 3)
+                                        <a href="{{ route('booking.transaction', ['booking_id' => $b->booking_id]) }}" class="btn btn-sm btn-warning text-dark rounded-pill px-3 py-1 fw-bold text-decoration-none shadow-sm">
+                                            <i class="bi bi-wallet2 me-1"></i> Bayar
+                                        </a>
                                     @else
                                         <span class="badge bg-light text-primary border px-3 py-2">Terjadwal</span>
                                     @endif

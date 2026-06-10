@@ -126,43 +126,49 @@
                             </td>
                             <td class="fw-bold text-dark">Rp {{ number_format($b->total, 0, ',', '.') }}</td>
                             <td class="text-center">
-                                @if($b->status == 1)
-                                    @if(strtotime($b->end_date) < time())
-                                        <span class="badge rounded-pill bg-success-subtle text-success px-3 py-2">Selesai (Acara Lewat)</span>
-                                    @else
-                                        <span class="badge rounded-pill bg-primary-subtle text-primary px-3 py-2">Terjadwal</span>
-                                    @endif
-                                @elseif($b->status == 2)
-                                    <span class="badge rounded-pill badge-selesai px-3 py-2">Selesai</span>
-                                @elseif($b->status == 0)
-                                    <span class="badge rounded-pill bg-danger-subtle text-danger px-3 py-2">Batal</span>
-                                @endif
+                                 @if($b->status == 1)
+                                     @if(strtotime($b->end_date) < time())
+                                         <span class="badge rounded-pill bg-success-subtle text-success px-3 py-2">Selesai (Acara Lewat)</span>
+                                     @else
+                                         <span class="badge rounded-pill bg-primary-subtle text-primary px-3 py-2">Terjadwal</span>
+                                     @endif
+                                 @elseif($b->status == 2)
+                                     <span class="badge rounded-pill badge-selesai px-3 py-2">Selesai</span>
+                                 @elseif($b->status == 3)
+                                     <span class="badge rounded-pill bg-warning-subtle text-warning px-3 py-2">Belum Bayar</span>
+                                 @elseif($b->status == 0)
+                                     <span class="badge rounded-pill bg-danger-subtle text-danger px-3 py-2">Batal</span>
+                                 @endif
                             </td>
-                            <td class="text-center">
-                                <div class="d-flex gap-2 justify-content-center align-items-center">
-                                    @if($b->status == 0)
-                                        {{-- Batal, no rating option --}}
-                                    @else
-                                        @php
-                                            $isCompleted = ($b->status == 2 || strtotime($b->end_date) < time());
-                                        @endphp
-                                        @if($isCompleted)
-                                            @if($b->rating)
-                                                <span class="badge bg-light text-secondary border px-3 py-2"><i class="bi bi-check-circle-fill text-success me-1"></i> Sudah Dinilai</span>
-                                            @else
-                                                <button type="button" class="btn btn-sm btn-warning rounded-pill px-3 py-1.5 fw-bold shadow-sm" 
-                                                        data-bs-toggle="modal" data-bs-target="#modalRating{{ $b->booking_id }}">
-                                                    <i class="bi bi-star-fill me-1"></i> Rate
-                                                </button>
-                                            @endif
-                                        @endif
-                                    @endif
-                                    <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3 py-1.5 fw-bold" 
-                                            data-bs-toggle="modal" data-bs-target="#modalDetail{{ $b->booking_id }}">
-                                        <i class="bi bi-eye"></i> Detail
-                                    </button>
-                                </div>
-                            </td>
+                             <td class="text-center">
+                                 <div class="d-flex gap-2 justify-content-center align-items-center">
+                                     @if($b->status == 0)
+                                         <span class="text-muted small italic">Tidak ada tindakan</span>
+                                     @else
+                                         <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3 fw-bold" data-bs-toggle="modal" data-bs-target="#modalDetail{{ $b->booking_id }}">
+                                             Detail
+                                         </button>
+                                         @if($b->status == 3)
+                                             <a href="{{ route('booking.transaction', ['booking_id' => $b->booking_id]) }}" class="btn btn-sm btn-warning text-dark rounded-pill px-3 fw-bold">
+                                                 <i class="bi bi-wallet2 me-1"></i> Bayar
+                                             </a>
+                                         @endif
+                                         @php
+                                             $isCompleted = ($b->status == 2 || strtotime($b->end_date) < time());
+                                         @endphp
+                                         @if($isCompleted && $b->status != 3 && Auth::user()->role !== 'penyedia')
+                                             @if($b->rating)
+                                                 <span class="badge bg-light text-secondary border px-3 py-2"><i class="bi bi-check-circle-fill text-success me-1"></i> Sudah Dinilai</span>
+                                             @else
+                                                 <button type="button" class="btn btn-sm btn-warning rounded-pill px-3 py-1.5 fw-bold shadow-sm" 
+                                                         data-bs-toggle="modal" data-bs-target="#modalRating{{ $b->booking_id }}">
+                                                     <i class="bi bi-star-fill me-1"></i> Rate
+                                                 </button>
+                                             @endif
+                                         @endif
+                                     @endif
+                                 </div>
+                             </td>
                         </tr>
                         @endforeach
                     </tbody>
@@ -177,7 +183,7 @@
     @php
         $isCompleted = ($b->status == 2 || strtotime($b->end_date) < time());
     @endphp
-    @if($isCompleted && !$b->rating)
+    @if($isCompleted && !$b->rating && $b->status != 3 && Auth::user()->role !== 'penyedia')
     <div class="modal fade" id="modalRating{{ $b->booking_id }}" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
@@ -284,17 +290,20 @@
                     <div class="col-md-6">
                         <label class="fw-bold small text-uppercase text-secondary" style="letter-spacing: 0.5px;">Status</label>
                         <div class="p-3 rounded bg-light mt-1">
-                            @if($b->status == 1)
-                                @if(strtotime($b->end_date) < time())
-                                    <span class="badge rounded-pill bg-success text-white px-3 py-2"><i class="bi bi-check-circle-fill me-1"></i> Selesai (Acara Lewat)</span>
-                                @else
-                                    <span class="badge rounded-pill bg-primary text-white px-3 py-2"><i class="bi bi-calendar-event-fill me-1"></i> Terjadwal</span>
-                                @endif
-                            @elseif($b->status == 2)
-                                <span class="badge rounded-pill bg-success text-white px-3 py-2"><i class="bi bi-check-circle-fill me-1"></i> Selesai</span>
-                            @elseif($b->status == 0)
-                                <span class="badge rounded-pill bg-danger text-white px-3 py-2"><i class="bi bi-x-circle-fill me-1"></i> Dibatalkan</span>
-                            @endif
+                             @if($b->status == 1)
+                                 @if(strtotime($b->end_date) < time())
+                                     <span class="badge rounded-pill bg-success text-white px-3 py-2"><i class="bi bi-check-circle-fill me-1"></i> Selesai (Acara Lewat)</span>
+                                 @else
+                                     <span class="badge rounded-pill bg-primary text-white px-3 py-2"><i class="bi bi-calendar-event-fill me-1"></i> Terjadwal</span>
+                                 @endif
+                             @elseif($b->status == 2)
+                                 <span class="badge rounded-pill bg-success text-white px-3 py-2"><i class="bi bi-check-circle-fill me-1"></i> Selesai</span>
+                             @elseif($b->status == 3)
+                                 <span class="badge rounded-pill bg-warning text-dark px-3 py-2"><i class="bi bi-wallet2 me-1"></i> Belum Bayar</span>
+                             @elseif($b->status == 0)
+                                 <span class="badge rounded-pill bg-danger text-white px-3 py-2"><i class="bi bi-x-circle-fill me-1"></i> Dibatalkan</span>
+                             @endif
+                            @if(Auth::user()->role !== 'penyedia')
                             <div class="text-muted small mt-2 text-capitalize">
                                 @if($b->rating)
                                     <span class="text-success fw-semibold"><i class="bi bi-star-fill text-warning me-1"></i> Sudah memberikan ulasan</span>
@@ -302,6 +311,7 @@
                                     <span class="text-warning fw-semibold"><i class="bi bi-exclamation-circle me-1"></i> Belum memberikan ulasan</span>
                                 @endif
                             </div>
+                            @endif
                         </div>
                     </div>
 

@@ -66,6 +66,7 @@
     .btn-date:hover:not(:disabled) { background-color: #f0f0f0; }
     .btn-date:disabled { cursor: default; background: transparent !important; }
     .btn-date:disabled .num, .btn-date:disabled .price { color: #ccc !important; }
+    .btn-date.is-fullbook:disabled .num, .btn-date.is-fullbook:disabled .price { color: #dc3545 !important; }
     .btn-date:disabled .today-label { color: var(--primary-blue); }
     .btn-date .num { font-weight: 600; font-size: 1rem; color: #444; }
     .btn-date .price { font-size: 0.65rem; font-weight: 600; }
@@ -228,9 +229,6 @@
                     <div class="col-6"><img src="{{ asset($images[1] ?? $images[0]) }}" class="img-fluid rounded object-fit-cover w-100" style="height: 200px;" alt="Gallery 1"></div>
                     <div class="col-6 position-relative">
                         <img src="{{ asset($images[2] ?? $images[0]) }}" class="img-fluid rounded object-fit-cover w-100" style="height: 200px;" alt="Gallery 2">
-                        <button type="button" class="btn btn-wishlist-float" id="btn-wishlist">
-                            <i class="bi bi-heart" id="icon-wishlist"></i>
-                        </button>
                     </div>
                     <div class="col-6"><img src="{{ asset($images[3] ?? $images[0]) }}" class="img-fluid rounded object-fit-cover w-100" style="height: 200px;" alt="Gallery 3"></div>
                     <div class="col-6">
@@ -328,7 +326,10 @@
                             <span class="fw-bold small text-primary">{{ number_format($userAvg, 1) }}<span class="text-muted">/5</span></span>
                             <span class="text-muted" style="font-size: 0.75rem;">{{ $formattedDate }}</span>
                         </div>
-                        <p class="small mb-2"><strong>{{ $userName }}</strong></p>
+                        <p class="small mb-1"><strong>{{ $userName }}</strong></p>
+                        @if($r->komentar)
+                            <p class="small text-secondary mb-2" style="font-style: italic; color: #555; font-size: 0.85rem; line-height: 1.4;">"{{ $r->komentar }}"</p>
+                        @endif
                         <div class="text-muted small" style="font-size: 0.8rem; line-height: 1.4;">
                             <div><i class="bi bi-shield-check text-success me-1"></i>Kebersihan: {{ $r->kebersihan }}/5</div>
                             <div><i class="bi bi-shield-check text-success me-1"></i>Pelayanan: {{ $r->pelayanan }}/5</div>
@@ -436,7 +437,8 @@
                         data-bs-target="#datePickerModal"
                         data-min-day="{{ $room->day ?? 1 }}"
                         data-room-id="{{ $room->room_id }}"
-                        data-jenis-harga="{{ $room->jenis_harga }}"> Pilih tanggal penyewaan...
+                        data-jenis-harga="{{ $room->jenis_harga }}"
+                        data-booked-dates="{{ json_encode($bookedDates) }}"> Pilih tanggal penyewaan...
                     </span>
                 </div>
                 <a href="" id="btn-trigger-booking" class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm" style="background-color: var(--primary-blue);">

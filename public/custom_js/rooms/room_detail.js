@@ -14,6 +14,7 @@ $(document).ready(function() {
     // Ganti baris pengambilan data-jenis-harga menjadi super aman seperti ini:
     const jenisHargaRaw = $('#display-date').data('jenis-harga') || '';
     const jenisHargaRuangan = String(jenisHargaRaw).trim().toLowerCase(); 
+    const bookedDates = $('#display-date').data('booked-dates') || [];
 
     // =========================================================================
     // 1. LOGIKA RANGE KALENDER PENYEWAAN 
@@ -85,6 +86,18 @@ $(document).ready(function() {
                 $btn.prop('disabled', true);
             }
 
+            // Formulasi tanggal ISO untuk loopDate (YYYY-MM-DD)
+            const y = loopDate.getFullYear();
+            const m = String(loopDate.getMonth() + 1).padStart(2, '0');
+            const dt = String(loopDate.getDate()).padStart(2, '0');
+            const loopDateIso = `${y}-${m}-${dt}`;
+
+            const isBooked = bookedDates.includes(loopDateIso);
+            if (isBooked) {
+                $btn.prop('disabled', true);
+                $btn.addClass('is-fullbook');
+            }
+
             // PEWARNAAN RENTANG SELECTION (IN-BETWEEN)
             const checkTime = loopDate.getTime();
             const startTime = startDate ? new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate()).getTime() : null;
@@ -99,7 +112,7 @@ $(document).ready(function() {
             $btn.html(`
                 ${isToday ? '<span class="today-label">Hari Ini</span>' : ''}
                 <span class="num">${d}</span>
-                <span class="price" style="color:var(--success-green)">Tersedia</span>
+                ${isBooked ? '<span class="price" style="color:#dc3545">Full Book</span>' : '<span class="price" style="color:var(--success-green)">Tersedia</span>'}
             `);
 
             // SATU-SATUNYA EVENT KLIK TOMBOL TANGGAL YANG AKTIF
@@ -144,6 +157,29 @@ $(document).ready(function() {
                                     .removeClass('d-none alert-success')
                                     .addClass('alert-warning');
                                 return; 
+                            }
+
+                            // Cek jika terdapat tanggal terbooking di dalam rentang pilihan
+                            let hasBookedDateInRange = false;
+                            let currentCheck = new Date(startDate.getTime());
+                            while (currentCheck <= loopDate) {
+                                const yCheck = currentCheck.getFullYear();
+                                const mCheck = String(currentCheck.getMonth() + 1).padStart(2, '0');
+                                const dCheck = String(currentCheck.getDate()).padStart(2, '0');
+                                const checkIso = `${yCheck}-${mCheck}-${dCheck}`;
+                                if (bookedDates.includes(checkIso)) {
+                                    hasBookedDateInRange = true;
+                                    break;
+                                }
+                                currentCheck.setDate(currentCheck.getDate() + 1);
+                            }
+
+                            if (hasBookedDateInRange) {
+                                $('#calendar-info-note')
+                                    .html(`<i class="bi bi-exclamation-triangle-fill me-2"></i>Gagal memilih! Terdapat tanggal yang sudah penuh (Full Book) di dalam rentang pilihan Anda.`)
+                                    .removeClass('d-none alert-success')
+                                    .addClass('alert-warning');
+                                return;
                             }
                             
                             endDate = loopDate;
@@ -211,14 +247,7 @@ $(document).ready(function() {
     // =========================================================================
     // 3. WIDGET LOGIKA TAMBAHAN (WISHLIST & ACTION BUTTON)
     // =========================================================================
-    $('#btn-wishlist').on('click', function() {
-        const $icon = $('#icon-wishlist');
-        if ($icon.hasClass('bi-heart')) {
-            $icon.attr('class', 'bi bi-heart-fill text-danger');
-        } else {
-            $icon.attr('class', 'bi bi-heart');
-        }
-    });
+
 
     $(window).on('scroll', function() {
         let currentSectionId = "";

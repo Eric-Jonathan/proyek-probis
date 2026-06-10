@@ -5,11 +5,15 @@ namespace App\Http\Controllers;
 use App\Models\Room;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Midtrans\Config;
+use Midtrans\Snap;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class BookingController extends Controller
 {
     public function history() {
-        $userId = auth()->id();
+        $userId = Auth::id();
 
         // Seeding data dummy booking jika user belum memiliki booking selesai agar bisa mencoba fitur rating
         $completedBookingExists = \App\Models\Booking::where('user_id', $userId)
@@ -153,7 +157,7 @@ class BookingController extends Controller
         // =========================================================================
         // VALIDASI KETERSEDIAAN WAKTU (LOCK & CONCURRENCY CHECK)
         // =========================================================================
-        $overlap = \App\Models\Booking::whereIn('status', [1, 2])
+        $overlap = \App\Models\Booking::whereIn('status', [1, 2, 3])
             ->whereHas('details', function($q) use ($room_id) {
                 $q->where('item_type', 1)->where('item_id', $room_id);
             })
@@ -254,7 +258,7 @@ class BookingController extends Controller
             'notes' => $request->notes,
             'start_date' => $reqStart,
             'end_date' => $reqEnd,
-            'status' => 1 // Booked
+            'status' => 3 // 3 = Belum Bayar / Pending Payment
         ]);
 
         // Detail 1: Sewa Gedung/Ruangan Utama
@@ -279,6 +283,73 @@ class BookingController extends Controller
             ]);
         }
 
-        return redirect()->route('bookings.history')->with('success', 'Pemesanan ruangan ' . $room->name . ' berhasil dibuat!');
+        return redirect()->route('booking.transaction', ['booking_id' => $booking->booking_id])
+            ->with('success', 'Pemesanan ruangan ' . $room->name . ' berhasil dibuat! Silakan lakukan pembayaran.');
+    }
+
+    public function transaction($booking_id)
+    {
+        $booking = \App\Models\Booking::with(['roomDetail.room', 'serviceDetails'])
+            ->findOrFail($booking_id);
+
+        $roomDetail = $booking->roomDetail;
+        $room = $roomDetail ? $roomDetail->room : null;
+
+        // Konfigurasi Midtrans dari services.php
+        Config::$serverKey    = config('services.midtrans.server_key');
+        Config::$isProduction = config('services.midtrans.is_production');
+        Config::$isSanitized  = config('services.midtrans.is_sanitized');
+        Config::$is3ds        = config('services.midtrans.is_3ds');
+
+        $params = [
+            'transaction_details' => [
+                'order_id' => 'BOOKING-' . $booking->booking_id . '-' . time(),
+                'gross_amount' => (int) $booking->total,
+            ],
+            'customer_details' => [
+                'first_name' => Auth::user()->username ?? 'Penyewa',
+                'email' => Auth::user()->email ?? 'penyewa@example.com',
+                'phone' => $booking->phone ?? '',
+            ],
+            'item_details' => [
+                [
+                    'id' => $room ? $room->room_id : 1,
+                    'price' => (int) ($roomDetail ? $roomDetail->item_price : $booking->total),
+                    'quantity' => 1,
+                    'name' => $room ? substr($room->name, 0, 50) : 'Sewa Ruangan',
+                ]
+            ]
+        ];
+
+        foreach ($booking->serviceDetails as $service) {
+            $params['item_details'][] = [
+                'id' => $service->item_id,
+                'price' => (int) $service->item_price,
+                'quantity' => 1,
+                'name' => substr($service->item_name, 0, 50),
+            ];
+        }
+
+        $snapToken = '';
+        $isSimulated = false;
+        try {
+            $snapToken = Snap::getSnapToken($params);
+        } catch (\Exception $e) {
+            Log::error('Midtrans Error: ' . $e->getMessage());
+            $snapToken = 'MOCK-SNAP-TOKEN-' . uniqid();
+            $isSimulated = true;
+        }
+
+        return view('rooms.transaction', compact('booking', 'room', 'snapToken', 'isSimulated'));
+    }
+
+    public function paymentCallback(Request $request, $booking_id)
+    {
+        $booking = \App\Models\Booking::findOrFail($booking_id);
+        if ($request->input('status') === 'success') {
+            $booking->update(['status' => 1]); // 1 = Booked/Paid/Active
+            return response()->json(['success' => true]);
+        }
+        return response()->json(['success' => false], 400);
     }
 }

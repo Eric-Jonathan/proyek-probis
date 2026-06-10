@@ -9,7 +9,7 @@
             <div class="dropdown" style="cursor: pointer">
                 <i class="bi bi-person-circle fs-4 cursor-pointer" data-bs-toggle="dropdown"></i>
                 <ul class="dropdown-menu dropdown-menu-end">
-                    <li><a class="dropdown-item" href="#">Profil</a></li>
+                    <li><a class="dropdown-item" href="{{ route('profile.show') }}"><i class="bi bi-person me-2"></i>Profil</a></li>
                     <li><hr class="dropdown-divider"></li>
                     <li>
                         <form id="logout-form" action="{{ route('logout') }}" method="POST">
