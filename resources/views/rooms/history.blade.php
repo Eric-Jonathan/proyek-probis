@@ -135,22 +135,45 @@
                                  @elseif($b->status == 2)
                                      <span class="badge rounded-pill badge-selesai px-3 py-2">Selesai</span>
                                  @elseif($b->status == 3)
-                                     <span class="badge rounded-pill bg-warning-subtle text-warning px-3 py-2">Belum Bayar</span>
+                                     <span class="badge rounded-pill bg-warning-subtle text-warning px-3 py-2" style="color: #a16207 !important;">Cicilan ({{ $b->installments_paid }}/3)</span>
                                  @elseif($b->status == 0)
                                      <span class="badge rounded-pill bg-danger-subtle text-danger px-3 py-2">Batal</span>
+                                 @endif
+
+                                 @php
+                                     $unpaidFine = $b->fines->where('status', 1)->where('is_paid', 0)->first();
+                                     $paidFine = $b->fines->where('status', 1)->where('is_paid', 1)->first();
+                                 @endphp
+                                 @if($unpaidFine)
+                                     <div class="mt-1">
+                                         <span class="badge rounded-pill bg-danger-subtle text-danger px-2.5 py-1.5 fw-bold" style="font-size: 0.72rem;">
+                                             <i class="bi bi-exclamation-triangle-fill me-1"></i> Denda Unpaid: Rp {{ number_format($unpaidFine->nominal_denda, 0, ',', '.') }}
+                                         </span>
+                                     </div>
+                                 @elseif($paidFine)
+                                     <div class="mt-1">
+                                         <span class="badge rounded-pill bg-success-subtle text-success px-2.5 py-1.5 fw-bold" style="font-size: 0.72rem;">
+                                             <i class="bi bi-check-circle-fill me-1"></i> Denda Lunas
+                                         </span>
+                                     </div>
                                  @endif
                             </td>
                              <td class="text-center">
                                  <div class="d-flex gap-2 justify-content-center align-items-center">
                                      @if($b->status == 0)
                                          <span class="text-muted small italic">Tidak ada tindakan</span>
-                                     @else
+                                      @else
+                                          @if($unpaidFine)
+                                              <a href="{{ route('penyewa.fine.detail', $unpaidFine->fine_id) }}" class="btn btn-sm btn-danger rounded-pill px-3 fw-bold shadow-sm text-decoration-none">
+                                                  <i class="bi bi-exclamation-octagon me-1"></i> Detail Denda
+                                              </a>
+                                          @endif
                                          <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3 fw-bold" data-bs-toggle="modal" data-bs-target="#modalDetail{{ $b->booking_id }}">
                                              Detail
                                          </button>
                                          @if($b->status == 3)
                                              <a href="{{ route('booking.transaction', ['booking_id' => $b->booking_id]) }}" class="btn btn-sm btn-warning text-dark rounded-pill px-3 fw-bold">
-                                                 <i class="bi bi-wallet2 me-1"></i> Bayar
+                                                 <i class="bi bi-wallet2 me-1"></i> Bayar Cicilan
                                              </a>
                                          @endif
                                          @php
@@ -299,7 +322,7 @@
                              @elseif($b->status == 2)
                                  <span class="badge rounded-pill bg-success text-white px-3 py-2"><i class="bi bi-check-circle-fill me-1"></i> Selesai</span>
                              @elseif($b->status == 3)
-                                 <span class="badge rounded-pill bg-warning text-dark px-3 py-2"><i class="bi bi-wallet2 me-1"></i> Belum Bayar</span>
+                                 <span class="badge rounded-pill bg-warning text-dark px-3 py-2" style="background-color: #ffc107 !important;"><i class="bi bi-wallet2 me-1"></i> Cicilan ({{ $b->installments_paid }}/3)</span>
                              @elseif($b->status == 0)
                                  <span class="badge rounded-pill bg-danger text-white px-3 py-2"><i class="bi bi-x-circle-fill me-1"></i> Dibatalkan</span>
                              @endif
@@ -368,6 +391,9 @@
 </div>
 @endforeach
 
+
+
+
 @endsection
 
 @section('custom_js')
@@ -431,6 +457,8 @@
                 var detailModal = new bootstrap.Modal(detailModalElement);
                 detailModal.show();
             }
+        }
+
         }
     });
 </script>

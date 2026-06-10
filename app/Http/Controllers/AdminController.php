@@ -530,4 +530,24 @@ class AdminController extends Controller
             'completedSurveys' => $completedSurveys
         ]);
     }
+
+    public function fines()
+    {
+        $fines = \App\Models\Fine::with(['booking.user', 'booking.roomDetail.room'])->orderBy('created_at', 'desc')->get();
+        return view('admin.fines', compact('fines'));
+    }
+
+    public function approveFine($id)
+    {
+        $fine = \App\Models\Fine::findOrFail($id);
+        $fine->update(['status' => 1]); // Approved
+        return back()->with('success', 'Denda #' . $fine->fine_id . ' berhasil disetujui. Warning akan ditampilkan kepada penyewa saat login.');
+    }
+
+    public function rejectFine($id)
+    {
+        $fine = \App\Models\Fine::findOrFail($id);
+        $fine->update(['status' => 2]); // Rejected
+        return back()->with('success', 'Denda #' . $fine->fine_id . ' telah ditolak.');
+    }
 }

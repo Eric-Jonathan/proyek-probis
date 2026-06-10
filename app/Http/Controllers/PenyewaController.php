@@ -61,7 +61,7 @@ class PenyewaController extends Controller
         ];
 
         // 2. Load recent bookings (terbaru)
-        $recentBookings = \App\Models\Booking::with(['roomDetail.room', 'rating'])
+        $recentBookings = \App\Models\Booking::with(['roomDetail.room', 'rating', 'fines'])
             ->where('user_id', $userId)
             ->orderBy('created_at', 'desc')
             ->take(5)
@@ -79,7 +79,16 @@ class PenyewaController extends Controller
             ->orderBy('end_date', 'desc')
             ->first();
 
-        return view('penyewa.dashboard', compact('stats', 'recentBookings', 'unratedBooking'));
+        // 4. Deteksi denda aktif yang belum dibayar oleh penyewa
+        $activeFine = \App\Models\Fine::whereHas('booking', function($q) use ($userId) {
+                $q->where('user_id', $userId);
+            })
+            ->where('status', 1) // Approved
+            ->where('is_paid', 0) // Unpaid
+            ->with(['booking.roomDetail.room'])
+            ->first();
+
+        return view('penyewa.dashboard', compact('stats', 'recentBookings', 'unratedBooking', 'activeFine'));
     }
 
     public function searchPage(Request $request) {
@@ -200,5 +209,86 @@ class PenyewaController extends Controller
         return view('rooms/booking', compact('room'));
     }
 
-    
+    public function dismissFine(Request $request, $fine_id)
+    {
+        $fine = \App\Models\Fine::findOrFail($fine_id);
+
+        // Verify that the fine booking belongs to the logged in user
+        if ($fine->booking->user_id !== auth()->id()) {
+            return response()->json(['success' => false, 'message' => 'Akses ditolak.'], 403);
+        }
+
+        $fine->update(['is_dismissed' => 1]);
+
+        return response()->json(['success' => true]);
+    }
+
+    public function payFine(Request $request, $fine_id)
+    {
+        $fine = \App\Models\Fine::with('booking.roomDetail.room')->findOrFail($fine_id);
+        $renter = auth()->user();
+
+        // 1. Verify that the fine booking belongs to the logged in user
+        if ($fine->booking->user_id !== $renter->user_id) {
+            return response()->json(['success' => false, 'message' => 'Akses ditolak.'], 403);
+        }
+
+        // 2. Verify fine is approved and not yet paid
+        if ($fine->status != 1) {
+            return response()->json(['success' => false, 'message' => 'Denda ini belum disetujui atau telah ditolak.'], 400);
+        }
+
+        if ($fine->is_paid == 1) {
+            return response()->json(['success' => false, 'message' => 'Denda ini sudah dibayar.'], 400);
+        }
+
+        // 3. Verify user has enough balance
+        $amount = (int) $fine->nominal_denda;
+        if ($renter->saldo < $amount) {
+            return response()->json([
+                'success' => false, 
+                'message' => 'Saldo Tempat-In Anda (Rp ' . number_format($renter->saldo, 0, ',', '.') . ') tidak mencukupi untuk membayar denda sebesar Rp ' . number_format($amount, 0, ',', '.') . '.'
+            ], 400);
+        }
+
+        // 4. Process deduction & transfer in a database transaction
+        \Illuminate\Support\Facades\DB::transaction(function() use ($fine, $renter, $amount) {
+            // Deduct renter
+            $renter->saldo -= $amount;
+            $renter->save();
+
+            // Add to room owner (provider)
+            $room = $fine->booking->roomDetail->room ?? null;
+            if ($room) {
+                $owner = \App\Models\People::find($room->user_id);
+                if ($owner) {
+                    $owner->saldo += $amount;
+                    $owner->save();
+                }
+            }
+
+            // Mark fine as paid
+            $fine->is_paid = 1;
+            $fine->save();
+        });
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Pembayaran denda sebesar Rp ' . number_format($amount, 0, ',', '.') . ' berhasil memotong saldo Tempat-In Anda!',
+            'new_balance' => $renter->saldo
+        ]);
+    }
+
+    public function fineDetail($fine_id)
+    {
+        $fine = \App\Models\Fine::with(['booking.roomDetail.room', 'booking.user'])->findOrFail($fine_id);
+        $renter = auth()->user();
+
+        // Verify that the fine booking belongs to the logged in user
+        if ($fine->booking->user_id !== $renter->user_id) {
+            abort(403, 'Akses ditolak.');
+        }
+
+        return view('penyewa.fine_detail', compact('fine'));
+    }
 }

@@ -24,6 +24,8 @@ class Booking extends Model
         'start_date',
         'end_date',
         'status',
+        'paid_amount',
+        'installments_paid',
     ];
 
     // Relasi ke User/People (Penyewa)
@@ -54,5 +56,11 @@ class Booking extends Model
     public function rating()
     {
         return $this->hasOne(Rating::class, 'booking_id', 'booking_id');
+    }
+
+    // Relasi ke Fine (Denda)
+    public function fines()
+    {
+        return $this->hasMany(Fine::class, 'booking_id', 'booking_id');
     }
 }

@@ -148,9 +148,38 @@ $(document).ready(function() {
         
         let finalTotal = basePriceCalculated + extraCost;
         $('#render-total-final').text('Rp ' + finalTotal.toLocaleString('id-ID'));
+
+        // Dynamic payment scheme summary and calculations
+        let scheme = $('#payment_scheme').val();
+        let depositPercent = parseInt($('#render-base-price').data('deposit-percent')) || 0;
+        let depositAmount = Math.ceil((depositPercent / 100) * finalTotal);
+
+        if (scheme === 'installment') {
+            let installmentPokok = Math.ceil(finalTotal / 3);
+            let initialPaymentTotal = installmentPokok + depositAmount;
+
+            $('#installment-container').removeClass('d-none');
+            $('#render-installment-pax').text('Rp ' + installmentPokok.toLocaleString('id-ID'));
+            $('#render-deposit-amount').text('Rp ' + depositAmount.toLocaleString('id-ID'));
+            $('#render-initial-payment').text('Rp ' + initialPaymentTotal.toLocaleString('id-ID'));
+
+            $('#payment-scheme-summary').html(
+                `Pembayaran awal yang akan dipotong: <strong class="text-success">Rp ${initialPaymentTotal.toLocaleString('id-ID')}</strong> (Cicilan 1/3: Rp ${installmentPokok.toLocaleString('id-ID')} + Deposit: Rp ${depositAmount.toLocaleString('id-ID')}).`
+            );
+        } else {
+            $('#installment-container').addClass('d-none');
+            $('#payment-scheme-summary').html(
+                `Jumlah yang akan dipotong: <strong class="text-primary">Rp ${finalTotal.toLocaleString('id-ID')}</strong> (Lunas).`
+            );
+        }
     }
 
-    // 4. Validasi Batas Maksimal Tamu Sebelum Submit Form
+    // Bind event for payment scheme select
+    $(document).on('change', '#payment_scheme', function() {
+        calculateTotalPrice();
+    });
+
+    // 4. Validasi Batas Maksimal Tamu & Saldo Sebelum Submit Form
     $('#main-booking-form').on('submit', function(e) {
         let inputCap = parseInt($('#input-capacity').val()) || 0;
         let maxCap = parseInt($('#input-capacity').attr('max')) || 0;
@@ -159,6 +188,23 @@ $(document).ready(function() {
             e.preventDefault();
             alert(`Jumlah tamu melebihi kapasitas maksimal ruangan! Ruangan ini hanya muat untuk maksimal ${maxCap} orang.`);
             $('#input-capacity').addClass('is-invalid').focus();
+            return false;
+        }
+
+        // Validasi kecukupan saldo Tempat-In
+        let userSaldo = parseInt($('#user-saldo').data('saldo')) || 0;
+        let scheme = $('#payment_scheme').val();
+        let finalTotalStr = $('#render-total-final').text().replace(/[^\d]/g, '');
+        let finalTotal = parseInt(finalTotalStr) || 0;
+
+        let depositPercent = parseInt($('#render-base-price').data('deposit-percent')) || 0;
+        let depositAmount = Math.ceil((depositPercent / 100) * finalTotal);
+
+        let paymentRequired = scheme === 'installment' ? (Math.ceil(finalTotal / 3) + depositAmount) : finalTotal;
+
+        if (userSaldo < paymentRequired) {
+            e.preventDefault();
+            alert(`Saldo Tempat-In Anda (Rp ${userSaldo.toLocaleString('id-ID')}) tidak mencukupi untuk melakukan pembayaran sebesar Rp ${paymentRequired.toLocaleString('id-ID')}. Silakan Top Up terlebih dahulu!`);
             return false;
         }
     });

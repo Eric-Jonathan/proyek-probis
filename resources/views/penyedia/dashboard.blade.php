@@ -214,6 +214,84 @@
             </div>
         </div>
     </div>
+
+    {{-- Row 4: Booking Masuk Terjadwal --}}
+    <div class="row g-4 mt-2">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm p-4" style="border-radius: 16px;">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <h5 class="fw-bold mb-0 text-dark">Booking Masuk Terjadwal</h5>
+                        <p class="text-secondary small mb-0">Daftar booking aktif yang akan datang atau sedang berlangsung (tidak termasuk selesai & dibatalkan).</p>
+                    </div>
+                    <a href="{{ route('bookings.index') }}" class="btn btn-sm btn-primary rounded-pill px-3 fw-bold shadow-sm">
+                        Kelola Semua Booking
+                    </a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width: 10%;">ID Booking</th>
+                                <th style="width: 25%;">Ruangan</th>
+                                <th style="width: 20%;">Penyewa</th>
+                                <th style="width: 25%;">Waktu Sewa</th>
+                                <th style="width: 10%;">Skema Pembayaran</th>
+                                <th class="text-center" style="width: 10%;">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($incomingBookings as $b)
+                            <tr>
+                                <td class="fw-bold">#{{ $b->booking_id }}</td>
+                                <td>
+                                    <div class="fw-bold text-dark text-truncate" style="max-width: 180px;">{{ $b->roomDetail->item_name ?? 'Ruangan' }}</div>
+                                    <small class="text-muted text-truncate d-block" style="max-width: 180px;"><i class="bi bi-geo-alt"></i> {{ $b->roomDetail->room->location ?? 'Lokasi' }}</small>
+                                </td>
+                                <td>
+                                    <div class="fw-bold text-dark">{{ $b->user->username ?? 'Guest' }}</div>
+                                    <small class="text-muted"><i class="bi bi-whatsapp"></i> +62{{ $b->phone }}</small>
+                                </td>
+                                <td>
+                                    @php
+                                        $startDateFormatted = date('d M Y', strtotime($b->start_date));
+                                        $endDateFormatted = date('d M Y', strtotime($b->end_date));
+                                    @endphp
+                                    <div class="small fw-bold text-dark">
+                                        @if(date('Y-m-d', strtotime($b->start_date)) === date('Y-m-d', strtotime($b->end_date)))
+                                            {{ $startDateFormatted }}
+                                        @else
+                                            {{ date('d M', strtotime($b->start_date)) }} - {{ $endDateFormatted }}
+                                        @endif
+                                    </div>
+                                    <div class="text-muted small">{{ date('H:i', strtotime($b->start_date)) }} - {{ date('H:i', strtotime($b->end_date)) }}</div>
+                                </td>
+                                <td>
+                                    @if($b->status == 1)
+                                        <span class="badge rounded-pill bg-success-subtle text-success px-2.5 py-1.5 fw-semibold" style="font-size: 0.75rem;">Lunas</span>
+                                    @elseif($b->status == 3)
+                                        <span class="badge rounded-pill bg-warning-subtle text-warning px-2.5 py-1.5 fw-semibold" style="font-size: 0.75rem;">Cicilan ({{ $b->installments_paid }}/3)</span>
+                                    @else
+                                        <span class="badge rounded-pill bg-secondary-subtle text-secondary px-2.5 py-1.5 fw-semibold" style="font-size: 0.75rem;">Status: {{ $b->status }}</span>
+                                    @endif
+                                </td>
+                                <td class="text-center">
+                                    <a href="{{ route('penyedia.detail_history', $b->booking_id) }}" class="btn btn-sm btn-outline-primary rounded-pill px-3 fw-bold">
+                                        Detail
+                                    </a>
+                                </td>
+                            </tr>
+                            @empty
+                            <tr>
+                                <td colspan="6" class="text-center py-4 text-muted small">Tidak ada booking masuk yang sedang berjalan atau akan datang.</td>
+                            </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 {{-- Chart JS Library --}}

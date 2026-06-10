@@ -16,7 +16,7 @@ class People extends Authenticatable
     public $incrementing = true;
 
     protected $fillable = [
-        'outsource_id', 'username', 'email', 'phone', 'password', 'role', 'status'
+        'outsource_id', 'username', 'email', 'phone', 'password', 'role', 'status', 'saldo'
     ];
 
     protected $hidden = [

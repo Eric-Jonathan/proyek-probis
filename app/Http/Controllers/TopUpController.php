@@ -1,0 +1,95 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\People;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
+use Midtrans\Config;
+use Midtrans\Snap;
+
+class TopUpController extends Controller
+{
+    public function show()
+    {
+        $user = Auth::user();
+        if ($user->role === 'admin' || $user->role === 'outsource') {
+            abort(403, 'Administrator dan outsource tidak memiliki saldo.');
+        }
+        return view('auth.topup', compact('user'));
+    }
+
+    public function process(Request $request)
+    {
+        $request->validate([
+            'amount' => 'required|integer|min:10000',
+        ]);
+
+        $user = Auth::user();
+        $amount = (int) $request->amount;
+
+        // Konfigurasi Midtrans
+        Config::$serverKey    = config('services.midtrans.server_key');
+        Config::$isProduction = config('services.midtrans.is_production');
+        Config::$isSanitized  = config('services.midtrans.is_sanitized');
+        Config::$is3ds        = config('services.midtrans.is_3ds');
+
+        $orderId = 'TOPUP-' . $user->user_id . '-' . time();
+
+        $params = [
+            'transaction_details' => [
+                'order_id' => $orderId,
+                'gross_amount' => $amount,
+            ],
+            'customer_details' => [
+                'first_name' => $user->username,
+                'email' => $user->email,
+                'phone' => $user->phone,
+            ],
+            'item_details' => [
+                [
+                    'id' => 'TOPUP',
+                    'price' => $amount,
+                    'quantity' => 1,
+                    'name' => 'Top Up Saldo Tempat-In',
+                ]
+            ]
+        ];
+
+        $snapToken = '';
+        $isSimulated = false;
+
+        try {
+            $snapToken = Snap::getSnapToken($params);
+        } catch (\Exception $e) {
+            Log::error('Midtrans Top Up Error: ' . $e->getMessage());
+            $snapToken = 'MOCK-TOPUP-TOKEN-' . uniqid();
+            $isSimulated = true;
+        }
+
+        return response()->json([
+            'token' => $snapToken,
+            'isSimulated' => $isSimulated,
+            'order_id' => $orderId
+        ]);
+    }
+
+    public function callback(Request $request)
+    {
+        $request->validate([
+            'amount' => 'required|numeric|min:0',
+        ]);
+
+        $userId = Auth::id();
+        $user = People::findOrFail($userId);
+        
+        $user->saldo += $request->amount;
+        $user->save();
+
+        return response()->json([
+            'success' => true,
+            'new_balance' => $user->saldo
+        ]);
+    }
+}

@@ -1,6 +1,16 @@
 @extends('layout.layout')
 
 @section('content')
+    @if(session('success'))
+        <div class="alert alert-success alert-dismissible fade show border-0 rounded-4 shadow-sm mb-4" role="alert">
+            <div class="d-flex align-items-center">
+                <i class="bi bi-check-circle-fill me-2 fs-5 text-success"></i>
+                <div class="fw-medium">{{ session('success') }}</div>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
 <div class="row mb-4 align-items-center">
     <div class="col">
         <h3 class="fw-bold m-0">Kelola Pesanan Ruangan</h3>
@@ -59,7 +69,7 @@
                 <div class="col-md-3">
                     <select name="status" class="form-select">
                         <option value="">Semua Status</option>
-                        <option value="3" {{ request('status') == '3' ? 'selected' : '' }}>Belum Bayar</option>
+                        <option value="3" {{ request('status') == '3' ? 'selected' : '' }}>Cicilan (Belum Lunas)</option>
                         <option value="1" {{ request('status') == '1' ? 'selected' : '' }}>Booked</option>
                         <option value="2" {{ request('status') == '2' ? 'selected' : '' }}>Occupied</option>
                         <option value="0" {{ request('status') == '0' ? 'selected' : '' }}>Canceled</option>
@@ -111,7 +121,7 @@
                              @elseif($item->status == 1)
                                  <span class="badge rounded-pill bg-primary-subtle text-primary px-3 py-2">Booked</span>
                              @elseif($item->status == 3)
-                                 <span class="badge rounded-pill bg-warning-subtle text-warning px-3 py-2">Belum Bayar</span>
+                                 <span class="badge rounded-pill bg-warning-subtle text-warning px-3 py-2" style="color: #a16207 !important;">Cicilan ({{ $item->installments_paid }}/3)</span>
                              @elseif($item->status == 0)
                                  <span class="badge rounded-pill bg-danger-subtle text-danger px-3 py-2">Canceled</span>
                              @else

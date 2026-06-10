@@ -1,5 +1,14 @@
 <div class="bg-dark text-white p-3" id="sidebar-wrapper">
     <div class="sidebar-heading fs-4 fw-bold border-bottom pb-3 mb-3">Tempat-In</div>
+    @if(Auth::user()->role !== 'admin' && Auth::user()->role !== 'outsource')
+        <div class="px-3 py-2.5 mb-3 bg-secondary bg-opacity-10 rounded mx-1 mt-n2 border border-secondary border-opacity-25">
+            <div class="small opacity-75" style="font-size: 0.75rem;"><i class="bi bi-wallet2 me-1"></i> Saldo Anda</div>
+            <div class="fs-5 fw-bold text-truncate text-warning mt-1">Rp {{ number_format(Auth::user()->saldo, 0, ',', '.') }}</div>
+            <a href="{{ route('topup.show') }}" class="btn btn-sm btn-primary w-100 rounded-pill mt-2 py-1 fw-bold" style="font-size: 0.72rem; background-color: #006ce4; border: none;">
+                <i class="bi bi-plus-lg me-1"></i> Top Up Saldo
+            </a>
+        </div>
+    @endif
     @if (Auth::user()->role == "admin")
         <div class="list-group list-group-flush">
             <a href="/admin/dashboard" class="list-group-item list-group-item-action bg-dark text-white border-0 py-2">
@@ -17,6 +26,9 @@
             <a href="/admin/outsource" class="list-group-item list-group-item-action bg-dark text-white border-0 py-2">
                 <i class="fa fa-handshake-o me-2"></i> Daftar Outsource
             </a>
+            <a href="{{ route('admin.fines') }}" class="list-group-item list-group-item-action bg-dark text-white border-0 py-2">
+                <i class="bi bi-exclamation-octagon me-2"></i> Manajemen Denda
+            </a>
         </div>
     @elseif (Auth::user()->role == "penyedia")
         <div class="list-group list-group-flush">
@@ -31,6 +43,9 @@
             </a>
             <a href="/bookings/history" class="list-group-item list-group-item-action bg-dark text-white border-0 py-2">
                 <i class="bi bi-card-checklist me-2"></i> History Persewaan
+            </a>
+            <a href="{{ route('penyedia.fines.history') }}" class="list-group-item list-group-item-action bg-dark text-white border-0 py-2">
+                <i class="bi bi-clock-history me-2"></i> History Denda
             </a>
         </div>
     @elseif (Auth::user()->role == "outsource")

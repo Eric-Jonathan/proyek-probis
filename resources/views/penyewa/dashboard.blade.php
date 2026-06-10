@@ -96,12 +96,35 @@
                             @elseif($b->status == 0)
                                 <span class="badge rounded-pill bg-danger-subtle text-danger px-3 py-2">Batal</span>
                             @endif
+
+                            @php
+                                $unpaidFine = $b->fines->where('status', 1)->where('is_paid', 0)->first();
+                                $paidFine = $b->fines->where('status', 1)->where('is_paid', 1)->first();
+                            @endphp
+                            @if($unpaidFine)
+                                <div class="mt-1">
+                                    <span class="badge rounded-pill bg-danger-subtle text-danger px-2.5 py-1.5 fw-bold" style="font-size: 0.72rem;">
+                                        <i class="bi bi-exclamation-triangle-fill me-1"></i> Denda Unpaid: Rp {{ number_format($unpaidFine->nominal_denda, 0, ',', '.') }}
+                                    </span>
+                                </div>
+                            @elseif($paidFine)
+                                <div class="mt-1">
+                                    <span class="badge rounded-pill bg-success-subtle text-success px-2.5 py-1.5 fw-bold" style="font-size: 0.72rem;">
+                                        <i class="bi bi-check-circle-fill me-1"></i> Denda Lunas
+                                    </span>
+                                </div>
+                            @endif
                         </td>
                         <td class="pe-3">
                             <div class="d-flex gap-2 justify-content-center align-items-center">
                                 @if($b->status == 0)
                                     <a href="/bookings/history?detail={{ $b->booking_id }}" class="btn btn-sm btn-outline-secondary rounded-pill px-3 py-1 fw-bold text-decoration-none">Detail</a>
                                 @else
+                                    @if($unpaidFine)
+                                        <a href="{{ route('penyewa.fine.detail', $unpaidFine->fine_id) }}" class="btn btn-sm btn-danger rounded-pill px-3 py-1 fw-bold shadow-sm text-decoration-none">
+                                            <i class="bi bi-exclamation-octagon me-1"></i> Detail Denda
+                                        </a>
+                                    @endif
                                     @php
                                         $isCompleted = ($b->status == 2 || strtotime($b->end_date) < time());
                                     @endphp
@@ -119,7 +142,9 @@
                                             <i class="bi bi-wallet2 me-1"></i> Bayar
                                         </a>
                                     @else
-                                        <span class="badge bg-light text-primary border px-3 py-2">Terjadwal</span>
+                                        @if(!$unpaidFine)
+                                            <span class="badge bg-light text-primary border px-3 py-2">Terjadwal</span>
+                                        @endif
                                     @endif
                                     <a href="/bookings/history?detail={{ $b->booking_id }}" class="btn btn-sm btn-outline-secondary rounded-pill px-3 py-1 fw-bold text-decoration-none">Detail</a>
                                 @endif
@@ -200,6 +225,9 @@
     @endif
 @endforeach
 
+
+
+
 {{-- MODAL RATING OTOMATIS (POP-UP NOTIFIKASI JIKA ADA ACARA SELESAI BELUM DINILAI) --}}
 @if(isset($unratedBooking) && $unratedBooking)
 <div class="modal fade" id="modalRatingAuto" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
@@ -249,6 +277,73 @@
                     </button>
                 </div>
             </form>
+        </div>
+    </div>
+</div>
+@endif
+
+{{-- MODAL WARNING DENDA --}}
+@if(isset($activeFine) && $activeFine)
+<div class="modal fade" id="modalFineWarning" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
+            <div class="modal-header border-0 p-4 pb-0 bg-danger text-white rounded-top" style="border-top-left-radius: 20px; border-top-right-radius: 20px;">
+                <div class="w-100">
+                    <div class="badge bg-white text-danger mb-2 px-3 py-1.5 fw-bold" style="font-size: 10px;"><i class="bi bi-exclamation-triangle-fill me-1"></i> PERINGATAN PELANGGARAN</div>
+                    <h4 class="fw-bold mb-0 text-white">Anda Menerima Laporan Denda</h4>
+                    <p class="text-white text-opacity-75 small mb-2">Pemberitahuan pelanggaran penggunaan ruangan pada Booking #{{ $activeFine->booking_id }}</p>
+                </div>
+            </div>
+
+            <div class="modal-body p-4">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="p-3 rounded bg-light border-start border-danger border-4">
+                            <span class="small text-muted d-block text-uppercase fw-bold" style="font-size: 10px;">Unit Ruangan:</span>
+                            <span class="fw-bold text-dark fs-5">{{ $activeFine->booking->roomDetail->item_name ?? 'Ruangan' }}</span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="p-3 rounded bg-light border-start border-danger border-4">
+                            <span class="small text-muted d-block text-uppercase fw-bold" style="font-size: 10px;">Nominal Denda:</span>
+                            <span class="fw-bold text-danger fs-5">Rp {{ number_format($activeFine->nominal_denda, 0, ',', '.') }}</span>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <span class="small text-muted d-block text-uppercase fw-bold mb-1" style="font-size: 10px;">Jenis Pelanggaran:</span>
+                        <span class="badge bg-danger-subtle text-danger px-3 py-2 text-capitalize fw-bold">{{ $activeFine->jenis_denda }}</span>
+                    </div>
+                    <div class="col-12">
+                        <span class="small text-muted d-block text-uppercase fw-bold mb-1" style="font-size: 10px;">Kronologi Pelanggaran:</span>
+                        <div class="p-3 rounded border bg-white small" style="white-space: pre-line;">
+                            {{ $activeFine->keterangan }}
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <span class="small text-muted d-block text-uppercase fw-bold mb-1" style="font-size: 10px;">Bukti Foto Kerusakan:</span>
+                        <div class="d-flex flex-wrap gap-2 mt-1">
+                            @if(is_array($activeFine->bukti_denda) && count($activeFine->bukti_denda) > 0)
+                                @foreach($activeFine->bukti_denda as $img)
+                                    <a href="{{ asset($img) }}" target="_blank">
+                                        <img src="{{ asset($img) }}" class="proof-thumbnail shadow-sm" style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px; border: 1px solid #e2e8f0;" alt="Bukti Foto">
+                                    </a>
+                                @endforeach
+                            @else
+                                <span class="text-muted small italic">Tidak ada foto bukti terlampir.</span>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="modal-footer border-0 p-4 pt-0 d-flex gap-2">
+                <button type="button" class="btn btn-light border py-3 rounded-pill fw-bold shadow-sm flex-grow-1" data-bs-dismiss="modal">
+                    Saya Mengerti
+                </button>
+                <a href="{{ route('penyewa.fine.detail', $activeFine->fine_id) }}" class="btn btn-danger py-3 rounded-pill fw-bold shadow-sm flex-grow-1 text-center">
+                    Bayar Sekarang
+                </a>
+            </div>
         </div>
     </div>
 </div>
@@ -305,8 +400,29 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Pemicu Notifikasi Rating Otomatis jika ada booking selesai belum di-rate
-    @if(isset($unratedBooking) && $unratedBooking)
+    // Pemicu Notifikasi Denda atau Rating Otomatis
+    @if(isset($activeFine) && $activeFine)
+        setTimeout(function() {
+            var fineModalElement = document.getElementById('modalFineWarning');
+            if (fineModalElement) {
+                var fineModal = new bootstrap.Modal(fineModalElement);
+                fineModal.show();
+
+                // Chain rating modal when fine warning is dismissed (hidden.bs.modal)
+                @if(isset($unratedBooking) && $unratedBooking)
+                fineModalElement.addEventListener('hidden.bs.modal', function() {
+                    setTimeout(function() {
+                        var autoModalElement = document.getElementById('modalRatingAuto');
+                        if (autoModalElement) {
+                            var autoModal = new bootstrap.Modal(autoModalElement);
+                            autoModal.show();
+                        }
+                    }, 500);
+                });
+                @endif
+            }
+        }, 500);
+    @elseif(isset($unratedBooking) && $unratedBooking)
         setTimeout(function() {
             var autoModalElement = document.getElementById('modalRatingAuto');
             if (autoModalElement) {
@@ -315,6 +431,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }, 800);
     @endif
+
 });
 </script>
 @endsection

@@ -58,9 +58,20 @@ class PenyediaController extends Controller
         }
         $chartData = array_values($chartData);
 
+        // 5. Query booking masuk (aktif & akan datang/sedang berjalan)
+        $incomingBookings = \App\Models\Booking::where('status', '!=', 0)
+            ->whereHas('roomDetail.room', function($q) use ($penyediaId) {
+                $q->where('user_id', $penyediaId);
+            })
+            ->where('end_date', '>=', now()->startOfDay())
+            ->with(['user', 'roomDetail.room'])
+            ->orderBy('start_date', 'asc')
+            ->get();
+
         return view('penyedia.dashboard', compact(
             'avgKebersihan', 'avgPelayanan', 'avgKenyamanan', 
-            'rooms', 'totalRooms', 'activeRooms', 'totalEarnings', 'chartData'
+            'rooms', 'totalRooms', 'activeRooms', 'totalEarnings', 'chartData',
+            'incomingBookings'
         ));
     }
 
@@ -270,10 +281,66 @@ class PenyediaController extends Controller
         $booking = Booking::with(['user', 'details.room'])->findOrFail($id);
 
         // Proteksi: Hanya penyedia pemilik ruangan yang bisa akses
-        if ($booking->details->room->user_id !== auth::id()) {
+        if ($booking->details->room->user_id !== auth()->id()) {
             abort(403, 'Akses ditolak.');
         }
 
         return view('penyedia.denda', compact('booking'));
+    }
+
+    public function storeDenda(Request $request)
+    {
+        $request->validate([
+            'booking_id'    => 'required|integer',
+            'jenis_denda'   => 'required|string|in:kerusakan,kebersihan,overtime,lainnya',
+            'nominal_denda' => 'required|numeric|min:1',
+            'keterangan'    => 'required|string',
+            'bukti_denda'   => 'required|array',
+            'bukti_denda.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048'
+        ]);
+
+        $booking = Booking::with('details.room')->findOrFail($request->booking_id);
+
+        // Proteksi: Hanya penyedia pemilik ruangan yang bisa akses
+        if ($booking->details->room->user_id !== auth()->id()) {
+            abort(403, 'Akses ditolak.');
+        }
+
+        // Simpan file bukti denda
+        $filePaths = [];
+        if ($request->hasFile('bukti_denda')) {
+            foreach ($request->file('bukti_denda') as $file) {
+                $filename = 'denda_' . uniqid() . '.' . $file->getClientOriginalExtension();
+                $file->move(public_path('upload_denda'), $filename);
+                $filePaths[] = 'upload_denda/' . $filename;
+            }
+        }
+
+        // Create Fine record
+        \App\Models\Fine::create([
+            'booking_id'    => $booking->booking_id,
+            'jenis_denda'   => $request->jenis_denda,
+            'nominal_denda' => $request->nominal_denda,
+            'keterangan'    => $request->keterangan,
+            'bukti_denda'   => $filePaths,
+            'status'        => 0, // Pending
+            'is_dismissed'  => 0
+        ]);
+
+        return redirect()->route('penyedia.fines.history')->with('success', 'Pengajuan denda telah berhasil dikirim ke Admin untuk ditinjau.');
+    }
+
+    public function finesHistory()
+    {
+        $penyediaId = Auth::id();
+
+        $fines = \App\Models\Fine::whereHas('booking.roomDetail.room', function($q) use ($penyediaId) {
+                $q->where('user_id', $penyediaId);
+            })
+            ->with(['booking.user', 'booking.roomDetail.room'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return view('penyedia.fines_history', compact('fines'));
     }
 }

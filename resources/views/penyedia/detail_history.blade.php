@@ -82,8 +82,8 @@
                             </span>
                         @endif
                     @elseif($booking->status == 3)
-                        <span class="badge-status bg-warning-soft">
-                            <i class="bi bi-clock-history me-2"></i>Belum Bayar
+                        <span class="badge-status bg-warning-soft text-warning" style="color: #a16207 !important;">
+                            <i class="bi bi-clock-history me-2"></i>Cicilan ({{ $booking->installments_paid }}/3)
                         </span>
                     @elseif($booking->status == 0)
                         <span class="badge-status bg-batal-soft">

@@ -168,6 +168,18 @@
                                     <input type="text" class="form-control border-start-0 bg-light text-capitalize" value="{{ $user->role }}" readonly disabled>
                                 </div>
                             </div>
+
+                            {{-- Saldo (Only for Renter / Provider) --}}
+                            @if($user->role !== 'admin' && $user->role !== 'outsource')
+                            <div class="col-md-6">
+                                <label class="form-label text-primary">Saldo Tempat-In Anda</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0 text-primary"><i class="bi bi-wallet2"></i></span>
+                                    <input type="text" class="form-control border-start-0 bg-light fw-bold text-primary" value="Rp {{ number_format($user->saldo, 0, ',', '.') }}" readonly disabled>
+                                    <a href="{{ route('topup.show') }}" class="btn btn-primary fw-bold px-3">Top Up</a>
+                                </div>
+                            </div>
+                            @endif
                         </div>
 
                         <h5 class="fw-bold mb-4 border-start border-primary border-4 ps-3 text-dark">Keamanan (Ganti Password)</h5>

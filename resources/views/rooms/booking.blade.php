@@ -89,7 +89,8 @@
                             data-raw-price="{{ $room->price }}"
                             data-min-order="{{ $room->min_order }}"
                             data-total-days="{{ $totalDays }}"
-                            data-base="{{ $basePriceCalculated }}">
+                            data-base="{{ $basePriceCalculated }}"
+                            data-deposit-percent="{{ $room->deposit_percent }}">
                             Rp {{ number_format($basePriceCalculated, 0, ',', '.') }}
                         </span>
                     </div>
@@ -98,11 +99,25 @@
                         </div>
 
                     <hr class="my-3">
-                    <div class="d-flex justify-content-between align-items-center">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
                         <h5 class="fw-bold mb-0 text-primary">Total Bayar</h5>
                         <div class="text-end">
                             <h4 class="fw-bold mb-0 text-dark" id="render-total-final">Rp {{ number_format($basePrice, 0, ',', '.') }}</h4>
                             <small class="text-muted" style="font-size: 11px;">Termasuk jaminan & biaya teknis</small>
+                        </div>
+                    </div>
+                    <div class="d-none mt-3 border-top pt-3" id="installment-container">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="text-secondary small">Cicilan Pokok (1/3)</span>
+                            <span class="fw-semibold text-dark" id="render-installment-pax">Rp 0</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="text-secondary small">Uang Deposit ({{ $room->deposit_percent }}%)</span>
+                            <span class="fw-semibold text-dark" id="render-deposit-amount">Rp 0</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-2 border-top pt-2">
+                            <h6 class="fw-bold mb-0 text-success">Total Bayar Awal</h6>
+                            <h5 class="fw-bold mb-0 text-success" id="render-initial-payment">Rp 0</h5>
                         </div>
                     </div>
                 </div>
@@ -138,11 +153,11 @@
                         <div class="col-md-6">
                             <label class="form-label small fw-bold">Jenis Kegiatan Acara <span class="text-danger">*</span></label>
                             <select name="jenis_acara" class="form-select py-2" required>
-                                <option value="" disabled selected>Pilih jenis acara...</option>
-                                <option value="Wedding">Wedding / Pernikahan</option>
-                                <option value="Seminar">Seminar / Corporate Meeting</option>
-                                <option value="Gathering">Social Gathering / Pesta</option>
-                                <option value="Lainnya">Lainnya</option>
+                                <option value="" disabled {{ old('jenis_acara') ? '' : 'selected' }}>Pilih jenis acara...</option>
+                                <option value="Wedding" {{ old('jenis_acara') === 'Wedding' ? 'selected' : '' }}>Wedding / Pernikahan</option>
+                                <option value="Seminar" {{ old('jenis_acara') === 'Seminar' ? 'selected' : '' }}>Seminar / Corporate Meeting</option>
+                                <option value="Gathering" {{ old('jenis_acara') === 'Gathering' ? 'selected' : '' }}>Social Gathering / Pesta</option>
+                                <option value="Lainnya" {{ old('jenis_acara') === 'Lainnya' ? 'selected' : '' }}>Lainnya</option>
                             </select>
                         </div>
 
@@ -157,7 +172,7 @@
                         <div class="col-md-6">
                             <label class="form-label small fw-bold">Estimasi Jumlah Pax / Tamu Hadir <span class="text-danger">*</span></label>
                             <input type="number" name="total_capacity" id="input-capacity" class="form-control py-2" 
-                                   max="{{ $room->capacity }}" placeholder="Maks. {{ $room->capacity }} orang" required>
+                                   max="{{ $room->capacity }}" placeholder="Maks. {{ $room->capacity }} orang" value="{{ old('total_capacity') }}" required>
                             <div class="form-text text-muted" style="font-size: 11px;">Tidak boleh melebihi kapasitas maksimal ruangan.</div>
                         </div>
 
@@ -165,11 +180,11 @@
                             <label class="form-label small fw-bold">Skema Waktu Sewa <span class="text-danger">*</span></label>
                             <div class="d-flex gap-4 p-2 border rounded bg-light">
                                 <div class="form-check">
-                                    <input class="form-check-input select-tipe-sewa" type="radio" name="sewa_tipe" id="tipe-hari" value="harian" checked>
+                                    <input class="form-check-input select-tipe-sewa" type="radio" name="sewa_tipe" id="tipe-hari" value="harian" {{ old('sewa_tipe', 'harian') === 'harian' ? 'checked' : '' }}>
                                     <label class="form-check-label fw-semibold" for="tipe-hari">Sewa Full Day (Harian)</label>
                                 </div>
                                 <div class="form-check">
-                                    <input class="form-check-input select-tipe-sewa" type="radio" name="sewa_tipe" id="tipe-jam" value="jam">
+                                    <input class="form-check-input select-tipe-sewa" type="radio" name="sewa_tipe" id="tipe-jam" value="jam" {{ old('sewa_tipe') === 'jam' ? 'checked' : '' }}>
                                     <label class="form-check-label fw-semibold" for="tipe-jam">Sewa Sistem Jam (Hourly)</label>
                                 </div>
                             </div>
@@ -178,11 +193,11 @@
                         <div class="col-12 row g-2 mt-1 d-none" id="container-input-jam">
                             <div class="col-md-6">
                                 <label class="form-label small fw-medium">Waktu Mulai Acara</label>
-                                <input type="time" name="jam_mulai" id="jam_mulai" class="form-control" value="08:00">
+                                <input type="time" name="jam_mulai" id="jam_mulai" class="form-control" value="{{ old('jam_mulai', '08:00') }}">
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label small fw-medium">Waktu Selesai Acara</label>
-                                <input type="time" name="jam_selesai" id="jam_selesai" class="form-control" value="16:00">
+                                <input type="time" name="jam_selesai" id="jam_selesai" class="form-control" value="{{ old('jam_selesai', '16:00') }}">
                             </div>
                         </div>
 
@@ -190,19 +205,19 @@
                             <h6 class="fw-bold text-uppercase small text-muted">Layanan Tambahan (Penyesuaian Biaya)</h6>
                             <div class="p-3 bg-white rounded-3 border">
                                 <div class="form-check mb-2">
-                                    <input class="form-check-input addon-service-checkbox" type="checkbox" name="services[]" id="catering" value="Catering" data-price="50000">
+                                    <input class="form-check-input addon-service-checkbox" type="checkbox" name="services[]" id="catering" value="Catering" data-price="50000" {{ is_array(old('services')) && in_array('Catering', old('services')) ? 'checked' : '' }}>
                                     <label class="form-check-label fw-medium" for="catering">
                                         Layanan Paket Katering Konsumsi (+Rp 50.000 / Pax)
                                     </label>
                                 </div>
                                 <div class="form-check mb-2">
-                                    <input class="form-check-input addon-service-checkbox" type="checkbox" name="services[]" id="decor" value="Dekorasi" data-price="1500000">
+                                    <input class="form-check-input addon-service-checkbox" type="checkbox" name="services[]" id="decor" value="Dekorasi" data-price="1500000" {{ is_array(old('services')) && in_array('Dekorasi', old('services')) ? 'checked' : '' }}>
                                     <label class="form-check-label fw-medium" for="decor">
                                         Paket Dekorasi Panggung & Artis Gedung (+Rp 1.500.000)
                                     </label>
                                 </div>
                                 <div class="form-check">
-                                    <input class="form-check-input addon-service-checkbox" type="checkbox" name="services[]" id="it_support" value="IT" data-price="750000">
+                                    <input class="form-check-input addon-service-checkbox" type="checkbox" name="services[]" id="it_support" value="IT" data-price="750000" {{ is_array(old('services')) && in_array('IT', old('services')) ? 'checked' : '' }}>
                                     <label class="form-check-label fw-medium" for="it_support">
                                         Operator Teknis & Sound Live Streaming (+Rp 750.000)
                                     </label>
@@ -211,16 +226,37 @@
                         </div>
 
                         <div class="col-md-12 mt-3">
-                            <label class="form-label small fw-bold">Pilihan Metode Pembayaran <span class="text-danger">*</span></label>
-                            <select name="payment_method" class="form-select" required>
-                                <option value="Midtrans">Pembayaran Online Aman (Midtrans - Transfer/QRIS)</option>
-                                <option value="Manual">Transfer Manual Bank BCA (Verifikasi 1x24 Jam)</option>
+                            <label class="form-label small fw-bold">Skema Pembayaran <span class="text-danger">*</span></label>
+                            <select name="payment_scheme" id="payment_scheme" class="form-select" required>
+                                <option value="full" {{ old('payment_scheme', 'full') === 'full' ? 'selected' : '' }}>Bayar Lunas (100%)</option>
+                                <option value="installment" {{ old('payment_scheme') === 'installment' ? 'selected' : '' }}>Bayar Cicilan 3x (Awal: 1/3 dari total)</option>
                             </select>
+                        </div>
+
+                        <div class="col-md-12 mt-3">
+                            <div class="card border-0 rounded-3 p-3 bg-light">
+                                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                                    <div>
+                                        <p class="mb-1 text-muted small"><i class="bi bi-wallet2 me-1"></i> Saldo Tempat-In Anda</p>
+                                        <h5 class="fw-bold mb-0 text-dark" id="user-saldo" data-saldo="{{ Auth::user()->saldo }}">
+                                            Rp {{ number_format(Auth::user()->saldo, 0, ',', '.') }}
+                                        </h5>
+                                    </div>
+                                    <div>
+                                        <a href="{{ route('topup.show') }}" class="btn btn-outline-primary btn-sm rounded-pill px-3" target="_blank">
+                                            <i class="bi bi-plus-lg me-1"></i> Top Up Saldo
+                                        </a>
+                                    </div>
+                                </div>
+                                <div class="mt-2 text-muted small" id="payment-scheme-summary">
+                                    Pembayaran akan langsung memotong saldo Tempat-In Anda.
+                                </div>
+                            </div>
                         </div>
 
                         <div class="col-12 mt-3">
                             <label class="form-label small fw-bold">Permintaan Khusus / Catatan Tambahan Gedung</label>
-                            <textarea name="notes" class="form-control" rows="3" placeholder="Contoh: Butuh penataan meja melingkar, request penambahan kursi cadangan, dsb."></textarea>
+                            <textarea name="notes" class="form-control" rows="3" placeholder="Contoh: Butuh penataan meja melingkar, request penambahan kursi cadangan, dsb.">{{ old('notes') }}</textarea>
                         </div>
 
                         <div class="col-12 text-end mt-4">

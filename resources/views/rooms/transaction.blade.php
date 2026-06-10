@@ -114,14 +114,17 @@
         </div>
     @endif
 
-    {{-- Simulation Mode Notice --}}
-    @if($isSimulated)
-        <div class="alert alert-warning border-0 shadow-sm rounded-4 p-3 mb-4 d-flex align-items-center" style="background-color: var(--warning-light); border-left: 5px solid var(--warning-orange) !important;">
-            <i class="bi bi-exclamation-triangle-fill me-3 fs-3 text-warning"></i>
-            <div>
-                <strong class="text-dark">Mode Simulasi Pembayaran Aktif</strong><br>
-                <span class="text-muted small">Midtrans Client/Server Keys belum dikonfigurasi di file <code>.env</code>. Menekan tombol bayar akan langsung mensimulasikan pembayaran berhasil di database lokal Anda.</span>
+    @if($errors->any())
+        <div class="alert alert-danger alert-dismissible fade show border-0 rounded-4 shadow-sm mb-4" role="alert">
+            <div class="d-flex align-items-center">
+                <i class="bi bi-exclamation-octagon-fill me-2 fs-5 text-danger"></i>
+                <div>
+                    @foreach($errors->all() as $error)
+                        <div>{{ $error }}</div>
+                    @endforeach
+                </div>
             </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     @endif
 
@@ -132,9 +135,19 @@
                 <p class="mb-1 opacity-75">Detail Transaksi Penyewaan</p>
                 <h2 class="fw-bold mb-0">Rincian Pembayaran</h2>
             </div>
-            <span class="badge-status">
-                <i class="bi bi-clock-history me-1"></i> Menunggu Pembayaran
-            </span>
+            @if($booking->status == 1)
+                <span class="badge rounded-pill bg-success-subtle text-success px-3 py-2 border border-success-subtle fw-bold">
+                    <i class="bi bi-check-circle-fill me-1"></i> Terjadwal (Lunas)
+                </span>
+            @elseif($booking->status == 3)
+                <span class="badge rounded-pill bg-warning-subtle text-warning px-3 py-2 border border-warning-subtle fw-bold" style="color: #a16207 !important;">
+                    <i class="bi bi-clock-history me-1"></i> Cicilan ({{ $booking->installments_paid }}/3)
+                </span>
+            @else
+                <span class="badge-status">
+                    <i class="bi bi-clock-history me-1"></i> Menunggu Pembayaran
+                </span>
+            @endif
         </div>
     </div>
 
@@ -223,18 +236,81 @@
 
                         <div class="mini-line my-3"></div>
 
-                        <p class="text-muted small mb-2">Total Pembayaran</p>
-                        <div class="price-box mb-4">
-                            Rp {{ number_format($booking->total, 0, ',', '.') }}
+                        @if($booking->status == 3)
+                            <div class="invoice-item text-muted mb-2">
+                                <span>Status Cicilan</span>
+                                <span class="fw-bold text-warning" style="color: #a16207 !important;">Cicilan ({{ $booking->installments_paid }}/3)</span>
+                            </div>
+                            <div class="invoice-item text-muted mb-2">
+                                <span>Uang Deposit</span>
+                                <span class="fw-semibold text-secondary">Rp {{ number_format($deposit, 0, ',', '.') }}</span>
+                            </div>
+                            <div class="invoice-item text-muted mb-2">
+                                <span>Sudah Dibayar</span>
+                                <span class="fw-semibold text-success">
+                                    Rp {{ number_format($booking->paid_amount, 0, ',', '.') }}
+                                    <small class="text-muted" style="font-size: 10px;">(inc. deposit)</small>
+                                </span>
+                            </div>
+                            <div class="invoice-item text-muted mb-2">
+                                <span>Sisa Tagihan Pokok</span>
+                                <span class="fw-semibold text-danger">Rp {{ number_format($booking->total - ($booking->paid_amount - $deposit), 0, ',', '.') }}</span>
+                            </div>
+                            <div class="mini-line my-3"></div>
+                            
+                            <p class="text-muted small mb-2">Tagihan Cicilan Berikutnya</p>
+                            <div class="price-box mb-3 bg-warning-subtle border-warning-subtle text-warning" style="background-color: #fff3cd !important; color: #a16207 !important; border-color: #ffeeba !important;">
+                                Rp {{ number_format($nextPayment, 0, ',', '.') }}
+                            </div>
+                        @else
+                            <p class="text-muted small mb-2">Total Pembayaran</p>
+                            <div class="price-box mb-3">
+                                Rp {{ number_format($booking->total, 0, ',', '.') }}
+                            </div>
+                        @endif
+
+                        <div class="p-3 rounded-3 mb-4 text-center border" style="background-color: #fff;">
+                            <div class="small text-muted mb-1"><i class="bi bi-wallet2 me-1"></i> Saldo Tempat-In Anda</div>
+                            <div class="fw-bold text-dark fs-5">Rp {{ number_format(Auth::user()->saldo, 0, ',', '.') }}</div>
                         </div>
                     </div>
 
                     <div>
-                        <button id="pay-button" class="btn btn-midtrans w-100 mb-3 py-3">
-                            <i class="bi bi-wallet2 me-2"></i> Bayar Sekarang (Midtrans)
-                        </button>
+                        @if($booking->status == 1 || $booking->status == 2)
+                            <div class="alert alert-success border-0 shadow-sm rounded-3 p-3 mb-3 text-start">
+                                <div class="d-flex gap-2">
+                                    <i class="bi bi-check-circle-fill text-success fs-5"></i>
+                                    <div>
+                                        <strong class="text-success" style="font-size: 0.9rem;">Pembayaran Lunas</strong>
+                                        <p class="small text-muted mb-0 mt-1">Pemesanan ini sudah dilunasi sepenuhnya dan terjadwal dengan aman.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        @else
+                            @if(Auth::user()->saldo >= $nextPayment)
+                                <form action="{{ route('booking.pay', $booking->booking_id) }}" method="POST">
+                                    @csrf
+                                    <button type="submit" class="btn btn-midtrans w-100 mb-3 py-3 bg-success border-0" onclick="return confirm('Apakah Anda yakin ingin membayar cicilan booking ini sebesar Rp {{ number_format($nextPayment, 0, ',', '.') }} menggunakan Saldo Tempat-In?')">
+                                        <i class="bi bi-wallet2 me-2"></i> Bayar Cicilan Sekarang
+                                    </button>
+                                </form>
+                            @else
+                                <div class="alert alert-danger border-0 shadow-sm rounded-3 p-3 mb-3 text-start">
+                                    <div class="d-flex gap-2">
+                                        <i class="bi bi-exclamation-octagon-fill text-danger fs-5"></i>
+                                        <div>
+                                            <strong class="text-danger" style="font-size: 0.9rem;">Saldo Tidak Cukup!</strong>
+                                            <p class="small text-muted mb-0 mt-1">Saldo Anda tidak mencukupi untuk melakukan pembayaran cicilan ini. Silakan top up saldo terlebih dahulu.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <a href="{{ route('topup.show') }}" class="btn btn-primary w-100 mb-3 py-3 rounded-pill fw-bold shadow-sm d-inline-flex align-items-center justify-content-center" style="text-decoration: none;">
+                                    <i class="bi bi-plus-lg me-2"></i> Top Up Saldo
+                                </a>
+                            @endif
+                        @endif
                         <div class="small text-muted text-center" style="font-size: 11px;">
-                            Secure payment gateway by Midtrans Sandbox.<br>Jaminan keamanan transaksi Anda.
+                            Pembayaran instan dipotong langsung dari saldo Tempat-In Anda.
                         </div>
                     </div>
                 </div>
@@ -243,50 +319,4 @@
     </div>
 </div>
 
-{{-- MIDTRANS SNAP INTEGRATION --}}
-<script src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="{{ config('midtrans.client_key') }}"></script>
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
-<script>
-    document.getElementById('pay-button').onclick = function (e) {
-        e.preventDefault();
-        
-        const isSimulated = {{ $isSimulated ? 'true' : 'false' }};
-        
-        if (isSimulated) {
-            // Jalankan simulation flow dengan AJAX post ke server
-            $.post('{{ route("booking.payment_callback", ["booking_id" => $booking->booking_id]) }}', {
-                _token: '{{ csrf_token() }}',
-                status: 'success'
-            }).done(function(response) {
-                alert("Simulasi Pembayaran Midtrans Sandbox Berhasil! Menghubungkan ke database...");
-                window.location.href = '{{ route("bookings.history") }}?success=1';
-            }).fail(function() {
-                alert("Simulasi gagal. Terjadi kesalahan pada server.");
-            });
-        } else {
-            // Jalankan real Midtrans Sandbox Snap Flow
-            window.snap.pay('{{ $snapToken }}', {
-                onSuccess: function(result){
-                    $.post('{{ route("booking.payment_callback", ["booking_id" => $booking->booking_id]) }}', {
-                        _token: '{{ csrf_token() }}',
-                        status: 'success'
-                    }).done(function() {
-                        alert("Pembayaran Berhasil! Status pemesanan Anda telah aktif.");
-                        window.location.href = '{{ route("bookings.history") }}?success=1';
-                    });
-                },
-                onPending: function(result){
-                    alert("Menunggu Pembayaran...");
-                },
-                onError: function(result){
-                    alert("Pembayaran Gagal! Silakan coba lagi.");
-                },
-                onClose: function(){
-                    alert("Anda menutup jendela pembayaran sebelum menyelesaikan transaksi.");
-                }
-            });
-        }
-    };
-</script>
 @endsection

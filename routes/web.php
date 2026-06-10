@@ -11,6 +11,7 @@ use App\Http\Controllers\RoomController;
 use App\Http\Controllers\OutsourceController;
 use App\Http\Controllers\RatingController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\TopUpController;
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -25,6 +26,7 @@ Route::get('/roomsList', [RoomController::class, 'index'])->name('rooms.index');
 Route::get('/rooms/create', [RoomController::class, 'create'])->name('rooms.create');
 Route::post('/rooms/store', [RoomController::class, 'store'])->name('rooms.store');
 Route::get('/booking/{booking_id}/transaction', [BookingController::class, 'transaction'])->name('booking.transaction');
+Route::post('/booking/{booking_id}/pay', [BookingController::class, 'payWithBalance'])->name('booking.pay');
 Route::post('/booking/{booking_id}/payment-callback', [BookingController::class, 'paymentCallback'])->name('booking.payment_callback');
 Route::get('/rooms/{room}/edit', [RoomController::class, 'edit'])->name('rooms.edit');
 Route::put('/rooms/{room}', [RoomController::class, 'update'])->name('rooms.update');
@@ -60,18 +62,26 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/admin/outsource/edit/{outsource_id}', [AdminController::class, 'edit_outsource'])->name('admin.outsource.edit');
     Route::put('/admin/outsource/update/{outsource_id}', [AdminController::class, 'update_outsource'])->name('admin.outsource.update');
     Route::post('/admin/outsource/terminate/{id}', [AdminController::class, 'terminate_outsource'])->name('admin.outsource.terminate');
+    
+    Route::get('/admin/fines', [AdminController::class, 'fines'])->name('admin.fines');
+    Route::post('/admin/fines/{id}/approve', [AdminController::class, 'approveFine'])->name('admin.fines.approve');
+    Route::post('/admin/fines/{id}/reject', [AdminController::class, 'rejectFine'])->name('admin.fines.reject');
 });
 
 Route::middleware(['auth', 'role:penyedia'])->group(function () {
     Route::get('/penyedia/dashboard', [PenyediaController::class, 'index'])->name('penyedia.dashboard');
     Route::get('/penyedia/dashboard/chart', [PenyediaController::class, 'getChartData'])->name('penyedia.dashboard.chart');
     Route::get('/penyedia/history/{id}', [PenyediaController::class, 'detail_history'])->name('penyedia.detail_history');
+    Route::get('/penyedia/fines/history', [PenyediaController::class, 'finesHistory'])->name('penyedia.fines.history');
 });
 
 Route::middleware(['auth', 'role:penyewa'])->group(function () {
     Route::get('/penyewa/dashboard', [PenyewaController::class, 'index'])->name('penyewa.dashboard');
     Route::get('/penyewa/search', [PenyewaController::class, 'searchPage'])->name('penyewa.search');
     Route::post('/ratings/store', [RatingController::class, 'store'])->name('ratings.store');
+    Route::post('/penyewa/fine/{fine_id}/dismiss', [PenyewaController::class, 'dismissFine'])->name('penyewa.fine.dismiss');
+    Route::post('/penyewa/fine/{fine_id}/pay', [PenyewaController::class, 'payFine'])->name('penyewa.fine.pay');
+    Route::get('/penyewa/fine/{fine_id}/detail', [PenyewaController::class, 'fineDetail'])->name('penyewa.fine.detail');
 });
 
 Route::middleware(['auth', 'role:admin,outsource'])->group(function () {
@@ -119,9 +129,7 @@ Route::get('/test-rating', function () {
 Route::get('/penyedia/denda/{id}', [PenyediaController::class, 'denda'])->name('bookings.denda');
 
 // Route simulasi proses kirim
-Route::post('/admin/denda/store', function () {
-    return back()->with('success', 'Pengajuan denda telah berhasil dikirim ke penyewa.');
-})->name('penyedia.denda.store');
+Route::post('/penyedia/denda/store', [PenyediaController::class, 'storeDenda'])->name('penyedia.denda.store');
 
 
 
@@ -139,4 +147,8 @@ Route::post('/penyedia/report/store', function () {
 Route::middleware(['auth'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
     Route::post('/profile/update', [ProfileController::class, 'update'])->name('profile.update');
+    
+    Route::get('/topup', [TopUpController::class, 'show'])->name('topup.show');
+    Route::post('/topup/process', [TopUpController::class, 'process'])->name('topup.process');
+    Route::post('/topup/callback', [TopUpController::class, 'callback'])->name('topup.callback');
 });

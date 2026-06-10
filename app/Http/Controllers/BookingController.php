@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Room;
+use App\Models\People;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Midtrans\Config;
 use Midtrans\Snap;
 use Illuminate\Support\Facades\Auth;
@@ -59,7 +61,7 @@ class BookingController extends Controller
         }
 
         // 1. Ambil data transaksi riwayat booking penyewa
-        $bookings = \App\Models\Booking::with(['roomDetail.room', 'rating'])
+        $bookings = \App\Models\Booking::with(['roomDetail.room', 'rating', 'fines'])
             ->where('user_id', $userId)
             ->orderBy('created_at', 'desc')
             ->get();
@@ -134,7 +136,7 @@ class BookingController extends Controller
             'phone' => 'required|string|max:30',
             'total_capacity' => 'required|integer|min:1|max:' . $room->capacity,
             'sewa_tipe' => 'required|in:harian,jam',
-            'payment_method' => 'required|string',
+            'payment_scheme' => 'required|in:full,installment',
             'notes' => 'nullable|string',
             'jam_mulai' => 'nullable|string',
             'jam_selesai' => 'nullable|string'
@@ -246,45 +248,77 @@ class BookingController extends Controller
 
         $grandTotalFinal = $basePrice + $extraCost;
 
-        // =========================================================================
-        // INSERT DATABASE
-        // =========================================================================
-        $booking = \App\Models\Booking::create([
-            'user_id' => \Illuminate\Support\Facades\Auth::id(),
-            'total' => $grandTotalFinal,
-            'method_payment' => $request->payment_method,
-            'event' => $request->instansi . ' - ' . $request->jenis_acara,
-            'phone' => $request->phone,
-            'notes' => $request->notes,
-            'start_date' => $reqStart,
-            'end_date' => $reqEnd,
-            'status' => 3 // 3 = Belum Bayar / Pending Payment
-        ]);
+        // Calculate payment amount based on selected scheme
+        $scheme = $request->input('payment_scheme', 'full');
+        $deposit = 0;
+        if ($scheme === 'installment') {
+            $deposit = (int)ceil(($room->deposit_percent / 100) * $grandTotalFinal);
+        }
+        $firstPayment = ($scheme === 'full') ? $grandTotalFinal : ((int)ceil($grandTotalFinal / 3) + $deposit);
 
-        // Detail 1: Sewa Gedung/Ruangan Utama
-        \App\Models\BookingDetail::create([
-            'booking_id' => $booking->booking_id,
-            'item_name' => $room->name,
-            'item_id' => $room->room_id,
-            'item_type' => 1, // Room
-            'item_price' => $basePrice,
-            'status' => 1 // Active
-        ]);
-
-        // Detail 2+: Addon Services
-        foreach ($addons as $addon) {
-            \App\Models\BookingDetail::create([
-                'booking_id' => $booking->booking_id,
-                'item_name' => $addon['name'],
-                'item_id' => $addon['item_id'],
-                'item_type' => 2, // Facility
-                'item_price' => $addon['price'],
-                'status' => 1 // Active
-            ]);
+        $renter = Auth::user();
+        if ($renter->saldo < $firstPayment) {
+            return back()->withInput()->with('error', 'Saldo Anda tidak mencukupi untuk melakukan pembayaran awal sebesar Rp ' . number_format($firstPayment, 0, ',', '.') . '. Silakan Top Up saldo Anda terlebih dahulu.');
         }
 
-        return redirect()->route('booking.transaction', ['booking_id' => $booking->booking_id])
-            ->with('success', 'Pemesanan ruangan ' . $room->name . ' berhasil dibuat! Silakan lakukan pembayaran.');
+        $booking = null;
+
+        // Perform balance deduction and insert inside a transaction
+        DB::transaction(function() use ($renter, $firstPayment, $grandTotalFinal, $scheme, $reqStart, $reqEnd, $request, $basePrice, $addons, $room, &$booking) {
+            // Deduct renter
+            $renter->saldo -= $firstPayment;
+            $renter->save();
+
+            // Add to room owner (provider)
+            $owner = People::find($room->user_id);
+            if ($owner) {
+                $owner->saldo += $firstPayment;
+                $owner->save();
+            }
+
+            // Create booking
+            $booking = \App\Models\Booking::create([
+                'user_id' => $renter->user_id,
+                'total' => $grandTotalFinal,
+                'paid_amount' => $firstPayment,
+                'installments_paid' => ($scheme === 'full') ? 3 : 1,
+                'method_payment' => ($scheme === 'full') ? 'Saldo (Lunas)' : 'Saldo (Cicilan 3x)',
+                'event' => $request->instansi . ' - ' . $request->jenis_acara,
+                'phone' => $request->phone,
+                'notes' => $request->notes,
+                'start_date' => $reqStart,
+                'end_date' => $reqEnd,
+                'status' => ($scheme === 'full') ? 1 : 3 // 1 = Terjadwal (Lunas), 3 = Cicilan (Belum Lunas)
+            ]);
+
+            // Detail 1: Sewa Gedung/Ruangan Utama
+            \App\Models\BookingDetail::create([
+                'booking_id' => $booking->booking_id,
+                'item_name' => $room->name,
+                'item_id' => $room->room_id,
+                'item_type' => 1, // Room
+                'item_price' => $basePrice,
+                'status' => 1 // Active
+            ]);
+
+            // Detail 2+: Addon Services
+            foreach ($addons as $addon) {
+                \App\Models\BookingDetail::create([
+                    'booking_id' => $booking->booking_id,
+                    'item_name' => $addon['name'],
+                    'item_id' => $addon['item_id'],
+                    'item_type' => 2, // Facility
+                    'item_price' => $addon['price'],
+                    'status' => 1 // Active
+                ]);
+            }
+        });
+
+        $msg = ($scheme === 'full') 
+            ? 'Pemesanan ruangan ' . $room->name . ' berhasil dibuat dan dibayar lunas!' 
+            : 'Pemesanan ruangan ' . $room->name . ' berhasil dibuat dengan pembayaran cicilan pertama (1/3)!';
+
+        return redirect()->route('bookings.history')->with('success', $msg);
     }
 
     public function transaction($booking_id)
@@ -295,52 +329,88 @@ class BookingController extends Controller
         $roomDetail = $booking->roomDetail;
         $room = $roomDetail ? $roomDetail->room : null;
 
-        // Konfigurasi Midtrans dari services.php
-        Config::$serverKey    = config('services.midtrans.server_key');
-        Config::$isProduction = config('services.midtrans.is_production');
-        Config::$isSanitized  = config('services.midtrans.is_sanitized');
-        Config::$is3ds        = config('services.midtrans.is_3ds');
+        $depositPercent = $room ? $room->deposit_percent : 0;
+        $deposit = (int)ceil(($depositPercent / 100) * $booking->total);
 
-        $params = [
-            'transaction_details' => [
-                'order_id' => 'BOOKING-' . $booking->booking_id . '-' . time(),
-                'gross_amount' => (int) $booking->total,
-            ],
-            'customer_details' => [
-                'first_name' => Auth::user()->username ?? 'Penyewa',
-                'email' => Auth::user()->email ?? 'penyewa@example.com',
-                'phone' => $booking->phone ?? '',
-            ],
-            'item_details' => [
-                [
-                    'id' => $room ? $room->room_id : 1,
-                    'price' => (int) ($roomDetail ? $roomDetail->item_price : $booking->total),
-                    'quantity' => 1,
-                    'name' => $room ? substr($room->name, 0, 50) : 'Sewa Ruangan',
-                ]
-            ]
-        ];
-
-        foreach ($booking->serviceDetails as $service) {
-            $params['item_details'][] = [
-                'id' => $service->item_id,
-                'price' => (int) $service->item_price,
-                'quantity' => 1,
-                'name' => substr($service->item_name, 0, 50),
-            ];
+        $nextPayment = 0;
+        if ($booking->status == 3) {
+            if ($booking->installments_paid == 1) {
+                $nextPayment = (int)ceil($booking->total / 3);
+            } elseif ($booking->installments_paid == 2) {
+                $nextPayment = $booking->total - ($booking->paid_amount - $deposit);
+            }
+        } else {
+            $nextPayment = $booking->total - $booking->paid_amount;
         }
 
-        $snapToken = '';
-        $isSimulated = false;
-        try {
-            $snapToken = Snap::getSnapToken($params);
-        } catch (\Exception $e) {
-            Log::error('Midtrans Error: ' . $e->getMessage());
-            $snapToken = 'MOCK-SNAP-TOKEN-' . uniqid();
-            $isSimulated = true;
+        return view('rooms.transaction', compact('booking', 'room', 'nextPayment', 'deposit'));
+    }
+
+    public function payWithBalance(Request $request, $booking_id)
+    {
+        $booking = \App\Models\Booking::with('roomDetail.room')->findOrFail($booking_id);
+        $renter = Auth::user();
+
+        // 1. Verify user is the booking requester
+        if ($booking->user_id !== $renter->user_id) {
+            abort(403, 'Akses ditolak.');
         }
 
-        return view('rooms.transaction', compact('booking', 'room', 'snapToken', 'isSimulated'));
+        // 2. Verify booking is unpaid or partially paid (status 3)
+        if ($booking->status != 3) {
+            return redirect()->route('bookings.history')->with('error', 'Transaksi ini sudah lunas atau dibatalkan.');
+        }
+
+        // 3. Calculate next payment amount
+        $nextPayment = 0;
+        if ($booking->installments_paid == 1) {
+            $nextPayment = (int)ceil($booking->total / 3);
+        } elseif ($booking->installments_paid == 2) {
+            $room = $booking->roomDetail->room ?? null;
+            $depositPercent = $room ? $room->deposit_percent : 0;
+            $deposit = (int)ceil(($depositPercent / 100) * $booking->total);
+
+            $nextPayment = $booking->total - ($booking->paid_amount - $deposit);
+        } else {
+            return redirect()->route('bookings.history')->with('error', 'Cicilan Anda sudah lunas.');
+        }
+
+        // 4. Check balance
+        if ($renter->saldo < $nextPayment) {
+            return back()->withErrors(['saldo' => 'Saldo Anda tidak mencukupi untuk melakukan pembayaran cicilan sebesar Rp ' . number_format($nextPayment, 0, ',', '.') . '. Silakan top up saldo terlebih dahulu.']);
+        }
+
+        // 5. Perform deduction and transfer in a database transaction
+        DB::transaction(function() use ($booking, $renter, $nextPayment) {
+            // Deduct renter
+            $renter->saldo -= $nextPayment;
+            $renter->save();
+
+            // Add to room owner (provider)
+            $room = $booking->roomDetail->room ?? null;
+            if ($room) {
+                $owner = People::find($room->user_id);
+                if ($owner) {
+                    $owner->saldo += $nextPayment;
+                    $owner->save();
+                }
+            }
+
+            // Update booking status & tracking
+            $booking->paid_amount += $nextPayment;
+            $booking->installments_paid += 1;
+            
+            if ($booking->installments_paid >= 3) {
+                $booking->status = 1; // 1 = Terjadwal (Lunas)
+            }
+            $booking->save();
+        });
+
+        $msg = ($booking->status == 1)
+            ? 'Pembayaran cicilan terakhir berhasil! Booking #' . $booking->booking_id . ' Anda sekarang LUNAS.'
+            : 'Pembayaran cicilan ke-' . $booking->installments_paid . ' berhasil sebesar Rp ' . number_format($nextPayment, 0, ',', '.') . '!';
+
+        return redirect()->route('bookings.history')->with('success', $msg);
     }
 
     public function paymentCallback(Request $request, $booking_id)
