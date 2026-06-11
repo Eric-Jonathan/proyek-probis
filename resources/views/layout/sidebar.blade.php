@@ -47,6 +47,12 @@
             <a href="{{ route('penyedia.fines.history') }}" class="list-group-item list-group-item-action bg-dark text-white border-0 py-2">
                 <i class="bi bi-clock-history me-2"></i> History Denda
             </a>
+            <a href="{{ route('penyedia.report.occupancy') }}" class="list-group-item list-group-item-action bg-dark text-white border-0 py-2">
+                <i class="bi bi-bar-chart-line me-2"></i> Laporan Okupansi
+            </a>
+            <a href="{{ route('penyedia.report.finance') }}" class="list-group-item list-group-item-action bg-dark text-white border-0 py-2">
+                <i class="bi bi-cash-coin me-2"></i> Laporan Keuangan
+            </a>
         </div>
     @elseif (Auth::user()->role == "outsource")
         <div class="list-group list-group-flush">

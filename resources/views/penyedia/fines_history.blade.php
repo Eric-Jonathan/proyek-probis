@@ -50,9 +50,6 @@
 <div class="container py-4">
     {{-- Header --}}
     <div class="d-flex align-items-center mb-4">
-        <a href="{{ route('penyedia.dashboard') }}" class="btn btn-light rounded-circle me-3 shadow-sm border d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
-            <i class="bi bi-arrow-left fs-5"></i>
-        </a>
         <div>
             <h2 class="fw-bold mb-1 text-dark">History Pengajuan Denda</h2>
             <p class="text-secondary mb-0">Pantau status persetujuan laporan pelanggaran denda properti Anda</p>

@@ -38,8 +38,8 @@ class PenyediaController extends Controller
 
         // 4. Data untuk grafik pendapatan bulanan tahun ini (Jan-Des)
         $monthlyEarnings = \App\Models\Booking::whereIn('status', [1, 2])
-            ->whereHas('details.room', function($q) use ($roomIds) {
-                $q->where('item_type', 1)->whereIn('item_id', $roomIds);
+            ->whereHas('roomDetail', function($q) use ($roomIds) {
+                $q->whereIn('item_id', $roomIds);
             })
             ->select(
                 DB::raw('MONTH(start_date) as month'),
@@ -101,8 +101,8 @@ class PenyediaController extends Controller
             }
 
             $bookings = \App\Models\Booking::whereIn('status', [1, 2])
-                ->whereHas('details.room', function($q) use ($roomIds) {
-                    $q->where('item_type', 1)->whereIn('item_id', $roomIds);
+                ->whereHas('roomDetail', function($q) use ($roomIds) {
+                    $q->whereIn('item_id', $roomIds);
                 })
                 ->whereYear('start_date', '>=', $currentYear - 4)
                 ->get();
@@ -117,8 +117,8 @@ class PenyediaController extends Controller
 
         } elseif ($filter === 'week') {
             $bookings = \App\Models\Booking::whereIn('status', [1, 2])
-                ->whereHas('details.room', function($q) use ($roomIds) {
-                    $q->where('item_type', 1)->whereIn('item_id', $roomIds);
+                ->whereHas('roomDetail', function($q) use ($roomIds) {
+                    $q->whereIn('item_id', $roomIds);
                 })
                 ->whereYear('start_date', date('Y'))
                 ->whereMonth('start_date', date('m'))
@@ -162,8 +162,8 @@ class PenyediaController extends Controller
             }
 
             $bookings = \App\Models\Booking::whereIn('status', [1, 2])
-                ->whereHas('details.room', function($q) use ($roomIds) {
-                    $q->where('item_type', 1)->whereIn('item_id', $roomIds);
+                ->whereHas('roomDetail', function($q) use ($roomIds) {
+                    $q->whereIn('item_id', $roomIds);
                 })
                 ->where('start_date', '>=', date('Y-m-d 00:00:00', strtotime("-6 days")))
                 ->get();
@@ -178,8 +178,8 @@ class PenyediaController extends Controller
 
         } else {
             $monthlyEarnings = \App\Models\Booking::whereIn('status', [1, 2])
-                ->whereHas('details.room', function($q) use ($roomIds) {
-                    $q->where('item_type', 1)->whereIn('item_id', $roomIds);
+                ->whereHas('roomDetail', function($q) use ($roomIds) {
+                    $q->whereIn('item_id', $roomIds);
                 })
                 ->select(
                     DB::raw('MONTH(start_date) as month'),
@@ -342,5 +342,231 @@ class PenyediaController extends Controller
             ->get();
 
         return view('penyedia.fines_history', compact('fines'));
+    }
+
+    public function occupancyReport(Request $request)
+    {
+        $penyediaId = Auth::id();
+        $filter = $request->query('filter', '30'); // '30', '90', 'all'
+
+        $rooms = \App\Models\Room::where('user_id', $penyediaId)->where('status', '>=', 0)->get();
+        $roomIds = $rooms->pluck('room_id')->toArray();
+
+        $startDate = null;
+        $totalDays = 30;
+        if ($filter === '30') {
+            $startDate = now()->subDays(30);
+            $totalDays = 30;
+        } elseif ($filter === '90') {
+            $startDate = now()->subDays(90);
+            $totalDays = 90;
+        } else {
+            $earliestBooking = \App\Models\Booking::whereIn('status', [1, 2])
+                ->whereHas('roomDetail', function($q) use ($roomIds) {
+                    $q->whereIn('item_id', $roomIds);
+                })
+                ->orderBy('start_date', 'asc')
+                ->first();
+            if ($earliestBooking) {
+                $earliestDate = \Carbon\Carbon::parse($earliestBooking->start_date);
+                $totalDays = max(1, now()->diffInDays($earliestDate));
+            } else {
+                $totalDays = 30;
+            }
+        }
+
+        $totalHoursPeriod = $totalDays * 24;
+
+        $bookingsQuery = \App\Models\Booking::whereIn('status', [1, 2])
+            ->whereHas('roomDetail', function($q) use ($roomIds) {
+                $q->whereIn('item_id', $roomIds);
+            });
+
+        if ($startDate) {
+            $bookingsQuery->where('start_date', '>=', $startDate);
+        }
+
+        $bookings = $bookingsQuery->with('roomDetail')->get();
+
+        $roomStats = [];
+        foreach ($rooms as $room) {
+            $roomStats[$room->room_id] = [
+                'room' => $room,
+                'booking_count' => 0,
+                'total_hours' => 0,
+                'occupancy_rate' => 0,
+            ];
+        }
+
+        foreach ($bookings as $b) {
+            $roomId = $b->roomDetail->item_id ?? null;
+            if ($roomId && isset($roomStats[$roomId])) {
+                $start = \Carbon\Carbon::parse($b->start_date);
+                $end = \Carbon\Carbon::parse($b->end_date);
+                
+                // Jika booking harian (dimulai 00:00:00 dan berakhir 23:59:59)
+                if ($start->format('H:i:s') === '00:00:00' && $end->format('H:i:s') === '23:59:59') {
+                    $days = max(1, $start->diffInDays($end) + 1);
+                    $hours = $days * 24;
+                } else {
+                    $hours = max(1, $end->diffInHours($start));
+                }
+
+                $roomStats[$roomId]['booking_count'] += 1;
+                $roomStats[$roomId]['total_hours'] += $hours;
+            }
+        }
+
+        $recommendations = [];
+        $chartLabels = [];
+        $chartValues = [];
+
+        foreach ($roomStats as $id => &$stats) {
+            $rate = ($stats['total_hours'] / $totalHoursPeriod) * 100;
+            $stats['occupancy_rate'] = round(min(100, $rate), 1);
+
+            $chartLabels[] = $stats['room']->name;
+            $chartValues[] = $stats['occupancy_rate'];
+
+            if ($stats['occupancy_rate'] < 15) {
+                $recommendations[] = [
+                    'room_name' => $stats['room']->name,
+                    'type' => 'promo',
+                    'text' => "Ruangan '{$stats['room']->name}' memiliki tingkat okupansi yang rendah ({$stats['occupancy_rate']}%). Pertimbangkan untuk membuat diskon weekday promo atau menurunkan harga sewa dasar.",
+                    'class' => 'warning'
+                ];
+            } elseif ($stats['occupancy_rate'] > 60) {
+                $recommendations[] = [
+                    'room_name' => $stats['room']->name,
+                    'type' => 'price',
+                    'text' => "Ruangan '{$stats['room']->name}' sangat diminati dengan okupansi tinggi ({$stats['occupancy_rate']}%). Anda dapat mencoba menaikkan harga dasar sebesar 5-10% pada weekend atau peak-hour.",
+                    'class' => 'success'
+                ];
+            }
+        }
+
+        $totalBookingsCount = $bookings->count();
+        $totalHoursAllRooms = array_sum(array_column($roomStats, 'total_hours'));
+        $avgOccupancyRate = count($roomStats) > 0 ? array_sum(array_column($roomStats, 'occupancy_rate')) / count($roomStats) : 0;
+        $avgOccupancyRate = round($avgOccupancyRate, 1);
+
+        return view('penyedia.report_occupancy', compact(
+            'roomStats', 'filter', 'totalBookingsCount', 'totalHoursAllRooms', 
+            'avgOccupancyRate', 'recommendations', 'chartLabels', 'chartValues'
+        ));
+    }
+
+    public function financeReport(Request $request)
+    {
+        $penyediaId = Auth::id();
+        $filter = $request->query('filter', '30'); // '30', '90', 'all'
+
+        $rooms = \App\Models\Room::where('user_id', $penyediaId)->where('status', '>=', 0)->get();
+        $roomIds = $rooms->pluck('room_id')->toArray();
+
+        $startDate = null;
+        if ($filter === '30') {
+            $startDate = now()->subDays(30);
+        } elseif ($filter === '90') {
+            $startDate = now()->subDays(90);
+        }
+
+        $bookingsQuery = \App\Models\Booking::whereIn('status', [1, 2])
+            ->whereHas('roomDetail', function($q) use ($roomIds) {
+                $q->whereIn('item_id', $roomIds);
+            });
+
+        if ($startDate) {
+            $bookingsQuery->where('start_date', '>=', $startDate);
+        }
+
+        $bookings = $bookingsQuery->with('roomDetail')->get();
+
+        $totalRevenue = 0;
+        $roomStats = [];
+        foreach ($rooms as $room) {
+            $roomStats[$room->room_id] = [
+                'room' => $room,
+                'revenue' => 0,
+                'booking_count' => 0,
+                'arpb' => 0,
+                'share' => 0
+            ];
+        }
+
+        foreach ($bookings as $b) {
+            $roomId = $b->roomDetail->item_id ?? null;
+            if ($roomId && isset($roomStats[$roomId])) {
+                $roomStats[$roomId]['revenue'] += $b->total;
+                $roomStats[$roomId]['booking_count'] += 1;
+                $totalRevenue += $b->total;
+            }
+        }
+
+        $donutLabels = [];
+        $donutValues = [];
+        foreach ($roomStats as $id => &$stats) {
+            $stats['share'] = $totalRevenue > 0 ? round(($stats['revenue'] / $totalRevenue) * 100, 1) : 0;
+            $stats['arpb'] = $stats['booking_count'] > 0 ? round($stats['revenue'] / $stats['booking_count']) : 0;
+
+            if ($stats['revenue'] > 0) {
+                $donutLabels[] = $stats['room']->name;
+                $donutValues[] = $stats['revenue'];
+            }
+        }
+
+        $monthlyEarnings = \App\Models\Booking::whereIn('status', [1, 2])
+            ->whereHas('roomDetail', function($q) use ($roomIds) {
+                $q->whereIn('item_id', $roomIds);
+            })
+            ->select(
+                DB::raw('MONTH(start_date) as month'),
+                DB::raw('SUM(total) as total')
+            )
+            ->whereYear('start_date', date('Y'))
+            ->groupBy('month')
+            ->orderBy('month')
+            ->get()
+            ->pluck('total', 'month')
+            ->toArray();
+
+        $months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+        $momGrowth = [];
+        $growthLabels = [];
+        $growthValues = [];
+
+        $monthlyData = array_fill(1, 12, 0);
+        foreach ($monthlyEarnings as $m => $tot) {
+            $monthlyData[$m] = (int)$tot;
+        }
+
+        $prevTotal = null;
+        for ($m = 1; $m <= 12; $m++) {
+            $currentTotal = $monthlyData[$m];
+            $growthLabels[] = $months[$m - 1];
+            $growthValues[] = $currentTotal;
+
+            if ($prevTotal !== null) {
+                if ($prevTotal > 0) {
+                    $change = (($currentTotal - $prevTotal) / $prevTotal) * 100;
+                    $momGrowth[$months[$m - 1]] = round($change, 1);
+                } else {
+                    $momGrowth[$months[$m - 1]] = $currentTotal > 0 ? 100 : 0;
+                }
+            } else {
+                $momGrowth[$months[$m - 1]] = 0;
+            }
+            $prevTotal = $currentTotal;
+        }
+
+        $currentMonthIndex = (int)date('n');
+        $latestGrowth = $momGrowth[$months[$currentMonthIndex - 1]] ?? 0;
+
+        $avgArpb = $bookings->count() > 0 ? round($totalRevenue / $bookings->count()) : 0;
+
+        return view('penyedia.report_finance', compact(
+            'roomStats', 'filter', 'totalRevenue', 'avgArpb', 'latestGrowth',
+            'donutLabels', 'donutValues', 'growthLabels', 'growthValues', 'momGrowth'
+        ));
     }
 }

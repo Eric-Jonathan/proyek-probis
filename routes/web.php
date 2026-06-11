@@ -73,6 +73,8 @@ Route::middleware(['auth', 'role:penyedia'])->group(function () {
     Route::get('/penyedia/dashboard/chart', [PenyediaController::class, 'getChartData'])->name('penyedia.dashboard.chart');
     Route::get('/penyedia/history/{id}', [PenyediaController::class, 'detail_history'])->name('penyedia.detail_history');
     Route::get('/penyedia/fines/history', [PenyediaController::class, 'finesHistory'])->name('penyedia.fines.history');
+    Route::get('/penyedia/report/occupancy', [PenyediaController::class, 'occupancyReport'])->name('penyedia.report.occupancy');
+    Route::get('/penyedia/report/finance', [PenyediaController::class, 'financeReport'])->name('penyedia.report.finance');
 });
 
 Route::middleware(['auth', 'role:penyewa'])->group(function () {
