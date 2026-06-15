@@ -122,6 +122,8 @@
                                  <span class="badge rounded-pill bg-primary-subtle text-primary px-3 py-2">Booked</span>
                              @elseif($item->status == 3)
                                  <span class="badge rounded-pill bg-warning-subtle text-warning px-3 py-2" style="color: #a16207 !important;">Cicilan ({{ $item->installments_paid }}/3)</span>
+                             @elseif($item->status == 4)
+                                 <span class="badge rounded-pill bg-secondary-subtle text-secondary px-3 py-2">Menunggu Pembayaran</span>
                              @elseif($item->status == 0)
                                  <span class="badge rounded-pill bg-danger-subtle text-danger px-3 py-2">Canceled</span>
                              @else
@@ -162,7 +164,7 @@
         <div class="mt-4 d-flex justify-content-between align-items-center">
             <p class="small text-muted mb-0">Menampilkan {{ $bookings->firstItem() ?? 0 }} - {{ $bookings->lastItem() ?? 0 }} dari {{ $bookings->total() }} data</p>
             <div>
-                {{ $bookings->links() }}
+                {{ $bookings->links('pagination::bootstrap-5') }}
             </div>
         </div>
     </div>

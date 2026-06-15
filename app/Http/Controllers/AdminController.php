@@ -9,6 +9,7 @@ use App\Models\People;
 use App\Models\Room;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class AdminController extends Controller
 {
@@ -82,6 +83,12 @@ class AdminController extends Controller
         $countPendingReports = $pendingReports->count();
         $countTotalRooms = Room::where('status', '>=', 0)->count();
 
+        // Load pending fines that need review (status = 0)
+        $pendingFines = \App\Models\Fine::with(['booking.user', 'booking.roomDetail.room.owner'])
+            ->where('status', 0)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
         return view('admin.dashboard', compact(
             'incoming', 
             'monitoring', 
@@ -92,7 +99,8 @@ class AdminController extends Controller
             'countActive', 
             'countSurveyor',
             'countPendingReports',
-            'countTotalRooms'
+            'countTotalRooms',
+            'pendingFines'
         ));
     }
 
@@ -549,5 +557,148 @@ class AdminController extends Controller
         $fine = \App\Models\Fine::findOrFail($id);
         $fine->update(['status' => 2]); // Rejected
         return back()->with('success', 'Denda #' . $fine->fine_id . ' telah ditolak.');
+    }
+
+    public function profitabilityReport(Request $request)
+    {
+        $filter = $request->query('filter', '30'); // '30', '90', 'all'
+        
+        $startDate = null;
+        if ($filter === '30') {
+            $startDate = now()->subDays(30);
+        } elseif ($filter === '90') {
+            $startDate = now()->subDays(90);
+        }
+
+        $bookingsQuery = \App\Models\Booking::whereIn('status', [1, 2]);
+        if ($startDate) {
+            $bookingsQuery->where('start_date', '>=', $startDate);
+        }
+        $bookings = $bookingsQuery->get();
+
+        $totalGmv = $bookings->sum('total');
+        $commissionFee = $bookings->sum(function($b) {
+            return (int) round(($b->total / 1.05) * 0.10);
+        });
+        $bookingsCount = $bookings->count();
+        $avgTransactionValue = $bookingsCount > 0 ? round($totalGmv / $bookingsCount) : 0;
+
+        // Top Profitable Properties (Commission Contribution)
+        $detailsQuery = \App\Models\BookingDetail::where('item_type', 1)
+            ->whereHas('booking', function($q) use ($startDate) {
+                $q->whereIn('status', [1, 2]);
+                if ($startDate) {
+                    $q->where('start_date', '>=', $startDate);
+                }
+            });
+
+        $topRoomsRaw = $detailsQuery
+            ->select('item_id', 'item_name', DB::raw('count(*) as booking_count'), DB::raw('sum(item_price) as total_revenue'))
+            ->groupBy('item_id', 'item_name')
+            ->orderBy('total_revenue', 'desc')
+            ->take(5)
+            ->get();
+
+        $topRooms = $topRoomsRaw->map(function($r) {
+            return (object)[
+                'name' => $r->item_name,
+                'booking_count' => $r->booking_count,
+                'revenue' => $r->total_revenue,
+                'commission' => $r->total_revenue * 0.10
+            ];
+        });
+
+        // Monthly Commission Trend (for this year)
+        $monthlyGmvRaw = \App\Models\Booking::whereIn('status', [1, 2])
+            ->select(
+                DB::raw('MONTH(start_date) as month'),
+                DB::raw('SUM(total) as gmv')
+            )
+            ->whereYear('start_date', date('Y'))
+            ->groupBy('month')
+            ->orderBy('month')
+            ->get()
+            ->pluck('gmv', 'month')
+            ->toArray();
+
+        $months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+        $chartLabels = $months;
+        $chartGmvValues = array_fill(0, 12, 0);
+        $chartCommissionValues = array_fill(0, 12, 0);
+
+        for ($m = 1; $m <= 12; $m++) {
+            $gmv = isset($monthlyGmvRaw[$m]) ? (int)$monthlyGmvRaw[$m] : 0;
+            $chartGmvValues[$m - 1] = $gmv;
+            $chartCommissionValues[$m - 1] = (int) round(($gmv / 1.05) * 0.10);
+        }
+
+        return view('admin.report_profitability', compact(
+            'filter', 'totalGmv', 'commissionFee', 'avgTransactionValue', 'bookingsCount',
+            'topRooms', 'chartLabels', 'chartGmvValues', 'chartCommissionValues'
+        ));
+    }
+
+    public function retentionReport(Request $request)
+    {
+        $totalRenters = \App\Models\People::where('role', 'penyewa')->count();
+
+        // Get renters who have at least 1 successful booking
+        $rentersWithBookings = \App\Models\People::where('role', 'penyewa')
+            ->whereHas('bookings', function($q) {
+                $q->whereIn('status', [1, 2]);
+            })
+            ->withCount(['bookings' => function($q) {
+                $q->whereIn('status', [1, 2]);
+            }])
+            ->get();
+
+        $totalActiveRenters = $rentersWithBookings->count();
+
+        // Repeat Renter Rate
+        $repeatRenters = $rentersWithBookings->filter(function($u) {
+            return $u->bookings_count >= 2;
+        });
+        $repeatRentersCount = $repeatRenters->count();
+        $repeatRenterRate = $totalActiveRenters > 0 ? round(($repeatRentersCount / $totalActiveRenters) * 100, 1) : 0;
+
+        // Renter Segmentation
+        // Loyal (>= 3 bookings), Occasional (1-2 bookings), Inactive (0 bookings)
+        $loyalCount = $rentersWithBookings->filter(function($u) {
+            return $u->bookings_count >= 3;
+        })->count();
+
+        $occasionalCount = $rentersWithBookings->filter(function($u) {
+            return $u->bookings_count >= 1 && $u->bookings_count <= 2;
+        })->count();
+
+        $inactiveCount = $totalRenters - $totalActiveRenters;
+
+        // Top Renters by Spent (CLV)
+        $topRentersRaw = \App\Models\People::where('role', 'penyewa')
+            ->whereHas('bookings', function($q) {
+                $q->whereIn('status', [1, 2]);
+            })
+            ->with(['bookings' => function($q) {
+                $q->whereIn('status', [1, 2]);
+            }])
+            ->get();
+
+        $topRenters = $topRentersRaw->map(function($u) {
+            $totalSpent = $u->bookings->sum('total');
+            return (object)[
+                'username' => $u->username,
+                'email' => $u->email,
+                'booking_count' => $u->bookings->count(),
+                'total_spent' => $totalSpent,
+                'clv' => $totalSpent
+            ];
+        })->sortByDesc('total_spent')->take(5);
+
+        $avgLifetimeSpent = $totalActiveRenters > 0 ? round($topRentersRaw->map(function($u) { return $u->bookings->sum('total'); })->avg()) : 0;
+
+        return view('admin.report_retention', compact(
+            'totalRenters', 'totalActiveRenters', 'repeatRentersCount', 'repeatRenterRate',
+            'loyalCount', 'occasionalCount', 'inactiveCount', 'topRenters', 'avgLifetimeSpent'
+        ));
     }
 }

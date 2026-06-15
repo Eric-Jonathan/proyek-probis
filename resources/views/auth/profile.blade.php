@@ -169,14 +169,19 @@
                                 </div>
                             </div>
 
-                            {{-- Saldo (Only for Renter / Provider) --}}
-                            @if($user->role !== 'admin' && $user->role !== 'outsource')
+                            {{-- Saldo (Only for Renter / Provider / Admin) --}}
+                            @if($user->role !== 'outsource')
                             <div class="col-md-6">
                                 <label class="form-label text-primary">Saldo Tempat-In Anda</label>
                                 <div class="input-group">
                                     <span class="input-group-text bg-light border-end-0 text-primary"><i class="bi bi-wallet2"></i></span>
                                     <input type="text" class="form-control border-start-0 bg-light fw-bold text-primary" value="Rp {{ number_format($user->saldo, 0, ',', '.') }}" readonly disabled>
-                                    <a href="{{ route('topup.show') }}" class="btn btn-primary fw-bold px-3">Top Up</a>
+                                    @if($user->role !== 'admin')
+                                        <a href="{{ route('topup.show') }}" class="btn btn-primary fw-bold px-3">Top Up</a>
+                                    @endif
+                                    @if($user->role === 'admin' || $user->role === 'penyedia')
+                                        <a href="{{ route('withdraw.show') }}" class="btn btn-success fw-bold px-3">Cairkan</a>
+                                    @endif
                                 </div>
                             </div>
                             @endif

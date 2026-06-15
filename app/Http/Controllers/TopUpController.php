@@ -14,8 +14,11 @@ class TopUpController extends Controller
     public function show()
     {
         $user = Auth::user();
-        if ($user->role === 'admin' || $user->role === 'outsource') {
-            abort(403, 'Administrator dan outsource tidak memiliki saldo.');
+        if ($user->role === 'outsource') {
+            abort(403, 'Mitra outsource tidak memiliki saldo.');
+        }
+        if ($user->role === 'admin') {
+            abort(403, 'Administrator tidak diperbolehkan melakukan top up saldo.');
         }
         return view('auth.topup', compact('user'));
     }
@@ -27,6 +30,12 @@ class TopUpController extends Controller
         ]);
 
         $user = Auth::user();
+        if ($user->role === 'admin' || $user->role === 'outsource') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Top up tidak diperbolehkan untuk peran ini.'
+            ], 403);
+        }
         $amount = (int) $request->amount;
 
         // Konfigurasi Midtrans
@@ -80,6 +89,14 @@ class TopUpController extends Controller
         $request->validate([
             'amount' => 'required|numeric|min:0',
         ]);
+
+        $user = Auth::user();
+        if ($user && ($user->role === 'admin' || $user->role === 'outsource')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Top up tidak diperbolehkan untuk peran ini.'
+            ], 403);
+        }
 
         $userId = Auth::id();
         $user = People::findOrFail($userId);

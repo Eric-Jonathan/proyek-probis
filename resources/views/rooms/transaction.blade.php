@@ -234,9 +234,53 @@
                             @endforeach
                         @endif
 
+                        @php
+                            $baseTotal = ($booking->roomDetail->item_price ?? 0) + $booking->serviceDetails->sum('item_price');
+                            $serviceFee = (int) round($baseTotal * 0.05);
+                            $renterTotal = $baseTotal + $serviceFee;
+                        @endphp
+                        <div class="mini-line my-2"></div>
+                        <div class="invoice-item text-muted text-primary">
+                            <span class="fw-bold">Biaya Layanan (5%)</span>
+                            <span class="fw-bold">Rp {{ number_format($serviceFee, 0, ',', '.') }}</span>
+                        </div>
+
                         <div class="mini-line my-3"></div>
 
-                        @if($booking->status == 3)
+                        @if($booking->status == 4)
+                            @php
+                                $isInstallment = str_contains(strtolower($booking->method_payment), 'cicilan');
+                            @endphp
+                            @if($isInstallment)
+                                <div class="invoice-item text-muted mb-2">
+                                    <span>Skema Pembayaran</span>
+                                    <span class="fw-bold text-warning" style="color: #a16207 !important;">Cicilan (3x)</span>
+                                </div>
+                                <div class="invoice-item text-muted mb-2">
+                                    <span>Uang Deposit</span>
+                                    <span class="fw-semibold text-secondary">Rp {{ number_format($deposit, 0, ',', '.') }}</span>
+                                </div>
+                                <div class="invoice-item text-muted mb-2">
+                                    <span>Cicilan Ke-1</span>
+                                    <span class="fw-semibold text-secondary">Rp {{ number_format((int)ceil($baseTotal / 3), 0, ',', '.') }}</span>
+                                </div>
+                                <div class="mini-line my-3"></div>
+                                <p class="text-muted small mb-2">Pembayaran Awal Harus Dibayar</p>
+                                <div class="price-box mb-3 bg-warning-subtle border-warning-subtle text-warning" style="background-color: #fff3cd !important; color: #a16207 !important; border-color: #ffeeba !important;">
+                                    Rp {{ number_format($nextPayment, 0, ',', '.') }}
+                                </div>
+                            @else
+                                <div class="invoice-item text-muted mb-2">
+                                    <span>Skema Pembayaran</span>
+                                    <span class="fw-bold text-success">Bayar Lunas (100%)</span>
+                                </div>
+                                <div class="mini-line my-3"></div>
+                                <p class="text-muted small mb-2">Total Pembayaran</p>
+                                <div class="price-box mb-3">
+                                    Rp {{ number_format($nextPayment, 0, ',', '.') }}
+                                </div>
+                            @endif
+                        @elseif($booking->status == 3)
                             <div class="invoice-item text-muted mb-2">
                                 <span>Status Cicilan</span>
                                 <span class="fw-bold text-warning" style="color: #a16207 !important;">Cicilan ({{ $booking->installments_paid }}/3)</span>
@@ -254,7 +298,7 @@
                             </div>
                             <div class="invoice-item text-muted mb-2">
                                 <span>Sisa Tagihan Pokok</span>
-                                <span class="fw-semibold text-danger">Rp {{ number_format($booking->total - ($booking->paid_amount - $deposit), 0, ',', '.') }}</span>
+                                <span class="fw-semibold text-danger">Rp {{ number_format($baseTotal - ($booking->paid_amount - $deposit - $serviceFee), 0, ',', '.') }}</span>
                             </div>
                             <div class="mini-line my-3"></div>
                             
@@ -265,9 +309,11 @@
                         @else
                             <p class="text-muted small mb-2">Total Pembayaran</p>
                             <div class="price-box mb-3">
-                                Rp {{ number_format($booking->total, 0, ',', '.') }}
+                                Rp {{ number_format($renterTotal, 0, ',', '.') }}
                             </div>
                         @endif
+
+                        {{-- Distribution card removed per client feedback --}}
 
                         <div class="p-3 rounded-3 mb-4 text-center border" style="background-color: #fff;">
                             <div class="small text-muted mb-1"><i class="bi bi-wallet2 me-1"></i> Saldo Tempat-In Anda</div>
@@ -290,9 +336,15 @@
                             @if(Auth::user()->saldo >= $nextPayment)
                                 <form action="{{ route('booking.pay', $booking->booking_id) }}" method="POST">
                                     @csrf
-                                    <button type="submit" class="btn btn-midtrans w-100 mb-3 py-3 bg-success border-0" onclick="return confirm('Apakah Anda yakin ingin membayar cicilan booking ini sebesar Rp {{ number_format($nextPayment, 0, ',', '.') }} menggunakan Saldo Tempat-In?')">
-                                        <i class="bi bi-wallet2 me-2"></i> Bayar Cicilan Sekarang
-                                    </button>
+                                    @if($booking->status == 4)
+                                        <button type="submit" class="btn btn-midtrans w-100 mb-3 py-3 bg-success border-0" onclick="return confirm('Apakah Anda yakin ingin membayar pemesanan booking ini sebesar Rp {{ number_format($nextPayment, 0, ',', '.') }} menggunakan Saldo Tempat-In?')">
+                                            <i class="bi bi-wallet2 me-2"></i> Bayar Sekarang
+                                        </button>
+                                    @else
+                                        <button type="submit" class="btn btn-midtrans w-100 mb-3 py-3 bg-success border-0" onclick="return confirm('Apakah Anda yakin ingin membayar cicilan booking ini sebesar Rp {{ number_format($nextPayment, 0, ',', '.') }} menggunakan Saldo Tempat-In?')">
+                                            <i class="bi bi-wallet2 me-2"></i> Bayar Cicilan Sekarang
+                                        </button>
+                                    @endif
                                 </form>
                             @else
                                 <div class="alert alert-danger border-0 shadow-sm rounded-3 p-3 mb-3 text-start">
@@ -300,7 +352,7 @@
                                         <i class="bi bi-exclamation-octagon-fill text-danger fs-5"></i>
                                         <div>
                                             <strong class="text-danger" style="font-size: 0.9rem;">Saldo Tidak Cukup!</strong>
-                                            <p class="small text-muted mb-0 mt-1">Saldo Anda tidak mencukupi untuk melakukan pembayaran cicilan ini. Silakan top up saldo terlebih dahulu.</p>
+                                            <p class="small text-muted mb-0 mt-1">Saldo Anda tidak mencukupi untuk melakukan pembayaran ini. Silakan top up saldo terlebih dahulu.</p>
                                         </div>
                                     </div>
                                 </div>

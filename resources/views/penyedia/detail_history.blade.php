@@ -85,6 +85,10 @@
                         <span class="badge-status bg-warning-soft text-warning" style="color: #a16207 !important;">
                             <i class="bi bi-clock-history me-2"></i>Cicilan ({{ $booking->installments_paid }}/3)
                         </span>
+                    @elseif($booking->status == 4)
+                        <span class="badge-status bg-warning-soft text-warning" style="color: #a16207 !important;">
+                            <i class="bi bi-clock-history me-2"></i>Menunggu Pembayaran
+                        </span>
                     @elseif($booking->status == 0)
                         <span class="badge-status bg-batal-soft">
                             <i class="bi bi-x-circle-fill me-2"></i>Dibatalkan
@@ -153,7 +157,7 @@
             {{-- Rincian Biaya --}}
             <div class="row justify-content-end">
                 <div class="col-md-5">
-                    <h5 class="fw-bold mb-4 text-primary text-md-end">Rincian Pembayaran</h5>
+                    <h5 class="fw-bold mb-4 text-primary text-md-end">Rincian Pendapatan</h5>
                     <div class="cost-item">
                         <span class="text-secondary">Harga Sewa Ruangan Utama</span>
                         <span class="fw-bold text-dark">Rp {{ number_format($booking->roomDetail->item_price ?? 0, 0, ',', '.') }}</span>
@@ -168,9 +172,24 @@
                         @endforeach
                     @endif
 
-                    <div class="total-row">
-                        <span>Total Pendapatan</span>
-                        <span>Rp {{ number_format($booking->total, 0, ',', '.') }}</span>
+                    @php
+                        $baseTotal = ($booking->roomDetail->item_price ?? 0) + $booking->serviceDetails->sum('item_price');
+                        $commission = (int) round($baseTotal * 0.05);
+                        $netEarnings = $baseTotal - $commission;
+                    @endphp
+                    <div class="mini-line my-2"></div>
+                    <div class="cost-item">
+                        <span class="text-secondary">Subtotal Biaya Sewa</span>
+                        <span class="fw-semibold text-dark">Rp {{ number_format($baseTotal, 0, ',', '.') }}</span>
+                    </div>
+                    <div class="cost-item">
+                        <span class="text-secondary">Komisi Tempat-In (5%)</span>
+                        <span class="fw-semibold text-danger">- Rp {{ number_format($commission, 0, ',', '.') }}</span>
+                    </div>
+                    
+                    <div class="total-row mt-3">
+                        <span>Total Pendapatan Bersih</span>
+                        <span>Rp {{ number_format($netEarnings, 0, ',', '.') }}</span>
                     </div>
                     <p class="text-md-end text-muted small mt-2">
                         <i class="bi bi-shield-check me-1 text-success"></i> Metode Pembayaran: {{ $booking->method_payment }}

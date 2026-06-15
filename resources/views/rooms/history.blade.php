@@ -136,6 +136,8 @@
                                      <span class="badge rounded-pill badge-selesai px-3 py-2">Selesai</span>
                                  @elseif($b->status == 3)
                                      <span class="badge rounded-pill bg-warning-subtle text-warning px-3 py-2" style="color: #a16207 !important;">Cicilan ({{ $b->installments_paid }}/3)</span>
+                                 @elseif($b->status == 4)
+                                     <span class="badge rounded-pill bg-secondary-subtle text-secondary px-3 py-2">Menunggu Pembayaran</span>
                                  @elseif($b->status == 0)
                                      <span class="badge rounded-pill bg-danger-subtle text-danger px-3 py-2">Batal</span>
                                  @endif
@@ -174,6 +176,11 @@
                                          @if($b->status == 3)
                                              <a href="{{ route('booking.transaction', ['booking_id' => $b->booking_id]) }}" class="btn btn-sm btn-warning text-dark rounded-pill px-3 fw-bold">
                                                  <i class="bi bi-wallet2 me-1"></i> Bayar Cicilan
+                                             </a>
+                                         @endif
+                                         @if($b->status == 4)
+                                             <a href="{{ route('booking.transaction', ['booking_id' => $b->booking_id]) }}" class="btn btn-sm btn-success text-white rounded-pill px-3 fw-bold">
+                                                 <i class="bi bi-wallet2 me-1"></i> Bayar Sekarang
                                              </a>
                                          @endif
                                          @php
@@ -248,7 +255,7 @@
                         </div>
                     </div>
                     <div class="modal-footer border-0 p-4 pt-0">
-                        <button type="submit" class="btn btn-primary w-100 py-3 rounded-pill fw-bold shadow-sm submit-rating" disabled style="background-color: #0064D2; border: none;">
+                        <button type="submit" class="btn btn-primary w-100 py-3 rounded-pill fw-bold" disabled style="background-color: #0064D2; border: none;">
                             Simpan Penilaian
                         </button>
                     </div>
@@ -323,6 +330,8 @@
                                  <span class="badge rounded-pill bg-success text-white px-3 py-2"><i class="bi bi-check-circle-fill me-1"></i> Selesai</span>
                              @elseif($b->status == 3)
                                  <span class="badge rounded-pill bg-warning text-dark px-3 py-2" style="background-color: #ffc107 !important;"><i class="bi bi-wallet2 me-1"></i> Cicilan ({{ $b->installments_paid }}/3)</span>
+                             @elseif($b->status == 4)
+                                 <span class="badge rounded-pill bg-secondary text-white px-3 py-2"><i class="bi bi-clock-history me-1"></i> Menunggu Pembayaran</span>
                              @elseif($b->status == 0)
                                  <span class="badge rounded-pill bg-danger text-white px-3 py-2"><i class="bi bi-x-circle-fill me-1"></i> Dibatalkan</span>
                              @endif

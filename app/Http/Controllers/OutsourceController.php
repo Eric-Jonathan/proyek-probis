@@ -487,4 +487,149 @@ class OutsourceController extends Controller
 
         return $pdf->stream('Laporan_Survei_SRV-' . $id . '.pdf');
     }
+
+    public function performanceReport(Request $request)
+    {
+        $userId = \Illuminate\Support\Facades\Auth::user()->user_id;
+
+        $completedAssignments = \App\Models\OutsourceAssignment::with(['room', 'report'])
+            ->where('surveyor_id', $userId)
+            ->where('assignment_status', 'completed')
+            ->whereHas('report')
+            ->get();
+
+        $completedCount = $completedAssignments->count();
+        $totalEarnings = $completedCount * 200000;
+
+        // SLA (Speed of Completion - from assignment to report submission)
+        $totalHours = 0;
+        foreach ($completedAssignments as $item) {
+            $reportTime = $item->report->created_at ?? $item->updated_at;
+            $totalHours += (int) abs($item->created_at->diffInHours($reportTime));
+        }
+        $avgSla = $completedCount > 0 ? round($totalHours / $completedCount, 1) : 0;
+
+        // Feasibility breakdown (Layak vs Tidak Layak)
+        $layakCount = $completedAssignments->filter(function($item) {
+            return strtolower($item->report->rekomendasi ?? '') === 'layak';
+        })->count();
+        $tidakLayakCount = $completedCount - $layakCount;
+
+        // Accuracy (Approved vs Decided)
+        $processedCount = $completedAssignments->filter(function($item) {
+            return in_array($item->room->status ?? 0, [2, 3]);
+        })->count();
+        $approvedCount = $completedAssignments->filter(function($item) {
+            return ($item->room->status ?? 0) == 2;
+        })->count();
+        $accuracy = $processedCount > 0 ? round(($approvedCount / $processedCount) * 100) : 100;
+
+        // Regional Workload Analysis
+        $regionalData = [];
+        foreach ($completedAssignments as $item) {
+            $location = $item->room->location ?? 'Malang';
+            $parts = explode(',', $location);
+            $city = trim($parts[0]);
+            if (empty($city)) {
+                $city = 'Malang';
+            }
+
+            $reportTime = $item->report->created_at ?? $item->updated_at;
+            $hours = (int) abs($item->created_at->diffInHours($reportTime));
+
+            if (!isset($regionalData[$city])) {
+                $regionalData[$city] = [
+                    'name' => $city,
+                    'count' => 0,
+                    'total_hours' => 0,
+                    'approved' => 0,
+                    'decided' => 0,
+                ];
+            }
+
+            $regionalData[$city]['count']++;
+            $regionalData[$city]['total_hours'] += $hours;
+
+            $status = $item->room->status ?? 0;
+            if (in_array($status, [2, 3])) {
+                $regionalData[$city]['decided']++;
+                if ($status == 2) {
+                    $regionalData[$city]['approved']++;
+                }
+            }
+        }
+
+        $regionsList = [];
+        foreach ($regionalData as $city => $data) {
+            $avgCitySla = round($data['total_hours'] / $data['count'], 1);
+            $cityAccuracy = $data['decided'] > 0 ? round(($data['approved'] / $data['decided']) * 100) : 100;
+
+            // Business recommendation logic based on density and SLA
+            if ($data['count'] >= 5 && $avgCitySla > 48) {
+                $suggestion = 'Volume Padat & SLA Lambat (Rekomendasi: Tambah Surveyor)';
+                $badge = 'danger';
+            } elseif ($data['count'] >= 3) {
+                $suggestion = 'Volume Sedang (Rekomendasi: Pertahankan Staff Aktif)';
+                $badge = 'warning';
+            } else {
+                $suggestion = 'Volume Rendah (Rekomendasi: Cukup 1 Surveyor On-Call)';
+                $badge = 'success';
+            }
+
+            $regionsList[] = (object) [
+                'name' => $city,
+                'count' => $data['count'],
+                'percentage' => $completedCount > 0 ? round(($data['count'] / $completedCount) * 100) : 0,
+                'avg_sla' => $avgCitySla,
+                'accuracy' => $cityAccuracy,
+                'suggestion' => $suggestion,
+                'badge' => $badge
+            ];
+        }
+
+        // Sort regions by count descending
+        usort($regionsList, function($a, $b) {
+            return $b->count <=> $a->count;
+        });
+
+        // Monthly task completion count
+        $monthlyData = [];
+        for ($m = 1; $m <= 12; $m++) {
+            $monthName = date('F', mktime(0, 0, 0, $m, 1));
+            $indoMonths = [
+                'January' => 'Jan', 'February' => 'Feb', 'March' => 'Mar', 'April' => 'Apr',
+                'May' => 'Mei', 'June' => 'Jun', 'July' => 'Jul', 'August' => 'Agt',
+                'September' => 'Sep', 'October' => 'Okt', 'November' => 'Nov', 'December' => 'Des'
+            ];
+            $monthlyData[$indoMonths[$monthName]] = 0;
+        }
+
+        foreach ($completedAssignments as $item) {
+            if ($item->updated_at) {
+                $month = $item->updated_at->format('F');
+                $indoMonths = [
+                    'January' => 'Jan', 'February' => 'Feb', 'March' => 'Mar', 'April' => 'Apr',
+                    'May' => 'Mei', 'June' => 'Jun', 'July' => 'Jul', 'August' => 'Agt',
+                    'September' => 'Sep', 'October' => 'Okt', 'November' => 'Nov', 'December' => 'Des'
+                ];
+                $mName = $indoMonths[$month] ?? 'Jan';
+                $monthlyData[$mName]++;
+            }
+        }
+
+        $chartLabels = array_keys($monthlyData);
+        $chartValues = array_values($monthlyData);
+
+        return view('outsource.report_performance', compact(
+            'completedCount',
+            'totalEarnings',
+            'avgSla',
+            'accuracy',
+            'layakCount',
+            'tidakLayakCount',
+            'regionsList',
+            'chartLabels',
+            'chartValues'
+        ));
+    }
 }

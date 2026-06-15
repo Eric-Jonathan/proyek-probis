@@ -27,4 +27,9 @@ class People extends Authenticatable
     {
         return $this->belongsTo(Outsource::class, 'outsource_id', 'outsource_id');
     }
+
+    public function bookings()
+    {
+        return $this->hasMany(Booking::class, 'user_id', 'user_id');
+    }
 }

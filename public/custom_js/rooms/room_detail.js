@@ -141,8 +141,18 @@ $(document).ready(function() {
                             .addClass('alert-success');
                     } else {
                         if (loopDate.getTime() === startDate.getTime()) {
-                            startDate = null;
-                            $('#calendar-info-note').addClass('d-none'); // Sembunyikan jika batal
+                            if (minBookingDays > 1) {
+                                $('#calendar-info-note')
+                                    .html(`<i class="bi bi-exclamation-triangle-fill me-2"></i>Gagal memilih! Ruangan ini memiliki batas minimal sewa selama <strong>${minBookingDays} hari</strong>.`)
+                                    .removeClass('d-none alert-success')
+                                    .addClass('alert-warning');
+                                return;
+                            }
+                            endDate = loopDate;
+                            $('#calendar-info-note')
+                                .html(`<i class="bi bi-check-circle-fill me-2"></i>Rentang tanggal sewa berhasil ditentukan (1 Hari).`)
+                                .removeClass('d-none alert-warning')
+                                .addClass('alert-success');
                         } else if (loopDate < startDate) {
                             startDate = loopDate;
                             endDate = null;

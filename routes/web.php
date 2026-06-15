@@ -12,6 +12,7 @@ use App\Http\Controllers\OutsourceController;
 use App\Http\Controllers\RatingController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TopUpController;
+use App\Http\Controllers\WithdrawController;
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -66,6 +67,8 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/admin/fines', [AdminController::class, 'fines'])->name('admin.fines');
     Route::post('/admin/fines/{id}/approve', [AdminController::class, 'approveFine'])->name('admin.fines.approve');
     Route::post('/admin/fines/{id}/reject', [AdminController::class, 'rejectFine'])->name('admin.fines.reject');
+    Route::get('/admin/report/profitability', [AdminController::class, 'profitabilityReport'])->name('admin.report.profitability');
+    Route::get('/admin/report/retention', [AdminController::class, 'retentionReport'])->name('admin.report.retention');
 });
 
 Route::middleware(['auth', 'role:penyedia'])->group(function () {
@@ -101,6 +104,9 @@ Route::middleware(['auth', 'role:outsource'])->group(function () {
 
         // Halaman Tabel History
         Route::get('/history', [OutsourceController::class, 'history'])->name('history');
+
+        // Halaman Laporan Kinerja
+        Route::get('/report', [OutsourceController::class, 'performanceReport'])->name('report');
     });
 });
 
@@ -153,4 +159,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/topup', [TopUpController::class, 'show'])->name('topup.show');
     Route::post('/topup/process', [TopUpController::class, 'process'])->name('topup.process');
     Route::post('/topup/callback', [TopUpController::class, 'callback'])->name('topup.callback');
+
+    Route::get('/withdraw', [WithdrawController::class, 'show'])->name('withdraw.show');
+    Route::post('/withdraw/process', [WithdrawController::class, 'process'])->name('withdraw.process');
 });

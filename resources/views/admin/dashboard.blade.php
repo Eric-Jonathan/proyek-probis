@@ -397,6 +397,61 @@
         </div>
     </div>
 
+    {{-- SECTION 3: TINJAU PENGAJUAN DENDA PENDING --}}
+    <div class="section-divider">
+        <h5 class="fw-bold mb-1">Tinjau Pengajuan Denda (Pending Review)</h5>
+        <p class="small text-muted mb-0">Verifikasi laporan denda dari penyedia terhadap penyewa sebelum disetujui.</p>
+    </div>
+
+    {{-- Table 3: Pengajuan Denda Menunggu Persetujuan --}}
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-5">
+        <div class="card-header bg-white border-0 py-3">
+            <h6 class="fw-bold m-0 text-dark"><i class="bi bi-exclamation-triangle me-2 text-warning"></i>Pengajuan Denda Menunggu Persetujuan</h6>
+            <small class="text-muted text-xs">Klik "Verifikasi Denda" untuk memeriksa rincian denda di halaman manajemen denda.</small>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0 text-center">
+                <thead>
+                    <tr>
+                        <th class="text-start">ID Booking / Ruangan</th>
+                        <th>Penyedia (Pengaju)</th>
+                        <th>Penyewa (Terdenda)</th>
+                        <th>Nominal Denda</th>
+                        <th>Tanggal Diajukan</th>
+                        <th>Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($pendingFines as $fine)
+                    <tr>
+                        <td class="text-start">
+                            <div class="fw-bold text-dark" style="font-size: 0.92rem;">#{{ $fine->booking_id }}</div>
+                            <small class="text-muted">{{ $fine->booking->roomDetail->item_name ?? 'Ruangan' }}</small>
+                        </td>
+                        <td class="small">{{ $fine->booking->roomDetail->room->owner->username ?? 'Penyedia' }}</td>
+                        <td class="small">{{ $fine->booking->user->username ?? 'Penyewa' }}</td>
+                        <td class="fw-bold text-danger">Rp {{ number_format($fine->nominal_denda, 0, ',', '.') }}</td>
+                        <td class="small text-muted">{{ date('d M Y H:i', strtotime($fine->created_at)) }}</td>
+                        <td>
+                            <a href="{{ route('admin.fines') }}" class="btn btn-warning btn-sm rounded-pill px-4 fw-bold shadow-sm text-dark" style="font-size: 0.8rem;">
+                                <i class="bi bi-shield-fill-exclamation me-1"></i> Verifikasi Denda
+                            </a>
+                        </td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="6" class="text-center py-5 text-muted">
+                            <i class="bi bi-check-circle d-block fs-2 mb-2 text-success opacity-80"></i>
+                            <span class="fw-medium d-block text-dark mb-1">Semua Pengajuan Denda Selesai Ditinjau</span>
+                            <small class="text-muted d-block text-xs">Tidak ada laporan denda baru yang membutuhkan review Anda.</small>
+                        </td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+    </div>
+
 </div>
 @endsection
 

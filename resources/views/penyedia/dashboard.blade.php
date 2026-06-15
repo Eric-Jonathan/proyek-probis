@@ -45,7 +45,7 @@
     {{-- Header --}}
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h2 class="fw-bold mb-1 text-dark">Dashboard Mitra</h2>
+            <h2 class="fw-bold mb-1 text-dark">Dashboard</h2>
             <p class="text-secondary mb-0">Kelola dan pantau performa seluruh properti Anda dalam satu panel.</p>
         </div>
     </div>
@@ -271,6 +271,8 @@
                                         <span class="badge rounded-pill bg-success-subtle text-success px-2.5 py-1.5 fw-semibold" style="font-size: 0.75rem;">Lunas</span>
                                     @elseif($b->status == 3)
                                         <span class="badge rounded-pill bg-warning-subtle text-warning px-2.5 py-1.5 fw-semibold" style="font-size: 0.75rem;">Cicilan ({{ $b->installments_paid }}/3)</span>
+                                    @elseif($b->status == 4)
+                                        <span class="badge rounded-pill bg-secondary-subtle text-secondary px-2.5 py-1.5 fw-semibold" style="font-size: 0.75rem;">Menunggu Pembayaran</span>
                                     @else
                                         <span class="badge rounded-pill bg-secondary-subtle text-secondary px-2.5 py-1.5 fw-semibold" style="font-size: 0.75rem;">Status: {{ $b->status }}</span>
                                     @endif

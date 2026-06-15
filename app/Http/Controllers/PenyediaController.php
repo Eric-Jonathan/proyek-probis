@@ -31,30 +31,30 @@ class PenyediaController extends Controller
         $totalRooms = $roomsQuery->count();
         $activeRooms = \App\Models\Room::where('user_id', $penyediaId)->where('status', 2)->count();
         
-        $totalEarnings = \App\Models\Booking::whereIn('status', [1, 2])
+        $bookingsForEarnings = \App\Models\Booking::whereIn('status', [1, 2])
             ->whereHas('details.room', function ($q) use ($penyediaId) {
                 $q->where('user_id', $penyediaId);
-            })->sum('total');
+            })->get();
+            
+        $totalEarnings = $bookingsForEarnings->sum(function($b) {
+            $baseTotal = (int) round($b->total / 1.05);
+            return $baseTotal - (int) round($baseTotal * 0.05);
+        });
 
         // 4. Data untuk grafik pendapatan bulanan tahun ini (Jan-Des)
-        $monthlyEarnings = \App\Models\Booking::whereIn('status', [1, 2])
+        $monthlyEarningsRaw = \App\Models\Booking::whereIn('status', [1, 2])
             ->whereHas('roomDetail', function($q) use ($roomIds) {
                 $q->whereIn('item_id', $roomIds);
             })
-            ->select(
-                DB::raw('MONTH(start_date) as month'),
-                DB::raw('SUM(total) as total')
-            )
             ->whereYear('start_date', date('Y'))
-            ->groupBy('month')
-            ->orderBy('month')
-            ->get()
-            ->pluck('total', 'month')
-            ->toArray();
+            ->get();
 
         $chartData = array_fill(1, 12, 0);
-        foreach ($monthlyEarnings as $month => $total) {
-            $chartData[$month] = (int)$total;
+        foreach ($monthlyEarningsRaw as $b) {
+            $month = (int) date('n', strtotime($b->start_date));
+            $baseTotal = (int) round($b->total / 1.05);
+            $netRevenue = $baseTotal - (int) round($baseTotal * 0.05);
+            $chartData[$month] += $netRevenue;
         }
         $chartData = array_values($chartData);
 
@@ -110,7 +110,9 @@ class PenyediaController extends Controller
             foreach ($bookings as $b) {
                 $bYear = (int)date('Y', strtotime($b->start_date));
                 if (isset($yearsData[$bYear])) {
-                    $yearsData[$bYear] += $b->total;
+                    $baseTotal = (int) round($b->total / 1.05);
+                    $netRevenue = $baseTotal - (int) round($baseTotal * 0.05);
+                    $yearsData[$bYear] += $netRevenue;
                 }
             }
             $values = array_values($yearsData);
@@ -127,11 +129,13 @@ class PenyediaController extends Controller
             $weeks = [1 => 0, 2 => 0, 3 => 0, 4 => 0, 5 => 0];
             foreach ($bookings as $b) {
                 $day = (int)date('d', strtotime($b->start_date));
-                if ($day <= 7) $weeks[1] += $b->total;
-                elseif ($day <= 14) $weeks[2] += $b->total;
-                elseif ($day <= 21) $weeks[3] += $b->total;
-                elseif ($day <= 28) $weeks[4] += $b->total;
-                else $weeks[5] += $b->total;
+                $baseTotal = (int) round($b->total / 1.05);
+                $netRevenue = $baseTotal - (int) round($baseTotal * 0.05);
+                if ($day <= 7) $weeks[1] += $netRevenue;
+                elseif ($day <= 14) $weeks[2] += $netRevenue;
+                elseif ($day <= 21) $weeks[3] += $netRevenue;
+                elseif ($day <= 28) $weeks[4] += $netRevenue;
+                else $weeks[5] += $netRevenue;
             }
             $labels = ['Minggu 1', 'Minggu 2', 'Minggu 3', 'Minggu 4', 'Minggu 5'];
             $values = array_values($weeks);
@@ -171,30 +175,27 @@ class PenyediaController extends Controller
             foreach ($bookings as $b) {
                 $bDate = date('Y-m-d', strtotime($b->start_date));
                 if (isset($daysData[$bDate])) {
-                    $daysData[$bDate] += $b->total;
+                    $baseTotal = (int) round($b->total / 1.05);
+                    $netRevenue = $baseTotal - (int) round($baseTotal * 0.05);
+                    $daysData[$bDate] += $netRevenue;
                 }
             }
             $values = array_values($daysData);
 
         } else {
-            $monthlyEarnings = \App\Models\Booking::whereIn('status', [1, 2])
+            $monthlyEarningsRaw = \App\Models\Booking::whereIn('status', [1, 2])
                 ->whereHas('roomDetail', function($q) use ($roomIds) {
                     $q->whereIn('item_id', $roomIds);
                 })
-                ->select(
-                    DB::raw('MONTH(start_date) as month'),
-                    DB::raw('SUM(total) as total')
-                )
                 ->whereYear('start_date', date('Y'))
-                ->groupBy('month')
-                ->orderBy('month')
-                ->get()
-                ->pluck('total', 'month')
-                ->toArray();
+                ->get();
 
             $chartData = array_fill(1, 12, 0);
-            foreach ($monthlyEarnings as $month => $total) {
-                $chartData[$month] = (int)$total;
+            foreach ($monthlyEarningsRaw as $b) {
+                $month = (int)date('n', strtotime($b->start_date));
+                $baseTotal = (int) round($b->total / 1.05);
+                $netRevenue = $baseTotal - (int) round($baseTotal * 0.05);
+                $chartData[$month] += $netRevenue;
             }
             $labels = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
             $values = array_values($chartData);
@@ -254,7 +255,7 @@ class PenyediaController extends Controller
         $totalOrder   = (clone $statsQuery)->count();
         $pendingOrder = (clone $statsQuery)->where('status', 1)->count();
         $successOrder = (clone $statsQuery)->where('status', 2)->count();
-        $unpaidOrder  = (clone $statsQuery)->where('status', 3)->count();
+        $unpaidOrder  = (clone $statsQuery)->whereIn('status', [3, 4])->count();
         $cancelOrder  = (clone $statsQuery)->where('status', 0)->count();
 
         $bookings = $query->latest()->paginate(10)->withQueryString();

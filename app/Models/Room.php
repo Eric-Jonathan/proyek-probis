@@ -47,4 +47,9 @@ class Room extends Model
     {
         return $this->hasMany(Rating::class, 'item_id', 'room_id')->where('item_type', 1);
     }
+
+    public function owner()
+    {
+        return $this->belongsTo(People::class, 'user_id', 'user_id');
+    }
 }
