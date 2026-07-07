@@ -79,11 +79,18 @@
                     <h6 class="fw-bold small text-muted text-uppercase mb-3">Ringkasan Biaya</h6>
                     
                     @php 
-                        $basePrice = $room->price * ($room->jenis_harga === 'Pax' ? $room->min_order : $totalDays);
+                        $jenisHargaLower = strtolower(trim($room->jenis_harga));
+                        if ($jenisHargaLower === 'pax') {
+                            $basePrice = $room->price * $room->min_order;
+                        } elseif ($jenisHargaLower === 'pax_hari') {
+                            $basePrice = $room->price * $room->min_order * $totalDays;
+                        } else {
+                            $basePrice = $room->price * $totalDays;
+                        }
                     @endphp
 
-                    <div class="d-flex justify-content-between mb-2">
-                        <span>Sewa Ruangan Utama</span>
+                    <div class="d-flex justify-content-between mb-1">
+                        <span class="fw-semibold">Sewa Ruangan Utama</span>
                         <span class="fw-bold" id="render-base-price" 
                             data-jenis-harga="{{ $room->jenis_harga }}" 
                             data-raw-price="{{ $room->price }}"
@@ -93,6 +100,9 @@
                             data-deposit-percent="{{ $room->deposit_percent }}">
                             Rp {{ number_format($basePriceCalculated, 0, ',', '.') }}
                         </span>
+                    </div>
+                    <div class="mb-3">
+                        <small class="text-muted d-block" id="label-sewa-utama" style="font-size: 0.8rem; line-height: 1.4;"></small>
                     </div>
                     
                     <div id="render-extra-services-cost">
@@ -140,7 +150,7 @@
             <div class="card shadow-sm border-0 rounded-4 p-4">
                 <h4 class="fw-bold mb-4 border-bottom pb-2">Detail Formulir Acara</h4>
                 
-                <form action="{{ route('booking.store', $room->room_id) }}" method="POST" id="main-booking-form">
+                <form action="{{ route('booking.store', $room->room_id) }}" method="POST" id="main-booking-form" data-room-id="{{ $room->room_id }}">
                     @csrf
                     <input type="hidden" name="start_date" value="{{ $startDate->format('Y-m-d') }}">
                     <input type="hidden" name="end_date" value="{{ $endDate->format('Y-m-d') }}">
@@ -172,7 +182,7 @@
                         <div class="col-md-6">
                             <label class="form-label small fw-bold">Estimasi Jumlah Pax / Tamu Hadir <span class="text-danger">*</span></label>
                             <input type="number" name="total_capacity" id="input-capacity" class="form-control py-2" 
-                                   max="{{ $room->capacity }}" placeholder="Maks. {{ $room->capacity }} orang" value="{{ old('total_capacity') }}" required>
+                                   min="1" max="{{ $room->capacity }}" placeholder="Maks. {{ $room->capacity }} orang" value="{{ old('total_capacity', 1) }}" required>
                             <div class="form-text text-muted" style="font-size: 11px;">Tidak boleh melebihi kapasitas maksimal ruangan.</div>
                         </div>
 

@@ -260,8 +260,12 @@
                 </div>
                 <h2 class="fw-bold mb-1" style="font-size: 2.2rem; letter-spacing: -0.5px;">{{ $room->name }}</h2>
                 <div class="d-flex align-items-center gap-2 small">
-                    <span class="fw-bold">{{ number_format($averageRating, 1) }}<span class="text-muted fw-normal">/5</span></span>
-                    <a href="#section-review" class="text-decoration-none fw-semibold" style="color: var(--primary-blue);">({{ $totalReview }} Review)</a>
+                    @if($totalReview > 0)
+                        <span class="fw-bold">{{ number_format($averageRating, 1) }}<span class="text-muted fw-normal">/5</span></span>
+                        <a href="#section-review" class="text-decoration-none fw-semibold" style="color: var(--primary-blue);">({{ $totalReview }} Review)</a>
+                    @else
+                        <span class="text-muted fw-medium"><i class="bi bi-chat-left-text me-1"></i>Belum ada review</span>
+                    @endif
                     <span class="text-muted mx-1">•</span>
                     <span class="text-muted fw-medium"><i class="bi bi-geo-alt"></i> {{ $room->location }}</span>
                 </div>
@@ -279,6 +283,8 @@
                     <span class="text-dark fw-bold text-uppercase" style="font-size: 1.2rem; color: #222 !important;">
                         @if($room->jenis_harga === 'pax_jam')
                             / Pax / Jam
+                        @elseif($room->jenis_harga === 'pax_hari')
+                            / Pax / Hari
                         @else
                             / {{ ucfirst($room->jenis_harga) }}
                         @endif
@@ -290,6 +296,7 @@
                     @php
                         $labelMapping = [
                             'pax' => 'Pax',
+                            'pax_hari' => 'Pax',
                             'hari' => 'Hari',
                             'jam' => 'Jam',
                             'pax_jam' => 'Pax' // Untuk pax_jam, minimal ordernya dihitung per orang (pax)

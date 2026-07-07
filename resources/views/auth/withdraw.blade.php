@@ -112,8 +112,8 @@
                         <label for="amount" class="form-label">Nominal Penarikan (Rupiah)</label>
                         <div class="input-group input-group-lg">
                             <span class="input-group-text bg-light border-end-0 text-secondary fw-semibold">Rp</span>
-                            <input type="number" name="amount" id="amount" class="form-control border-start-0 fs-4 fw-bold text-dark" 
-                                   placeholder="Minimal 10.000" min="10000" max="{{ $user->saldo }}" value="{{ old('amount') }}" required>
+                            <input type="text" name="amount" id="amount" class="form-control border-start-0 fs-4 fw-bold text-dark thousand-separator" 
+                                   placeholder="Minimal 10.000" value="{{ old('amount') }}" required>
                         </div>
                         <div class="form-text text-muted small mt-1">
                             Jumlah penarikan minimal Rp 10.000 dan tidak boleh melebihi saldo aktif Anda.

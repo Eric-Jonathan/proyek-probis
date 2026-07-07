@@ -102,7 +102,7 @@
                         <label for="amount" class="form-label fw-bold small text-uppercase text-secondary" style="letter-spacing: 0.5px;">Masukkan Nominal (Rupiah)</label>
                         <div class="input-group input-group-lg">
                             <span class="input-group-text bg-light border-end-0 fw-bold text-muted" style="font-size: 1.25rem;">Rp</span>
-                            <input type="number" name="amount" id="amount" class="form-control border-start-0 fw-bold text-dark" style="font-size: 1.25rem;" min="10000" placeholder="Minimal Rp 10.000" required>
+                            <input type="text" name="amount" id="amount" class="form-control border-start-0 fw-bold text-dark thousand-separator" style="font-size: 1.25rem;" placeholder="Minimal Rp 10.000" required>
                         </div>
                         <div class="form-text text-muted mt-2">Minimal nominal pengisian adalah Rp 10.000.</div>
                     </div>
@@ -164,12 +164,14 @@
                 quickBtns.forEach(b => b.classList.remove('active'));
                 this.classList.add('active');
                 amountInput.value = this.dataset.value;
+                amountInput.dispatchEvent(new Event('input'));
             });
         });
 
         amountInput.addEventListener('input', function() {
+            let cleanVal = this.value.replace(/[^0-9]/g, '');
             quickBtns.forEach(btn => {
-                if (btn.dataset.value === this.value) {
+                if (btn.dataset.value === cleanVal) {
                     btn.classList.add('active');
                 } else {
                     btn.classList.remove('active');
@@ -181,9 +183,15 @@
         form.addEventListener('submit', function(e) {
             e.preventDefault();
             
-            const amount = amountInput.value;
-            if (amount < 10000) {
-                alert('Nominal minimal adalah Rp 10.000');
+            const amount = amountInput.value.replace(/[^0-9]/g, '');
+            if (parseInt(amount || 0) < 10000) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Nominal Kurang',
+                    text: 'Nominal minimal adalah Rp 10.000',
+                    confirmButtonColor: '#0064D2'
+                });
+                resetSubmitBtn();
                 return;
             }
 
@@ -202,8 +210,14 @@
             .then(data => {
                 if (data.isSimulated) {
                     // Simulation flow fallback
-                    alert("Simulasi Pembayaran Midtrans Sandbox Aktif!\nMenambah Rp " + new Intl.NumberFormat('id-ID').format(amount) + " ke Saldo Anda...");
-                    finalizeTopup(amount);
+                    Swal.fire({
+                        icon: 'info',
+                        title: 'Simulasi Pembayaran',
+                        text: "Simulasi Pembayaran Midtrans Sandbox Aktif! Menambah Rp " + new Intl.NumberFormat('id-ID').format(amount) + " ke Saldo Anda...",
+                        confirmButtonColor: '#0064D2'
+                    }).then(function() {
+                        finalizeTopup(amount);
+                    });
                 } else {
                     // Real Snap flow
                     window.snap.pay(data.token, {
@@ -211,15 +225,30 @@
                             finalizeTopup(amount);
                         },
                         onPending: function(result) {
-                            alert("Pembayaran tertunda. Silakan selesaikan pembayaran Anda.");
+                            Swal.fire({
+                                icon: 'warning',
+                                title: 'Pembayaran Pending',
+                                text: "Pembayaran tertunda. Silakan selesaikan pembayaran Anda.",
+                                confirmButtonColor: '#0064D2'
+                            });
                             resetSubmitBtn();
                         },
                         onError: function(result) {
-                            alert("Top up gagal! Silakan coba lagi.");
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Gagal',
+                                text: "Top up gagal! Silakan coba lagi.",
+                                confirmButtonColor: '#0064D2'
+                            });
                             resetSubmitBtn();
                         },
                         onClose: function() {
-                            alert("Anda menutup jendela pembayaran sebelum menyelesaikan transaksi.");
+                            Swal.fire({
+                                icon: 'info',
+                                title: 'Dibatalkan',
+                                text: "Anda menutup jendela pembayaran sebelum menyelesaikan transaksi.",
+                                confirmButtonColor: '#0064D2'
+                            });
                             resetSubmitBtn();
                         }
                     });
@@ -227,7 +256,12 @@
             })
             .catch(error => {
                 console.error('Error initiating topup:', error);
-                alert('Terjadi kesalahan saat menghubungi server.');
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Terjadi kesalahan saat menghubungi server.',
+                    confirmButtonColor: '#0064D2'
+                });
                 resetSubmitBtn();
             });
         });
@@ -244,16 +278,32 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    alert('Top up berhasil! Saldo Anda sekarang: Rp ' + new Intl.NumberFormat('id-ID').format(data.new_balance));
-                    window.location.href = '{{ route("profile.show") }}';
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Top Up Berhasil',
+                        text: 'Top up berhasil! Saldo Anda sekarang: Rp ' + new Intl.NumberFormat('id-ID').format(data.new_balance),
+                        confirmButtonColor: '#0064D2'
+                    }).then(function() {
+                        window.location.href = '{{ route("penyewa.dashboard") }}';
+                    });
                 } else {
-                    alert('Gagal memperbarui saldo di database.');
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Gagal',
+                        text: 'Gagal memperbarui saldo di database.',
+                        confirmButtonColor: '#0064D2'
+                    });
                     resetSubmitBtn();
                 }
             })
             .catch(error => {
                 console.error('Error finalizing topup:', error);
-                alert('Terjadi kesalahan saat memfinalisasi top up.');
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Terjadi kesalahan saat memfinalisasi top up.',
+                    confirmButtonColor: '#0064D2'
+                });
                 resetSubmitBtn();
             });
         }
@@ -262,6 +312,11 @@
             submitBtn.disabled = false;
             submitBtn.innerHTML = '<i class="bi bi-wallet2 fs-5"></i> Top Up Sekarang';
         }
+
+        // Reset status tombol loading saat pengguna menekan tombol back browser (BFCache reset)
+        window.addEventListener('pageshow', function(event) {
+            resetSubmitBtn();
+        });
     });
 </script>
 @endsection

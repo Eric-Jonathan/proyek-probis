@@ -5,8 +5,19 @@ $(document).ready(function() {
     let today = new Date();
     let startDate = null;
     let endDate = null;
-    let currentViewDate = new Date(today.getFullYear(), today.getMonth(), 1);
-    const dateOptions = { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' };
+    const roomId = $('#display-date').data('room-id');
+    const dateStorageKey = 'detail_booking_date_' + roomId;
+
+    // Hapus draf tanggal untuk ruangan lain agar bersih
+    if (roomId) {
+        for (let i = 0; i < sessionStorage.length; i++) {
+            let key = sessionStorage.key(i);
+            if (key && key.startsWith('detail_booking_date_') && key !== dateStorageKey) {
+                sessionStorage.removeItem(key);
+                i--;
+            }
+        }
+    }
 
     // Ambil data minimal hari sewa dari atribut HTML secara dinamis
     const minBookingDays = parseInt($('#display-date').data('min-day')) || 1;
@@ -15,6 +26,24 @@ $(document).ready(function() {
     const jenisHargaRaw = $('#display-date').data('jenis-harga') || '';
     const jenisHargaRuangan = String(jenisHargaRaw).trim().toLowerCase(); 
     const bookedDates = $('#display-date').data('booked-dates') || [];
+
+    // Muat tanggal ter-save jika ada
+    if (roomId) {
+        let savedDates = sessionStorage.getItem(dateStorageKey);
+        if (savedDates) {
+            try {
+                let parsed = JSON.parse(savedDates);
+                if (parsed.start) startDate = new Date(parsed.start);
+                if (parsed.end) endDate = new Date(parsed.end);
+            } catch (e) {
+                console.error("Gagal memuat tanggal ter-save:", e);
+            }
+        }
+    }
+
+    let defaultViewDate = (startDate) ? new Date(startDate.getFullYear(), startDate.getMonth(), 1) : new Date(today.getFullYear(), today.getMonth(), 1);
+    let currentViewDate = defaultViewDate;
+    const dateOptions = { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' };
 
     // =========================================================================
     // 1. LOGIKA RANGE KALENDER PENYEWAAN 
@@ -46,6 +75,20 @@ $(document).ready(function() {
             }
         } else {
             $('#display-date').text("Pilih tanggal penyewaan...");
+        }
+
+        saveDatesToSession();
+    }
+
+    function saveDatesToSession() {
+        if (!roomId) return;
+        if (startDate) {
+            sessionStorage.setItem(dateStorageKey, JSON.stringify({
+                start: startDate.toISOString(),
+                end: endDate ? endDate.toISOString() : null
+            }));
+        } else {
+            sessionStorage.removeItem(dateStorageKey);
         }
     }
 
@@ -228,6 +271,7 @@ $(document).ready(function() {
     $('#prevMonthBtn').on('click', function() { currentViewDate.setMonth(currentViewDate.getMonth() - 1); renderDoubleCalendar(); });
 
     renderDoubleCalendar();
+    updateDisplayDate();
 
     // =========================================================================
     // 2. LOGIKA GALERI MODAL POP-UP
@@ -281,7 +325,12 @@ $(document).ready(function() {
         const currentHref = $(this).attr('href');
         if (currentHref === '#' || currentHref === '') {
             e.preventDefault();
-            alert('Mohon tentukan tanggal sewa terlebih dahulu pada kalender!');
+            Swal.fire({
+                icon: 'warning',
+                title: 'Pilih Tanggal',
+                text: 'Mohon tentukan tanggal sewa terlebih dahulu pada kalender!',
+                confirmButtonColor: '#0064D2'
+            });
             $('#datePickerModal').modal('show');
         }
     });

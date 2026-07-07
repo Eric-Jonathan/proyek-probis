@@ -209,8 +209,8 @@
                                     <label class="form-label fw-bold small text-uppercase">Deposit (Rp) *</label>
                                     <div class="input-group">
                                         <span class="input-group-text">Rp</span>
-                                        <input type="number" name="deposit_nominal" class="form-control @error('deposit_nominal') is-invalid @enderror" 
-                                            value="{{ old('deposit_nominal', $room->deposit_nominal ?? 0) }}">
+                                         <input type="text" name="deposit_nominal" class="form-control thousand-separator @error('deposit_nominal') is-invalid @enderror" 
+                                             value="{{ old('deposit_nominal', $room->deposit_nominal ?? 0) }}">
                                     </div>
                                     @error('deposit_nominal') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                                 </div>
@@ -221,8 +221,8 @@
                                 <label class="form-label fw-bold small text-uppercase">Harga Sewa *</label>
                                 <div class="input-group">
                                     <span class="input-group-text">Rp</span>
-                                    <input type="number" name="price" class="form-control py-2 @error('price') is-invalid @enderror" 
-                                           value="{{ old('price', $room->price ?? 0) }}">
+                                     <input type="text" name="price" class="form-control py-2 thousand-separator @error('price') is-invalid @enderror" 
+                                            value="{{ old('price', $room->price ?? 0) }}">
                                 </div>
                                 @error('price') <small class="text-danger small">{{ $message }}</small> @enderror
                             </div>
@@ -231,10 +231,11 @@
                             <div class="col-md-4">
                                 <label class="form-label fw-bold small text-uppercase">Harga Per *</label>
                                 <select name="jenis_harga" id="jenis_harga" class="form-select bg-light py-2">
-                                    <option value="pax" selected>Pax</option>
-                                    <option value="jam">Jam</option>
-                                    <option value="hari">Hari</option>
-                                    <option value="pax_jam">Pax & Jam</option>
+                                    <option value="pax" {{ old('jenis_harga', $room->jenis_harga ?? '') === 'pax' ? 'selected' : '' }}>Pax</option>
+                                    <option value="pax_hari" {{ old('jenis_harga', $room->jenis_harga ?? '') === 'pax_hari' ? 'selected' : '' }}>Pax & Hari</option>
+                                    <option value="jam" {{ old('jenis_harga', $room->jenis_harga ?? '') === 'jam' ? 'selected' : '' }}>Jam</option>
+                                    <option value="hari" {{ old('jenis_harga', $room->jenis_harga ?? '') === 'hari' ? 'selected' : '' }}>Hari</option>
+                                    <option value="pax_jam" {{ old('jenis_harga', $room->jenis_harga ?? '') === 'pax_jam' ? 'selected' : '' }}>Pax & Jam</option>
                                 </select>
                             </div>
 

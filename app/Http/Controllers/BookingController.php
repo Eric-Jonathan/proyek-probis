@@ -98,21 +98,31 @@ class BookingController extends Controller
 
         switch ($room->jenis_harga) {
             case 'Pax':
-                // Rumus: Harga x Jumlah Minimal Pax (Awal)
+            case 'pax':
+                // Rumus: Harga x Jumlah Minimal Pax (Awal) - Tanpa Hari
                 $basePriceCalculated = $price * $minPax;
                 break;
 
+            case 'Pax_hari':
+            case 'pax_hari':
+                // Rumus: Harga x Jumlah Minimal Pax (Awal) x Jumlah Hari Sewa
+                $basePriceCalculated = $price * $minPax * $totalDays;
+                break;
+
             case 'Hari':
+            case 'hari':
                 // Rumus: Harga x Jumlah Hari Sewa
                 $basePriceCalculated = $price * $totalDays;
                 break;
 
             case 'Jam':
+            case 'jam':
                 // Rumus: Harga x Durasi Jam x Jumlah Hari Sewa
                 $basePriceCalculated = $price * $durationHours * $totalDays;
                 break;
 
             case 'Pax_jam':
+            case 'pax_jam':
                 // Skenario Barumu: Harga x Min Pax x Durasi Jam x Jumlah Hari Sewa
                 $basePriceCalculated = $price * $minPax * $durationHours * $totalDays;
                 break;
@@ -181,8 +191,11 @@ class BookingController extends Controller
         $totalDays = max(1, $carbonStart->diffInDays($carbonEnd) + 1);
 
         $totalPax = intval($request->total_capacity);
-        if ($totalPax < $room->min_order) {
-            $totalPax = $room->min_order;
+        $jenisHarga = strtolower(trim($room->jenis_harga));
+        $needsMinOrder = ($jenisHarga === 'pax' || $jenisHarga === 'pax_jam');
+
+        if ($needsMinOrder && $totalPax < $room->min_order) {
+            return back()->withInput()->with('error', 'Jumlah tamu kurang dari batas minimal order (' . $room->min_order . ' pax).');
         }
 
         // Durasi jam
@@ -202,6 +215,8 @@ class BookingController extends Controller
         $basePrice = 0;
         $jenisHarga = strtolower(trim($room->jenis_harga));
         if ($jenisHarga === 'pax') {
+            $basePrice = $room->price * $totalPax;
+        } elseif ($jenisHarga === 'pax_hari') {
             $basePrice = $room->price * $totalPax * $totalDays;
         } elseif ($jenisHarga === 'hari') {
             $basePrice = $room->price * $totalDays;

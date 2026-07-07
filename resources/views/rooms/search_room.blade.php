@@ -227,6 +227,7 @@
                                                 <option value="Hari" {{ request('jenis_harga') == 'Hari' ? 'selected' : '' }}>Harian</option>
                                                 <option value="Jam" {{ request('jenis_harga') == 'Jam' ? 'selected' : '' }}>Per Jam</option>
                                                 <option value="Pax" {{ request('jenis_harga') == 'Pax' ? 'selected' : '' }}>Per Pax</option>
+                                                <option value="Pax_hari" {{ request('jenis_harga') == 'Pax_hari' ? 'selected' : '' }}>Pax & Hari</option>
                                                 <option value="Pax_jam" {{ request('jenis_harga') == 'Pax_jam' ? 'selected' : '' }}>Pax & Jam</option>
                                             </select>
                                             <i class="bi bi-chevron-down text-secondary position-absolute end-0 me-3" style="pointer-events: none;"></i>
@@ -240,10 +241,10 @@
                                         </label>
                                         <div class="filter-input-group d-flex align-items-center">
                                             <span class="text-muted small me-1">Rp</span>
-                                            <input type="number" name="min_price" class="filter-input-field text-end px-1" placeholder="Min" value="{{ request('min_price') }}">
+                                            <input type="text" name="min_price" class="filter-input-field text-end px-1 thousand-separator" placeholder="Min" value="{{ request('min_price') }}">
                                             <span class="mx-2 text-muted fw-light">-</span>
                                             <span class="text-muted small me-1">Rp</span>
-                                            <input type="number" name="max_price" class="filter-input-field text-end px-1" placeholder="Max" value="{{ request('max_price') }}">
+                                            <input type="text" name="max_price" class="filter-input-field text-end px-1 thousand-separator" placeholder="Max" value="{{ request('max_price') }}">
                                         </div>
                                     </div>
 
@@ -324,8 +325,12 @@
                                 </div>
                                 <div class="col-4 text-end">
                                     <div class="fw-bold fs-6">
-                                        {{ number_format($room->average_rating, 1) }}/5 
-                                        <span class="fw-normal text-muted small" style="font-size: 0.75rem;">({{ $room->rating_count }})</span>
+                                        @if($room->rating_count > 0)
+                                            {{ number_format($room->average_rating, 1) }}/5 
+                                            <span class="fw-normal text-muted small" style="font-size: 0.75rem;">({{ $room->rating_count }})</span>
+                                        @else
+                                            <span class="fw-normal text-muted small" style="font-size: 0.8rem;">Belum ada review</span>
+                                        @endif
                                     </div>
                                 </div>
                             </div>

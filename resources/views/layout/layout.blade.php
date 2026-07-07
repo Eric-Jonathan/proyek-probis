@@ -144,6 +144,48 @@
     {{-- Quill JS --}}
     <script src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js"></script>
 
+    {{-- SweetAlert2 --}}
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    {{-- Global Thousand Separator Script --}}
+    <script>
+        $(document).ready(function() {
+            function formatThousand(val) {
+                if (val === null || val === undefined) return '';
+                let clean = val.toString().replace(/[^0-9]/g, '');
+                return clean.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+            }
+
+            // Format initial values on page load
+            $('.thousand-separator').each(function() {
+                let val = $(this).val();
+                if (val !== undefined && val !== '') {
+                    $(this).val(formatThousand(val));
+                }
+            });
+
+            // Format real-time on input
+            $(document).on('input', '.thousand-separator', function() {
+                let selectionStart = this.selectionStart;
+                let originalLen = this.value.length;
+                
+                let formatted = formatThousand(this.value);
+                this.value = formatted;
+                
+                let newLen = formatted.length;
+                this.setSelectionRange(selectionStart + (newLen - originalLen), selectionStart + (newLen - originalLen));
+            });
+
+            // Strip separators before form submit
+            $(document).on('submit', 'form', function() {
+                $(this).find('.thousand-separator').each(function() {
+                    let rawVal = $(this).val().replace(/[^0-9]/g, '');
+                    $(this).val(rawVal);
+                });
+            });
+        });
+    </script>
+
     @yield('custom_js')
 </body>
 </html>
