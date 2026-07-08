@@ -58,7 +58,7 @@
     }
 
     body {
-        background: #f8f9fa;
+        background-color: var(--bs-tertiary-bg);
     }
 
     .transaction-header {
@@ -69,9 +69,9 @@
     }
 
     .transaction-card {
-        border: 1px solid #eef2f7;
+        border: 1px solid var(--bs-border-color);
         border-radius: 18px;
-        background: white;
+        background-color: var(--bs-card-bg);
         transition: 0.25s ease;
     }
 
@@ -86,7 +86,7 @@
 
     .value-text {
         font-weight: 600;
-        color: var(--text-dark);
+        color: var(--bs-body-color);
         font-size: 1rem;
     }
 
@@ -144,7 +144,7 @@
 <div class="container py-5">
     {{-- Back Button --}}
     <div class="mb-4">
-        <a href="{{ route('bookings.history') }}" class="btn btn-light rounded-pill border px-3 fw-medium">
+        <a href="{{ route('bookings.history') }}" class="btn btn-outline-secondary rounded-pill px-3 fw-medium">
             <i class="bi bi-chevron-left me-1"></i> Kembali ke Riwayat Booking
         </a>
     </div>
@@ -248,7 +248,7 @@
                 </div>
 
                 {{-- INFORMASI PENGELOLA RUANGAN --}}
-                <div class="mt-4 p-3 rounded-4 bg-light border d-flex align-items-center justify-content-between flex-wrap gap-3" style="background-color: #ebf5ff !important; border-color: #bfdbfe !important;">
+                <div class="mt-4 p-3 rounded-4 border d-flex align-items-center justify-content-between flex-wrap gap-3" style="background-color: rgba(13, 110, 253, 0.1) !important; border-color: rgba(13, 110, 253, 0.2) !important;">
                     <div class="d-flex align-items-center gap-3">
                         <div class="rounded-circle bg-primary text-white p-2 d-flex justify-content-center align-items-center" style="width: 45px; height: 45px;">
                             <i class="bi bi-person-workspace fs-4"></i>
@@ -349,7 +349,7 @@
                                     Rp {{ number_format($nextPayment, 0, ',', '.') }}
                                 </div>
                                 @if($booking->installment_due_date)
-                                    <div class="alert alert-warning border-0 p-2 text-center rounded-3 mb-3" style="background-color: #fffbeb; color: #b45309; font-size: 0.85rem;">
+                                    <div class="alert alert-warning border-0 p-2 text-center rounded-3 mb-3" style="font-size: 0.85rem;">
                                         <i class="bi bi-calendar-event me-1"></i>
                                         <strong>Jatuh Tempo:</strong> {{ \Carbon\Carbon::parse($booking->installment_due_date)->translatedFormat('d F Y') }}
                                     </div>
@@ -392,7 +392,7 @@
                                 Rp {{ number_format($nextPayment, 0, ',', '.') }}
                             </div>
                             @if($booking->installment_due_date)
-                                <div class="alert alert-warning border-0 p-2 text-center rounded-3 mb-3" style="background-color: #fffbeb; color: #b45309; font-size: 0.85rem;">
+                                <div class="alert alert-warning border-0 p-2 text-center rounded-3 mb-3" style="font-size: 0.85rem;">
                                     <i class="bi bi-calendar-event me-1"></i>
                                     <strong>Jatuh Tempo:</strong> {{ \Carbon\Carbon::parse($booking->installment_due_date)->translatedFormat('d F Y') }}
                                 </div>
@@ -406,7 +406,7 @@
 
                         {{-- Distribution card removed per client feedback --}}
 
-                        <div class="p-3 rounded-3 mb-4 text-center border" style="background-color: #fff;">
+                        <div class="p-3 rounded-3 mb-4 text-center border" style="background-color: var(--bs-tertiary-bg); border-color: var(--bs-border-color) !important;">
                             <div class="small text-muted mb-1"><i class="bi bi-wallet2 me-1"></i> Saldo Tempat-In Anda</div>
                             <div class="fw-bold text-dark fs-5">Rp {{ number_format(Auth::user()->saldo, 0, ',', '.') }}</div>
                         </div>

@@ -180,7 +180,7 @@ class AdminController extends Controller
         }
 
         // Ambil data dengan pagination
-        $partners = $query->paginate(10);
+        $partners = $query->get();
 
         // Menghitung data statistik box atas secara real-time
         $totalMitra    = Outsource::where('status', '>=', 0)->count();

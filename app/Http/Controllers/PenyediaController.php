@@ -258,7 +258,7 @@ class PenyediaController extends Controller
         $unpaidOrder  = (clone $statsQuery)->whereIn('status', [3, 4])->count();
         $cancelOrder  = (clone $statsQuery)->where('status', 0)->count();
 
-        $bookings = $query->latest()->paginate(10)->withQueryString();
+        $bookings = $query->latest()->get();
 
         return view('penyedia.list_booking', compact(
             'bookings', 'totalOrder', 'pendingOrder', 'successOrder', 'unpaidOrder', 'cancelOrder'

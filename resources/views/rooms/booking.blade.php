@@ -291,6 +291,8 @@
     </div>
 </div>
 
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+@endsection
+
+@section('custom_js')
 <script src="{{ asset('custom_js/rooms/booking.js') }}"></script>
 @endsection

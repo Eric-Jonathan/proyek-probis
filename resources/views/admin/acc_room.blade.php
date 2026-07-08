@@ -1,9 +1,10 @@
 @extends('layout.layout')
 
 @section('custom_css')
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css">
     <style>
         /* Base Styling */
-        body { background-color: #f8f9fa; color: #334155; font-family: 'Inter', sans-serif; }
+        body { background-color: var(--bs-tertiary-bg); color: var(--bs-body-color); font-family: 'Inter', sans-serif; }
         .rounded-4 { border-radius: 1rem !important; }
         
         /* Subtle Badge Colors */
@@ -67,8 +68,8 @@
     </div>
 
     <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-5">
-        <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0 text-center">
+        <div class="table-responsive p-3">
+            <table class="table table-hover align-middle mb-0 text-center" id="tablePending" style="width: 100%;">
                 <thead class="text-secondary text-uppercase" style="font-size: 0.7rem;">
                     <tr>
                         <th class="ps-4 text-start">Informasi Unit</th>
@@ -114,8 +115,8 @@
     </div>
 
     <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
-        <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0 text-center">
+        <div class="table-responsive p-3">
+            <table class="table table-hover align-middle mb-0 text-center" id="tableProcessed" style="width: 100%;">
                 <thead class="table-light text-secondary text-uppercase" style="font-size: 0.7rem;">
                     <tr>
                         <th class="ps-4 text-start">Informasi Unit</th>
@@ -154,4 +155,45 @@
     </div>
 
 </div>
+@endsection
+
+@section('custom_js')
+    <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('#tablePending').DataTable({
+                responsive: true,
+                language: {
+                    search: "_INPUT_",
+                    searchPlaceholder: "Cari pengajuan...",
+                    lengthMenu: "Tampilkan _MENU_ data",
+                    info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ entri",
+                    paginate: {
+                        previous: "<i class='bi bi-chevron-left'></i>",
+                        next: "<i class='bi bi-chevron-right'></i>"
+                    }
+                },
+                columnDefs: [
+                    { orderable: false, targets: [4] } // Matikan sorting kolom aksi
+                ]
+            });
+            $('#tableProcessed').DataTable({
+                responsive: true,
+                language: {
+                    search: "_INPUT_",
+                    searchPlaceholder: "Cari riwayat...",
+                    lengthMenu: "Tampilkan _MENU_ data",
+                    info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ entri",
+                    paginate: {
+                        previous: "<i class='bi bi-chevron-left'></i>",
+                        next: "<i class='bi bi-chevron-right'></i>"
+                    }
+                },
+                columnDefs: [
+                    { orderable: false, targets: [3] } // Matikan sorting kolom aksi
+                ]
+            });
+        });
+    </script>
 @endsection

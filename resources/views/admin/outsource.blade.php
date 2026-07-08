@@ -1,11 +1,12 @@
 @extends('layout.layout')
 
 @section('custom_css')
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css">
     <style>
         /* Base Styling - Konsisten dengan sistem sebelumnya */
         body {
-            background-color: #f8f9fa;
-            color: #334155;
+            background-color: var(--bs-tertiary-bg);
+            color: var(--bs-body-color);
             font-family: 'Inter', -apple-system, sans-serif;
         }
 
@@ -114,28 +115,15 @@
             <!-- Filters & Search Header -->
             <div class="card-header bg-white border-0 py-4 px-4">
                 <div class="row align-items-center g-3">
-                    <div class="col-12 col-lg-4">
+                    <div class="col-12">
                         <h5 class="fw-bold mb-0">List Vendor <span class="badge bg-light text-dark ms-2 fw-normal fs-6 px-3">{{ $totalMitra }} Perusahaan</span></h5>
-                    </div>
-                    <div class="col-12 col-lg-8">
-                        <form method="GET" action="{{ route('admin.outsource') }}" class="row g-2 justify-content-lg-end">
-                            <div class="col-12 col-md-9 col-xl-10">
-                                <div class="input-group input-group-search">
-                                    <span class="input-group-text bg-light border-0"><i class="bi bi-search text-muted small"></i></span>
-                                    <input type="text" name="search" value="{{ request('search') }}" class="form-control bg-light border-0 small" placeholder="Cari nama vendor atau layanan...">
-                                </div>
-                            </div>
-                            <div class="col-6 col-md-3 col-xl-2">
-                                <button type="submit" class="btn btn-dark w-100 fw-medium shadow-sm">Filter</button>
-                            </div>
-                        </form>
                     </div>
                 </div>
             </div>
 
             <!-- Table Body -->
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0" style="min-width: 950px;">
+            <div class="table-responsive p-3">
+                <table class="table table-hover align-middle mb-0" id="tableOutsource" style="width: 100%; min-width: 950px;">
                     <thead class="text-secondary">
                         <tr>
                             <th class="ps-4 py-3">Perusahaan / Vendor</th>
@@ -216,22 +204,7 @@
                 </table>
             </div>
 
-            <!-- Footer Pagination -->
-            <div class="card-footer bg-white border-0 py-4 px-4 d-flex flex-column flex-md-row justify-content-between align-items-center">
-                @if ($partners->total() > 0)
-                    <span class="text-muted small mb-3 mb-md-0">
-                        Menampilkan {{ $partners->firstItem() }} sampai {{ $partners->lastItem() }} dari {{ $partners->total() }} mitra
-                    </span>
-                @else
-                    <span class="text-muted small mb-3 mb-md-0">
-                        Menampilkan 0 mitra
-                    </span>
-                @endif
 
-                <nav class="laravel-pagination">
-                    {{ $partners->appends(request()->query())->links('pagination::bootstrap-5') }}
-                </nav>
-            </div>
         </div>
     </div>
 
@@ -298,5 +271,27 @@
 @endsection
 
 @section('custom_js')
+    <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
     <script src="{{ asset('custom_js/admin/outsource.js') }}"></script>
+    <script>
+        $(document).ready(function() {
+            $('#tableOutsource').DataTable({
+                responsive: true,
+                language: {
+                    search: "_INPUT_",
+                    searchPlaceholder: "Cari vendor...",
+                    lengthMenu: "Tampilkan _MENU_ data",
+                    info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ entri",
+                    paginate: {
+                        previous: "<i class='bi bi-chevron-left'></i>",
+                        next: "<i class='bi bi-chevron-right'></i>"
+                    }
+                },
+                columnDefs: [
+                    { orderable: false, targets: [4] } // Matikan sorting kolom aksi
+                ]
+            });
+        });
+    </script>
 @endsection

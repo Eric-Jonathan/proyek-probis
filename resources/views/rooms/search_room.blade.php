@@ -5,10 +5,11 @@
         .hotel-card {
             border-radius: 12px;
             overflow: hidden;
-            border: 1px solid #e0e0e0;
+            border: 1px solid var(--bs-border-color);
             margin-bottom: 20px;
             transition: box-shadow 0.3s;
             cursor: pointer;
+            background-color: var(--bs-card-bg);
         }
         .hotel-card:hover {
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
@@ -16,18 +17,18 @@
         .badge-filter {
             border-radius: 20px;
             padding: 8px 15px;
-            border: 1px solid #dee2e6;
-            background: white;
-            color: #495057;
+            border: 1px solid var(--bs-border-color);
+            background-color: var(--bs-card-bg);
+            color: var(--bs-body-color);
             font-size: 0.9rem;
             cursor: pointer;
             display: inline-block;
             margin: 2px;
         }
         .badge-filter.active {
-            background-color: #e7f1ff;
-            border-color: #0d6efd;
-            color: #0d6efd;
+            background-color: var(--bs-primary-bg-subtle);
+            border-color: var(--bs-primary);
+            color: var(--bs-primary);
         }
         .price-text {
             color: #ff5e1f;
@@ -36,7 +37,7 @@
         }
         .tax-text {
             font-size: 0.75rem;
-            color: #6c757d;
+            color: var(--bs-secondary-color);
         }
         .hotel-img {
             width: 100%;
@@ -44,16 +45,16 @@
             object-fit: cover;
         }
         .sidebar-section {
-            border: 1px solid #e0e0e0;
+            border: 1px solid var(--bs-border-color);
             border-radius: 10px;
             padding: 15px;
             margin-bottom: 15px;
         }
         .search-card {
-            background: #ffffff;
+            background-color: var(--bs-card-bg);
             border-radius: 16px;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-            border: 1px solid #eef2f5;
+            border: 1px solid var(--bs-border-color);
             padding: 24px;
             margin-bottom: 25px;
             transition: all 0.3s ease;
@@ -62,7 +63,7 @@
         .filter-label {
             font-size: 0.75rem;
             font-weight: 700;
-            color: #5c677d;
+            color: var(--bs-secondary-color);
             text-transform: uppercase;
             letter-spacing: 0.5px;
             margin-bottom: 8px;
@@ -71,8 +72,8 @@
         }
 
         .filter-input-group {
-            background-color: #f8f9fa;
-            border: 1px solid #dee2e6;
+            background-color: var(--bs-tertiary-bg);
+            border: 1px solid var(--bs-border-color);
             border-radius: 10px;
             padding: 8px 14px;
             display: flex;
@@ -84,7 +85,7 @@
         .filter-input-group:focus-within {
             border-color: #0064D2;
             box-shadow: 0 0 0 3px rgba(0, 100, 210, 0.15);
-            background-color: #fff;
+            background-color: var(--bs-body-bg);
         }
 
         .filter-input-field {
@@ -94,7 +95,7 @@
             width: 100%;
             font-size: 0.9rem;
             font-weight: 500;
-            color: #212529;
+            color: var(--bs-body-color);
             padding: 0;
         }
 
@@ -114,7 +115,7 @@
             width: 100%;
             font-size: 0.9rem;
             font-weight: 500;
-            color: #212529;
+            color: var(--bs-body-color);
             padding: 0;
             cursor: pointer;
             -webkit-appearance: none;

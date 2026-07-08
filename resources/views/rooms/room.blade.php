@@ -1,5 +1,48 @@
 @extends('layout.layout')
 
+@section('custom_css')
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css">
+<style>
+    /* ==========================================================================
+       CSS OVERRIDE PAGINATION DATATABLES (SERAGAM DAN BERJARAK)
+       ========================================================================== */
+    .dataTables_wrapper .dataTables_paginate .paginate_button {
+        padding: 0 !important;
+        margin: 0 !important;
+        border: none !important;
+        background: none !important;
+        display: inline !important;
+    }
+    .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+        border: none !important;
+        background: none !important;
+    }
+    .dataTables_wrapper .dataTables_paginate .pagination .page-item {
+        width: 40px;
+        height: 40px;
+        margin: 0 4px !important;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .dataTables_wrapper .dataTables_paginate .pagination .page-item .page-link {
+        width: 100% !important;
+        height: 100% !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border-radius: 12px !important;
+        box-sizing: border-box !important;
+    }
+    .dataTables_wrapper .dataTables_paginate .pagination {
+        border-radius: 0 !important;
+        box-shadow: none !important;
+    }
+</style>
+@endsection
+
 @section('content')
 <div class="container-fluid p-4 pt-3">
     {{-- Header: Menggunakan flex-wrap agar tidak tembus saat layar kecil/zoom --}}
@@ -43,9 +86,9 @@
 
     {{-- Table Card --}}
     <div class="card border-0 shadow-sm overflow-hidden">
-        <div class="table-responsive">
+        <div class="table-responsive p-3">
             <table class="table align-middle mb-0" id="tableRoom" style="width: 100%;">
-                <thead class="table-light text-nowrap">
+                <thead class="table-light text-nowrap text-secondary text-uppercase" style="font-size: 0.75rem; letter-spacing: 0.5px;">
                     <tr>
                         <th class="ps-4" width="50">#</th>
                         <th style="min-width: 250px;">Informasi Ruangan</th>
@@ -59,14 +102,13 @@
                 <tbody>
                     @forelse($rooms as $i => $room)
                     <tr>
-                        <td class="ps-4 text-muted">{{ $rooms->firstItem() + $i }}</td>
+                        <td class="ps-4 text-muted">{{ $i + 1 }}</td>
                         <td>
                             <div class="fw-bold text-dark">{{ $room->name }}</div>
                             <small class="text-muted">{{ Str::limit($room->description, 45) }}</small>
                         </td>
                         <td class="pe-3">
-                            {{-- Mengambil 2 data depan koma --}}
-                            <span class="badge bg-light text-dark border fw-normal" style="white-space: normal; text-align: left;">
+                            <span class="badge bg-body-secondary text-body border fw-normal" style="white-space: normal; text-align: left; border-color: var(--bs-border-color) !important;">
                                 {{ implode(', ', array_slice(explode(',', $room->location), 0, 1)) }}
                             </span>
                         </td>
@@ -93,17 +135,20 @@
                         <td class="pe-4">
                             <div class="d-flex justify-content-center gap-2">
                                 <a href="{{route('rooms.show', $room->room_id)}}" 
-                                    class="btn btn-sm btn-light text-primary rounded-circle shadow-sm" title="Lihat">
+                                    class="btn btn-sm btn-outline-primary rounded-circle d-inline-flex align-items-center justify-content-center" 
+                                    style="width: 32px; height: 32px;" title="Lihat">
                                     <i class="bi bi-eye"></i>
                                 </a>
                                 <a href="{{ route('rooms.edit', $room->room_id) }}" 
-                                   class="btn btn-sm btn-light text-warning rounded-circle shadow-sm" title="Edit">
+                                   class="btn btn-sm btn-outline-warning rounded-circle d-inline-flex align-items-center justify-content-center" 
+                                   style="width: 32px; height: 32px;" title="Edit">
                                     <i class="bi bi-pencil"></i>
                                 </a>
                                 <form action="{{ route('rooms.destroy', $room->room_id) }}" method="POST" class="d-inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus ruangan ini?')">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="btn btn-sm btn-light text-danger rounded-circle shadow-sm" title="Hapus">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger rounded-circle d-inline-flex align-items-center justify-content-center" 
+                                            style="width: 32px; height: 32px;" title="Hapus">
                                         <i class="bi bi-trash"></i>
                                     </button>
                                 </form>
@@ -120,22 +165,36 @@
                 </tbody>
             </table>
         </div>
-
-        {{-- Footer Tabel --}}
-        <div class="card-footer bg-white border-0 py-3">
-            <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
-                <p class="text-muted small mb-0">
-                    Menampilkan <b>{{ $rooms->firstItem() }}</b> ke <b>{{ $rooms->lastItem() }}</b> dari <b>{{ $rooms->total() }}</b> unit
-                </p>
-                <div class="pagination-responsive">
-                    {{ $rooms->links('pagination::bootstrap-5') }}
-                </div>
-            </div>
-        </div>
     </div>
 </div>
 @endsection
 
 @section('custom_js')
+    <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
     <script src="{{ asset('custom_js/rooms/room.js') }}"></script>
+    <script>
+        $(document).ready(function() {
+            $('#tableRoom').DataTable({
+                responsive: true,
+                // Mengatur DOM grid layout Bootstrap 5
+                dom: "<'row'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6'f>>" +
+                     "<'row'<'col-sm-12'tr>>" +
+                     "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
+                language: {
+                    search: "_INPUT_",
+                    searchPlaceholder: "Cari ruangan...",
+                    lengthMenu: "Tampilkan _MENU_ data",
+                    info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ entri",
+                    paginate: {
+                        previous: "‹",
+                        next: "›"
+                    }
+                },
+                columnDefs: [
+                    { orderable: false, targets: [6] }
+                ]
+            });
+        });
+    </script>
 @endsection

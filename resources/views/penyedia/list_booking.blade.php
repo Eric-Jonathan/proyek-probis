@@ -1,5 +1,66 @@
 @extends('layout.layout')
 
+@section('custom_css')
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css">
+<style>
+    /* ==========================================================================
+       STYLE TABEL UTAMA (SERAGAM DENGAN HALAMAN LAIN)
+       ========================================================================== */
+    table.dataTable thead th {
+        background-color: var(--bs-tertiary-bg) !important;
+        border-bottom: 1px solid var(--bs-border-color) !important;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: var(--bs-body-color);
+        padding: 1.25rem 1rem !important;
+    }
+    .table tbody td { 
+        padding: 1.25rem 1rem !important; 
+        vertical-align: middle; 
+        font-size: 0.9rem; 
+    }
+
+    /* ==========================================================================
+       CSS OVERRIDE PAGINATION DATATABLES (SERAGAM DAN BERJARAK)
+       ========================================================================== */
+    .dataTables_wrapper .dataTables_paginate .paginate_button {
+        padding: 0 !important;
+        margin: 0 !important;
+        border: none !important;
+        background: none !important;
+        display: inline !important;
+    }
+    .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+        border: none !important;
+        background: none !important;
+    }
+    .dataTables_wrapper .dataTables_paginate .pagination .page-item {
+        width: 40px;
+        height: 40px;
+        margin: 0 4px !important;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .dataTables_wrapper .dataTables_paginate .pagination .page-item .page-link {
+        width: 100% !important;
+        height: 100% !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border-radius: 12px !important;
+        box-sizing: border-box !important;
+    }
+    .dataTables_wrapper .dataTables_paginate .pagination {
+        border-radius: 0 !important;
+        box-shadow: none !important;
+    }
+</style>
+@endsection
+
 @section('content')
     @if(session('success'))
         <div class="alert alert-success alert-dismissible fade show border-0 rounded-4 shadow-sm mb-4" role="alert">
@@ -23,7 +84,6 @@
     </div>
 </div>
 
-<!-- Statistik Cards -->
 <div class="row g-3 mb-4 text-center">
     <div class="col-md">
         <div class="card shadow-sm border-0 p-3">
@@ -57,41 +117,14 @@
     </div>
 </div>
 
-<!-- Daftar Pesanan -->
 <div class="card shadow-sm border-0 rounded-3">
     <div class="card-header bg-white py-3 border-0">
         <h5 class="fw-bold mb-0"><i class="bi bi-list-ul me-2"></i>Daftar Riwayat Booking</h5>
     </div>
     <div class="card-body">
-        <!-- Search & Filter Area -->
-        <form action="{{ route('bookings.index') }}" method="GET">
-            <div class="row g-2 mb-4">
-                <div class="col-md-7">
-                    <input type="text" name="search" class="form-control" 
-                           placeholder="Cari nama penyewa atau ID pesanan..." 
-                           value="{{ request('search') }}">
-                </div>
-                <div class="col-md-3">
-                    <select name="status" class="form-select">
-                        <option value="">Semua Status</option>
-                        <option value="3" {{ request('status') == '3' ? 'selected' : '' }}>Cicilan (Belum Lunas)</option>
-                        <option value="1" {{ request('status') == '1' ? 'selected' : '' }}>Booked</option>
-                        <option value="2" {{ request('status') == '2' ? 'selected' : '' }}>Occupied</option>
-                        <option value="0" {{ request('status') == '0' ? 'selected' : '' }}>Canceled</option>
-                    </select>
-                </div>
-                <div class="col-md-2 d-flex gap-2">
-                    <button type="submit" class="btn btn-primary w-100 fw-bold">Search</button>
-                    <a href="{{ route('bookings.index') }}" class="btn btn-outline-secondary">
-                        Clear
-                    </a>
-                </div>
-            </div>
-        </form>
-
         <div class="table-responsive">
-            <table class="table align-middle">
-                <thead class="table-light">
+            <table class="table align-middle" id="tableBookings" style="width: 100%;">
+                <thead>
                     <tr>
                         <th class="ps-3">Informasi Pesanan</th>
                         <th>Metode Bayar</th>
@@ -104,10 +137,8 @@
                 <tbody>
                     @forelse($bookings as $item)
                     <tr>
-                        <td class="ps-3 py-3">
-                            <!-- Relasi ke model People/User -->
+                        <td class="ps-3">
                             <div class="fw-bold text-dark">{{ $item->user->username ?? 'Guest' }}</div>
-                            <!-- Relasi ke model BookingDetail -> Room -->
                             <small class="text-muted"><i class="bi bi-building"></i> {{ $item->details->room->name ?? 'Deleted Room' }}</small>
                         </td>
                         <td>
@@ -137,14 +168,12 @@
                         </td>
                         <td class="text-center">
                             <div class="d-flex justify-content-center gap-2">
-                                <!-- Tombol Detail (Aktif untuk semua status) -->
                                 <a href="{{ route('penyedia.detail_history', $item->booking_id) }}" 
                                    class="btn btn-outline-primary btn-sm rounded-pill px-3 fw-bold d-flex align-items-center shadow-sm" 
                                    style="font-size: 0.75rem;">
                                     <i class="bi bi-eye me-1"></i> Detail
                                 </a>
                                 
-                                <!-- Tombol Denda (Aktif untuk Status 2, disembunyikan untuk Status 3/Belum Bayar) -->
                                 @if($item->status != 3 && $item->status != 0 && $item->status != 1)
                                     <a href="{{ $item->status == 2 ? route('bookings.denda', $item->booking_id) : 'javascript:void(0)' }}" 
                                        class="btn {{ $item->status == 2 ? 'btn-danger' : 'btn-light text-muted border' }} btn-sm rounded-pill px-3 fw-bold d-flex align-items-center shadow-sm" 
@@ -164,14 +193,35 @@
                 </tbody>
             </table>
         </div>
-
-        <!-- Pagination -->
-        <div class="mt-4 d-flex justify-content-between align-items-center">
-            <p class="small text-muted mb-0">Menampilkan {{ $bookings->firstItem() ?? 0 }} - {{ $bookings->lastItem() ?? 0 }} dari {{ $bookings->total() }} data</p>
-            <div>
-                {{ $bookings->links('pagination::bootstrap-5') }}
-            </div>
-        </div>
     </div>
 </div>
+@endsection
+
+@section('custom_js')
+<script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
+<script>
+    $(document).ready(function() {
+        $('#tableBookings').DataTable({
+            responsive: true,
+            // Mengatur layout DOM grid sistem Bootstrap 5 agar layouting sejajar dan rapi
+            dom: "<'row'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6'f>>" +
+                 "<'row'<'col-sm-12'tr>>" +
+                 "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
+            language: {
+                search: "_INPUT_",
+                searchPlaceholder: "Cari booking...",
+                lengthMenu: "Tampilkan _MENU_ data",
+                info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ entri",
+                paginate: {
+                    previous: "‹",
+                    next: "›"
+                }
+            },
+            columnDefs: [
+                { orderable: false, targets: [5] } // Matikan sorting untuk kolom tindakan
+            ]
+        });
+    });
+</script>
 @endsection

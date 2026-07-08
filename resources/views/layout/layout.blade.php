@@ -1,6 +1,18 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-bs-theme="light">
 <head>
+    <script>
+        (function() {
+            const getStoredTheme = () => localStorage.getItem('theme');
+            const getPreferredTheme = () => {
+                const storedTheme = getStoredTheme();
+                if (storedTheme) return storedTheme;
+                return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+            }
+            const theme = getPreferredTheme();
+            document.documentElement.setAttribute('data-bs-theme', theme);
+        })();
+    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tempat-In</title>
@@ -43,7 +55,7 @@
         }
         #page-content-wrapper {
             width: 100%;
-            background: #f8f9fa;
+            background-color: var(--bs-tertiary-bg);
             margin-left: 250px;
             transition: margin-left 0.3s ease;
         }
@@ -164,15 +176,51 @@
 
         /* Styling when Sidebar is Collapsed (Toggled) */
         #wrapper.toggled #menu-toggle {
-            background-color: #ffffff;
-            border: 1px solid #cbd5e1;
-            color: #475569;
+            background-color: var(--bs-body-bg);
+            border: 1px solid var(--bs-border-color);
+            color: var(--bs-body-color);
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
         #wrapper.toggled #menu-toggle:hover {
-            background-color: #f1f5f9;
-            color: #0f172a;
-            border-color: #94a3b8;
+            background-color: var(--bs-tertiary-bg);
+            color: var(--bs-body-color);
+            border-color: var(--bs-border-color-translucent);
+        }
+
+        /* Global Dark Mode Overrides for hardcoded classes */
+        [data-bs-theme="dark"] .text-dark {
+            color: var(--bs-body-color) !important;
+        }
+        /* Preserve dark text contrast on light/warning elements in dark mode */
+        [data-bs-theme="dark"] .bg-warning .text-dark,
+        [data-bs-theme="dark"] .btn-warning .text-dark,
+        [data-bs-theme="dark"] .badge.text-dark,
+        [data-bs-theme="dark"] .badge.bg-warning,
+        [data-bs-theme="dark"] .badge.bg-warning .text-dark {
+            color: #1a1d20 !important;
+        }
+        [data-bs-theme="dark"] .bg-white {
+            background-color: var(--bs-card-bg) !important;
+        }
+        [data-bs-theme="dark"] .bg-light {
+            background-color: var(--bs-tertiary-bg) !important;
+        }
+        [data-bs-theme="dark"] .text-muted {
+            color: var(--bs-secondary-color) !important;
+        }
+        [data-bs-theme="dark"] .table-responsive {
+            background-color: var(--bs-card-bg) !important;
+        }
+        [data-bs-theme="dark"] .card {
+            background-color: var(--bs-card-bg) !important;
+            border-color: var(--bs-border-color) !important;
+        }
+        [data-bs-theme="dark"] .table-light {
+            --bs-table-color: var(--bs-body-color) !important;
+            --bs-table-bg: var(--bs-tertiary-bg) !important;
+            --bs-table-border-color: var(--bs-border-color) !important;
+            background-color: var(--bs-tertiary-bg) !important;
+            color: var(--bs-body-color) !important;
         }
     </style>
     @yield('custom_css')
@@ -219,6 +267,33 @@
             $('#menu-toggle').on('click', function(e) {
                 e.preventDefault();
                 $('#wrapper').toggleClass('toggled');
+            });
+
+            // Theme Toggle Logic
+            const themeToggleBtn = $('#theme-toggle-btn');
+            const themeToggleIcon = $('#theme-toggle-icon');
+
+            const updateThemeIcon = (theme) => {
+                if (theme === 'dark') {
+                    themeToggleIcon.removeClass('bi-moon-stars text-secondary').addClass('bi-sun-fill text-warning');
+                } else {
+                    themeToggleIcon.removeClass('bi-sun-fill text-warning').addClass('bi-moon-stars text-secondary');
+                }
+            }
+
+            // Sync icon on load
+            if (themeToggleIcon.length) {
+                const currentTheme = document.documentElement.getAttribute('data-bs-theme');
+                updateThemeIcon(currentTheme);
+            }
+
+            themeToggleBtn.on('click', function(e) {
+                e.preventDefault();
+                const activeTheme = document.documentElement.getAttribute('data-bs-theme');
+                const newTheme = activeTheme === 'dark' ? 'light' : 'dark';
+                document.documentElement.setAttribute('data-bs-theme', newTheme);
+                localStorage.setItem('theme', newTheme);
+                updateThemeIcon(newTheme);
             });
 
             function formatThousand(val) {

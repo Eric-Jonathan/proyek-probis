@@ -33,7 +33,7 @@ class RoomController extends Controller
         }
 
         // 4. Ambil data dengan pagination di akhir rangkaian filter
-        $rooms = $query->latest()->paginate(10)->withQueryString();
+        $rooms = $query->latest()->get();
 
         return view('rooms.room', [
             'rooms'         => $rooms,
