@@ -541,7 +541,7 @@ class AdminController extends Controller
 
     public function fines()
     {
-        $fines = \App\Models\Fine::with(['booking.user', 'booking.roomDetail.room'])->orderBy('created_at', 'desc')->get();
+        $fines = \App\Models\Fine::with(['booking.user', 'booking.roomDetail.room.owner'])->orderBy('created_at', 'desc')->get();
         return view('admin.fines', compact('fines'));
     }
 

@@ -89,13 +89,13 @@
                 <table class="table align-middle" id="tableHistory" style="width:100%">
                     <thead>
                         <tr>
-                            <th style="width: 10%;">ID Booking</th>
-                            <th style="width: 25%;">Ruangan</th>
-                            <th style="width: 20%;">Kegiatan / Kontak</th>
-                            <th style="width: 20%;">Tanggal Sewa</th>
+                            <th style="width: 8%;">ID Booking</th>
+                            <th style="width: 20%;">Ruangan</th>
+                            <th style="width: 17%;">Kegiatan / Kontak</th>
+                            <th style="width: 12%;">Tanggal Sewa</th>
                             <th style="width: 10%;">Total Bayar</th>
-                            <th class="text-center" style="width: 10%;">Status</th>
-                            <th class="text-center" style="width: 5%;">Aksi</th>
+                            <th class="text-center" style="width: 13%;">Status</th>
+                            <th class="text-center" style="width: 20%;">Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -135,7 +135,14 @@
                                  @elseif($b->status == 2)
                                      <span class="badge rounded-pill badge-selesai px-3 py-2">Selesai</span>
                                  @elseif($b->status == 3)
-                                     <span class="badge rounded-pill bg-warning-subtle text-warning px-3 py-2" style="color: #a16207 !important;">Cicilan ({{ $b->installments_paid }}/3)</span>
+                                      <span class="badge rounded-pill bg-warning-subtle text-warning px-3 py-2" style="color: #a16207 !important;">Cicilan ({{ $b->installments_paid }}/3)</span>
+                                      @if($b->installment_due_date)
+                                          <div class="mt-1" style="font-size: 0.72rem;">
+                                              <span class="text-danger fw-bold">
+                                                  <i class="bi bi-calendar-event me-1"></i>Tempo: {{ \Carbon\Carbon::parse($b->installment_due_date)->translatedFormat('d M Y') }}
+                                              </span>
+                                          </div>
+                                      @endif
                                  @elseif($b->status == 4)
                                      <span class="badge rounded-pill bg-secondary-subtle text-secondary px-3 py-2">Menunggu Pembayaran</span>
                                  @elseif($b->status == 0)
@@ -161,7 +168,7 @@
                                  @endif
                             </td>
                              <td class="text-center">
-                                 <div class="d-flex gap-2 justify-content-center align-items-center">
+                                 <div class="d-flex gap-2 justify-content-center align-items-center" style="white-space: nowrap;">
                                      @if($b->status == 0)
                                          <span class="text-muted small italic">Tidak ada tindakan</span>
                                       @else
@@ -330,6 +337,11 @@
                                  <span class="badge rounded-pill bg-success text-white px-3 py-2"><i class="bi bi-check-circle-fill me-1"></i> Selesai</span>
                              @elseif($b->status == 3)
                                  <span class="badge rounded-pill bg-warning text-dark px-3 py-2" style="background-color: #ffc107 !important;"><i class="bi bi-wallet2 me-1"></i> Cicilan ({{ $b->installments_paid }}/3)</span>
+                                 @if($b->installment_due_date)
+                                     <div class="mt-2 text-danger fw-bold small">
+                                         <i class="bi bi-calendar-event me-1"></i> Jatuh Tempo: {{ \Carbon\Carbon::parse($b->installment_due_date)->translatedFormat('d M Y') }}
+                                     </div>
+                                 @endif
                              @elseif($b->status == 4)
                                  <span class="badge rounded-pill bg-secondary text-white px-3 py-2"><i class="bi bi-clock-history me-1"></i> Menunggu Pembayaran</span>
                              @elseif($b->status == 0)

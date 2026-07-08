@@ -317,7 +317,7 @@ class BookingController extends Controller
 
     public function transaction($booking_id)
     {
-        $booking = \App\Models\Booking::with(['roomDetail.room', 'serviceDetails'])
+        $booking = \App\Models\Booking::with(['roomDetail.room.owner', 'serviceDetails'])
             ->findOrFail($booking_id);
 
         $roomDetail = $booking->roomDetail;
@@ -447,9 +447,21 @@ class BookingController extends Controller
                 if ($isInstallment) {
                     $booking->installments_paid = 1;
                     $booking->status = 3; // Cicilan (Belum Lunas)
+                    
+                    // Set default due date (30 days from now or 3 days before start date, whichever is earlier)
+                    $startDateTime = \Carbon\Carbon::parse($booking->start_date);
+                    $defaultDueDate = \Carbon\Carbon::now()->addDays(30);
+                    if ($defaultDueDate->gt($startDateTime->copy()->subDays(3))) {
+                        $defaultDueDate = $startDateTime->copy()->subDays(3);
+                    }
+                    if ($defaultDueDate->lt(\Carbon\Carbon::now())) {
+                        $defaultDueDate = \Carbon\Carbon::now()->addDay();
+                    }
+                    $booking->installment_due_date = $defaultDueDate->toDateString();
                 } else {
                     $booking->installments_paid = 3;
                     $booking->status = 1; // Terjadwal (Lunas)
+                    $booking->installment_due_date = null;
                 }
             } else {
                 $booking->paid_amount += $nextPayment;
@@ -457,6 +469,18 @@ class BookingController extends Controller
                 
                 if ($booking->installments_paid >= 3) {
                     $booking->status = 1; // 1 = Terjadwal (Lunas)
+                    $booking->installment_due_date = null;
+                } else {
+                    // Set default due date for the next installment (30 days from now or 3 days before start date, whichever is earlier)
+                    $startDateTime = \Carbon\Carbon::parse($booking->start_date);
+                    $defaultDueDate = \Carbon\Carbon::now()->addDays(30);
+                    if ($defaultDueDate->gt($startDateTime->copy()->subDays(3))) {
+                        $defaultDueDate = $startDateTime->copy()->subDays(3);
+                    }
+                    if ($defaultDueDate->lt(\Carbon\Carbon::now())) {
+                        $defaultDueDate = \Carbon\Carbon::now()->addDay();
+                    }
+                    $booking->installment_due_date = $defaultDueDate->toDateString();
                 }
             }
             $booking->save();

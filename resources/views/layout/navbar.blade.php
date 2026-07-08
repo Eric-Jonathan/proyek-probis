@@ -1,9 +1,6 @@
 <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom shadow-sm fixed-top" style="z-index: 1000">
     <div class="container-fluid">
-        <button class="btn btn-outline-primary btn-sm" id="menu-toggle">
-            <i class="bi bi-list"></i>
-        </button>
-        
+
         <div class="ms-auto d-flex align-items-center">
             <span class="me-3 text-muted">Welcome, {{ Auth::user()->username }}</span>
             <div class="dropdown" style="cursor: pointer">

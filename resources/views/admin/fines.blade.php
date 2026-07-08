@@ -114,7 +114,7 @@
                             <td class="fw-bold">#{{ $f->booking_id }}</td>
                             <td>
                                 <div class="fw-bold text-dark">{{ $f->booking->roomDetail->item_name ?? 'Ruangan' }}</div>
-                                <small class="text-muted"><i class="bi bi-person"></i> Penyedia: {{ $f->booking->roomDetail->room->user->username ?? 'Provider' }}</small>
+                                <small class="text-muted"><i class="bi bi-person"></i> Penyedia: {{ $f->booking->roomDetail->room->owner->username ?? 'Provider' }}</small>
                             </td>
                             <td>
                                 <div class="fw-bold text-dark">{{ $f->booking->user->username ?? 'Guest' }}</div>
@@ -172,7 +172,7 @@
                         <div class="p-3 rounded bg-light mt-1">
                             <h5 class="fw-bold mb-1 text-dark">{{ $f->booking->roomDetail->item_name ?? 'Ruangan' }}</h5>
                             <p class="text-muted small mb-2"><i class="bi bi-geo-alt-fill text-danger me-1"></i> {{ $f->booking->roomDetail->room->location ?? 'Lokasi tidak tersedia' }}</p>
-                            <p class="text-muted small mb-0"><i class="bi bi-person-circle me-1"></i> Penyedia: <strong>{{ $f->booking->roomDetail->room->user->username ?? 'Provider' }}</strong></p>
+                            <p class="text-muted small mb-0"><i class="bi bi-person-circle me-1"></i> Penyedia: <strong>{{ $f->booking->roomDetail->room->owner->username ?? 'Provider' }}</strong></p>
                         </div>
                     </div>
 

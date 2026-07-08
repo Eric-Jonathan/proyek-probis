@@ -16,9 +16,12 @@ class AuthController extends Controller
         $request->validate([
             'username' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:people,email',
-            'phone' => 'required|string|max:50',
+            'phone' => ['required', 'string', 'regex:/^(\+?62|0)8[0-9]{8,13}$/'],
             'password' => 'required|string|min:8|confirmed',
             'role' => 'required'
+        ], [
+            'phone.regex' => 'Nomor WhatsApp/HP tidak valid. Harus diawali 08, 62, atau +62 dan terdiri dari 10-15 digit angka.',
+            'phone.required' => 'Nomor WhatsApp wajib diisi.'
         ]);
 
         People::create([

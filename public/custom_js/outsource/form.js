@@ -51,12 +51,19 @@ $(document).ready(function() {
     $('#foto-input').on('change', function() {
         const files = this.files;
         const maxSizeBytes = 2 * 1024 * 1024; // 2MB
+        const maxPhotos = 5;
         let hasLargeFile = false;
 
         if (files.length > 0) {
-            Array.from(files).forEach(file => {
-                if (!file.type.startsWith('image/')) return;
+            let validFilesToAdd = Array.from(files).filter(file => file.type.startsWith('image/'));
+            
+            if (selectedPhotosArray.length + validFilesToAdd.length > maxPhotos) {
+                alert(`Gagal menambahkan foto! Maksimal jumlah foto yang diperbolehkan adalah ${maxPhotos} foto.`);
+                this.value = '';
+                return;
+            }
 
+            validFilesToAdd.forEach(file => {
                 if (file.size > maxSizeBytes) {
                     hasLargeFile = true;
                     return; 
@@ -171,6 +178,12 @@ $(document).ready(function() {
         if (selectedPhotosArray.length < 3) {
             e.preventDefault();
             alert('Gagal mengirim! Anda harus mengunggah minimal 3 foto hasil cek lapangan.');
+            $('#foto-input').focus();
+            return;
+        }
+        if (selectedPhotosArray.length > 5) {
+            e.preventDefault();
+            alert('Gagal mengirim! Maksimal jumlah foto yang diperbolehkan adalah 5 foto.');
             $('#foto-input').focus();
             return;
         }

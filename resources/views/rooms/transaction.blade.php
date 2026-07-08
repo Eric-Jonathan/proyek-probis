@@ -1,6 +1,51 @@
 @extends('layout.layout')
 
 @section('content')
+@php
+    $start = \Carbon\Carbon::parse($booking->start_date);
+    $end = \Carbon\Carbon::parse($booking->end_date);
+    $days = max(1, $start->diffInDays($end) + 1);
+    
+    // Let's check room price and booking details
+    $roomPrice = $booking->roomDetail->room->price ?? 0;
+    $jenisHarga = strtolower(trim($booking->roomDetail->room->jenis_harga ?? ''));
+    $minPax = $booking->roomDetail->room->min_order ?? 1;
+    
+    // Calculate total hours if Hourly
+    $durationHours = max(1, $start->diffInHours($end));
+    if ($durationHours <= 0) {
+        $durationHours = 1;
+    }
+    
+    // Reverse calculate actual pax based on price paid
+    $actualPax = $minPax;
+    if ($roomPrice > 0) {
+        $roomBasePrice = $booking->roomDetail->item_price ?? 0;
+        if ($jenisHarga === 'pax') {
+            $actualPax = (int) round($roomBasePrice / $roomPrice);
+        } elseif ($jenisHarga === 'pax_hari') {
+            $actualPax = (int) round($roomBasePrice / ($roomPrice * $days));
+        } elseif ($jenisHarga === 'pax_jam') {
+            $actualPax = (int) round($roomBasePrice / ($roomPrice * $durationHours * $days));
+        }
+    }
+    $actualPax = max(1, $actualPax);
+    
+    $formulaText = '';
+    if ($jenisHarga === 'pax') {
+        $formulaText = '(Rp ' . number_format($roomPrice, 0, ',', '.') . ' / Pax x ' . $actualPax . ' Pax)';
+    } elseif ($jenisHarga === 'pax_hari') {
+        $formulaText = '(Rp ' . number_format($roomPrice, 0, ',', '.') . ' / Pax/Hari x ' . $actualPax . ' Pax x ' . $days . ' Hari)';
+    } elseif ($jenisHarga === 'hari') {
+        $formulaText = '(Rp ' . number_format($roomPrice, 0, ',', '.') . ' / Hari x ' . $days . ' Hari)';
+    } elseif ($jenisHarga === 'jam') {
+        $formulaText = '(Rp ' . number_format($roomPrice, 0, ',', '.') . ' / Jam x ' . $durationHours . ' Jam x ' . $days . ' Hari)';
+    } elseif ($jenisHarga === 'pax_jam') {
+        $formulaText = '(Rp ' . number_format($roomPrice, 0, ',', '.') . ' / Pax/Jam x ' . $actualPax . ' Pax x ' . $durationHours . ' Jam x ' . $days . ' Hari)';
+    }
+    
+    $invoiceCode = 'INV/' . \Carbon\Carbon::parse($booking->created_at)->format('Ymd') . '/TRX/' . str_pad($booking->booking_id, 4, '0', STR_PAD_LEFT);
+@endphp
 <style>
     :root {
         --primary-blue: #006ce4;
@@ -132,7 +177,7 @@
     <div class="transaction-header shadow-sm mb-4">
         <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
             <div>
-                <p class="mb-1 opacity-75">Detail Transaksi Penyewaan</p>
+                <p class="mb-1 opacity-75 fw-bold"><i class="bi bi-file-earmark-text me-1"></i> Invoice: {{ $invoiceCode }}</p>
                 <h2 class="fw-bold mb-0">Rincian Pembayaran</h2>
             </div>
             @if($booking->status == 1)
@@ -202,12 +247,43 @@
                     </div>
                 </div>
 
+                {{-- INFORMASI PENGELOLA RUANGAN --}}
+                <div class="mt-4 p-3 rounded-4 bg-light border d-flex align-items-center justify-content-between flex-wrap gap-3" style="background-color: #ebf5ff !important; border-color: #bfdbfe !important;">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="rounded-circle bg-primary text-white p-2 d-flex justify-content-center align-items-center" style="width: 45px; height: 45px;">
+                            <i class="bi bi-person-workspace fs-4"></i>
+                        </div>
+                        <div>
+                            <div class="small text-muted fw-bold text-uppercase" style="font-size: 10px; letter-spacing: 0.5px;">Pengelola Ruangan (Penyedia)</div>
+                            <div class="fw-bold text-dark">{{ $booking->roomDetail->room->owner->username ?? 'Pemilik Ruangan' }}</div>
+                            <div class="small text-muted">+62 {{ $booking->roomDetail->room->owner->phone ?? '-' }}</div>
+                        </div>
+                    </div>
+                    @if($booking->roomDetail->room->owner->phone)
+                        @php
+                            $ownerPhone = $booking->roomDetail->room->owner->phone;
+                            if (str_starts_with($ownerPhone, '+62')) {
+                                $ownerPhone = substr($ownerPhone, 3);
+                            } elseif (str_starts_with($ownerPhone, '62')) {
+                                $ownerPhone = substr($ownerPhone, 2);
+                            } elseif (str_starts_with($ownerPhone, '0')) {
+                                $ownerPhone = substr($ownerPhone, 1);
+                            }
+                            $ownerPhoneFormatted = '62' . $ownerPhone;
+                        @endphp
+                        <a href="https://wa.me/{{ $ownerPhoneFormatted }}?text=Halo%20{{ urlencode($booking->roomDetail->room->owner->username) }},%20saya%20ingin%20koordinasi%20terkait%20booking%20#{{ $booking->booking_id }}" 
+                           target="_blank" class="btn btn-sm btn-success rounded-pill px-3 py-2 fw-bold d-inline-flex align-items-center gap-1 shadow-sm">
+                            <i class="bi bi-whatsapp"></i> Hubungi Pengelola
+                        </a>
+                    @endif
+                </div>
+
                 <div class="mini-line my-4"></div>
 
                 <div class="small text-muted">
                     ID Transaksi :
                     <span class="fw-bold text-dark">
-                        #TRX-{{ $booking->booking_id }}
+                        {{ $invoiceCode }}
                     </span>
                 </div>
             </div>
@@ -218,9 +294,12 @@
                     <div>
                         <h5 class="fw-bold mb-3 text-dark">Rincian Invoice</h5>
                         
-                        <div class="invoice-item text-muted">
-                            <span>Biaya Ruangan Utama</span>
-                            <span class="fw-semibold">Rp {{ number_format($booking->roomDetail->item_price ?? 0, 0, ',', '.') }}</span>
+                        <div class="invoice-item text-muted align-items-start">
+                            <div>
+                                <span>Biaya Ruangan Utama</span>
+                                <span class="d-block small text-muted font-monospace" style="font-size: 0.72rem; line-height: 1.2;">{{ $formulaText }}</span>
+                            </div>
+                            <span class="fw-semibold text-end">Rp {{ number_format($booking->roomDetail->item_price ?? 0, 0, ',', '.') }}</span>
                         </div>
 
                         @if($booking->serviceDetails->count() > 0)
@@ -269,6 +348,12 @@
                                 <div class="price-box mb-3 bg-warning-subtle border-warning-subtle text-warning" style="background-color: #fff3cd !important; color: #a16207 !important; border-color: #ffeeba !important;">
                                     Rp {{ number_format($nextPayment, 0, ',', '.') }}
                                 </div>
+                                @if($booking->installment_due_date)
+                                    <div class="alert alert-warning border-0 p-2 text-center rounded-3 mb-3" style="background-color: #fffbeb; color: #b45309; font-size: 0.85rem;">
+                                        <i class="bi bi-calendar-event me-1"></i>
+                                        <strong>Jatuh Tempo:</strong> {{ \Carbon\Carbon::parse($booking->installment_due_date)->translatedFormat('d F Y') }}
+                                    </div>
+                                @endif
                             @else
                                 <div class="invoice-item text-muted mb-2">
                                     <span>Skema Pembayaran</span>
@@ -306,6 +391,12 @@
                             <div class="price-box mb-3 bg-warning-subtle border-warning-subtle text-warning" style="background-color: #fff3cd !important; color: #a16207 !important; border-color: #ffeeba !important;">
                                 Rp {{ number_format($nextPayment, 0, ',', '.') }}
                             </div>
+                            @if($booking->installment_due_date)
+                                <div class="alert alert-warning border-0 p-2 text-center rounded-3 mb-3" style="background-color: #fffbeb; color: #b45309; font-size: 0.85rem;">
+                                    <i class="bi bi-calendar-event me-1"></i>
+                                    <strong>Jatuh Tempo:</strong> {{ \Carbon\Carbon::parse($booking->installment_due_date)->translatedFormat('d F Y') }}
+                                </div>
+                            @endif
                         @else
                             <p class="text-muted small mb-2">Total Pembayaran</p>
                             <div class="price-box mb-3">

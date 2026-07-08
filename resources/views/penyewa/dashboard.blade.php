@@ -54,10 +54,10 @@
                 <thead class="table-light">
                     <tr>
                         <th class="ps-4 py-3" style="width: 10%;">ID Booking</th>
-                        <th style="width: 35%;">Ruangan & Lokasi</th>
-                        <th style="width: 25%;">Waktu Sewa</th>
-                        <th style="width: 15%;">Status</th>
-                        <th class="text-center" style="width: 15%;">Aksi</th>
+                        <th style="width: 30%;">Ruangan & Lokasi</th>
+                        <th style="width: 15%;">Waktu Sewa</th>
+                        <th style="width: 20%;">Status</th>
+                        <th class="text-center" style="width: 25%;">Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -116,7 +116,7 @@
                             @endif
                         </td>
                         <td class="pe-3">
-                            <div class="d-flex gap-2 justify-content-center align-items-center">
+                            <div class="d-flex gap-2 justify-content-center align-items-center" style="white-space: nowrap;">
                                 @if($b->status == 0)
                                     <a href="/bookings/history?detail={{ $b->booking_id }}" class="btn btn-sm btn-outline-secondary rounded-pill px-3 py-1 fw-bold text-decoration-none">Detail</a>
                                 @else

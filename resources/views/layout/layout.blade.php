@@ -32,21 +32,20 @@
             min-width: 250px; 
             max-width: 250px;
             min-height: 100vh;
-            transition: all 0.3s;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 250px;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 1000;
+            transition: left 0.3s ease;
         }
         #page-content-wrapper {
             width: 100%;
             background: #f8f9fa;
             margin-left: 250px;
-        }
-        #sidebar-wrapper {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 250px; /* sesuaikan */
-            height: 100vh;
-            overflow-y: auto;
-            z-index: 1000;
+            transition: margin-left 0.3s ease;
         }
         .navbar {
             position: fixed;
@@ -54,7 +53,30 @@
             left: 250px; /* HARUS sama dengan lebar sidebar */
             right: 0;
             z-index: 1000;
+            transition: left 0.3s ease;
+            height: 56px;
         }
+        .sidebar-heading {
+            height: 56px;
+            display: flex;
+            align-items: center;
+            box-sizing: border-box;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+            margin-bottom: 20px;
+            padding-left: 80px; /* Make space for fixed toggle button */
+        }
+        
+        /* CSS State saat Sidebar Terlipat (Toggled) */
+        #wrapper.toggled #sidebar-wrapper {
+            left: -250px;
+        }
+        #wrapper.toggled #page-content-wrapper {
+            margin-left: 0;
+        }
+        #wrapper.toggled .navbar {
+            left: 0;
+        }
+        
         .contain{
             padding-top: 70px !important;
         }
@@ -114,12 +136,55 @@
             outline: none !important;
             box-shadow: none !important;
         }
+
+        /* Fixed Toggle Button styling */
+        #menu-toggle {
+            position: fixed;
+            top: 11px;
+            left: 15px;
+            z-index: 1100; /* Higher than sidebar (1000) and navbar (1000) */
+            width: 34px;
+            height: 34px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            background-color: #212529; /* Match bg-dark sidebar */
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: rgba(255, 255, 255, 0.8);
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            cursor: pointer;
+        }
+        #menu-toggle:hover {
+            background-color: #2c3034;
+            color: #ffffff;
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        /* Styling when Sidebar is Collapsed (Toggled) */
+        #wrapper.toggled #menu-toggle {
+            background-color: #ffffff;
+            border: 1px solid #cbd5e1;
+            color: #475569;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        #wrapper.toggled #menu-toggle:hover {
+            background-color: #f1f5f9;
+            color: #0f172a;
+            border-color: #94a3b8;
+        }
     </style>
     @yield('custom_css')
 </head>
 <body>
 
     <div id="wrapper">
+        <!-- Fixed panel toggle button -->
+        <button id="menu-toggle">
+            <i class="bi bi-layout-sidebar-inset fs-5"></i>
+        </button>
+
         @include('layout.sidebar')
 
         <div id="page-content-wrapper">
@@ -150,6 +215,12 @@
     {{-- Global Thousand Separator Script --}}
     <script>
         $(document).ready(function() {
+            // Toggle Sidebar Click Listener
+            $('#menu-toggle').on('click', function(e) {
+                e.preventDefault();
+                $('#wrapper').toggleClass('toggled');
+            });
+
             function formatThousand(val) {
                 if (val === null || val === undefined) return '';
                 let clean = val.toString().replace(/[^0-9]/g, '');

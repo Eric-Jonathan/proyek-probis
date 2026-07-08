@@ -16,6 +16,11 @@
         <h3 class="fw-bold m-0">Kelola Pesanan Ruangan</h3>
         <p class="text-secondary small m-0">Manajemen reservasi, pembayaran, dan status okupansi unit</p>
     </div>
+    <div class="col-auto">
+        <a href="{{ route('penyedia.list_booking.pdf', request()->query()) }}" class="btn btn-danger rounded-pill fw-bold shadow-sm px-4">
+            <i class="bi bi-file-earmark-pdf me-2"></i> Unduh Daftar PDF
+        </a>
+    </div>
 </div>
 
 <!-- Statistik Cards -->

@@ -154,11 +154,21 @@
                     @csrf
                     <input type="hidden" name="start_date" value="{{ $startDate->format('Y-m-d') }}">
                     <input type="hidden" name="end_date" value="{{ $endDate->format('Y-m-d') }}">
+                    @php
+                        $userPhone = Auth::user()->phone ?? '';
+                        if (str_starts_with($userPhone, '+62')) {
+                            $userPhone = substr($userPhone, 3);
+                        } elseif (str_starts_with($userPhone, '62')) {
+                            $userPhone = substr($userPhone, 2);
+                        } elseif (str_starts_with($userPhone, '0')) {
+                            $userPhone = substr($userPhone, 1);
+                        }
+                    @endphp
 
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label class="form-label small fw-bold">Nama Lengkap / Instansi Pemesan <span class="text-danger">*</span></label>
-                            <input type="text" name="instansi" class="form-control py-2" placeholder="Masukkan nama pemesan" value="{{ old('instansi') }}" required>
+                            <input type="text" name="instansi" class="form-control py-2" placeholder="Masukkan nama pemesan" value="{{ old('instansi', Auth::user()->username ?? '') }}" required>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small fw-bold">Jenis Kegiatan Acara <span class="text-danger">*</span></label>
@@ -175,7 +185,7 @@
                             <label class="form-label small fw-bold">Nomor WhatsApp Aktif <span class="text-danger">*</span></label>
                             <div class="input-group">
                                 <span class="input-group-text bg-light">+62</span>
-                                <input type="number" name="phone" class="form-control py-2" placeholder="8123xxxx" value="{{ old('phone') }}" required>
+                                <input type="number" name="phone" class="form-control py-2" placeholder="8123xxxx" value="{{ old('phone', $userPhone) }}" required>
                             </div>
                         </div>
 
