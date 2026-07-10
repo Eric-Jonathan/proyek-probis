@@ -12,10 +12,19 @@
     html { scroll-behavior: smooth; }
 
     section, .container[id] {
-        scroll-margin-top: 140px;
+        scroll-margin-top: 120px;
     }
 
     body { background-color: #f8f9fa; }
+
+    /* Fix transparent navbar and sub-navbar issues */
+    .navbar, #sub-navbar {
+        background-color: #ffffff !important;
+    }
+    [data-bs-theme="dark"] .navbar,
+    [data-bs-theme="dark"] #sub-navbar {
+        background-color: #212529 !important;
+    }
 
     .clickable-box {
         background-color: #f8f9fa;
@@ -186,7 +195,7 @@
 @section('content')
 <body class="bg-white">
     <!-- Sticky Sub-Navbar -->
-    <div class="sticky-top bg-white border-bottom shadow-sm d-flex justify-content-between" style="z-index: 900; top: 70px;">
+    <div id="sub-navbar" class="sticky-top bg-white border-bottom shadow-sm d-flex justify-content-between" style="z-index: 900; top: 56px;">
         <div class="container">
             <ul id="main-nav" class="nav nav-tabs border-0 mb-0 text-nowrap flex-nowrap overflow-auto py-2">
                 <li class="nav-item"><a class="nav-link active text-primary fw-bold border-0 border-bottom border-primary border-3" href="#section-info">Info Umum</a></li>

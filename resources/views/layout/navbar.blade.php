@@ -2,10 +2,10 @@
     <div class="container-fluid">
 
         <div class="ms-auto d-flex align-items-center">
-            <!-- Theme Toggle Button
+            <!-- Theme Toggle Button -->
             <button class="btn btn-link p-0 me-3 border-0 shadow-none d-flex align-items-center justify-content-center" id="theme-toggle-btn" style="text-decoration: none;">
                 <i class="bi bi-moon-stars fs-5 text-secondary" id="theme-toggle-icon"></i>
-            </button> -->
+            </button>
             
             <span class="me-3 text-muted">Welcome, {{ Auth::user()->username }}</span>
             <div class="dropdown" style="cursor: pointer">

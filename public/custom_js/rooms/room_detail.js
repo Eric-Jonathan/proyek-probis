@@ -308,7 +308,7 @@ $(document).ready(function() {
         let scrollPosition = $(window).scrollTop();
 
         sections.each(function() {
-            if (scrollPosition >= ($(this).offset().top - 160)) {
+            if (scrollPosition >= ($(this).offset().top - 130)) {
                 currentSectionId = $(this).attr('id');
             }
         });

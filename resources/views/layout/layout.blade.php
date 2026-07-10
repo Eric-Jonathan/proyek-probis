@@ -34,7 +34,10 @@
     
     <style>
         /* CSS Dasar untuk Layout Sidebar + Content */
-        body { overflow-x: hidden; }
+        body { 
+            overflow-x: hidden; 
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+        }
         #wrapper {
             display: flex;
             width: 100%;
@@ -51,13 +54,13 @@
             height: 100vh;
             overflow-y: auto;
             z-index: 1000;
-            transition: left 0.3s ease;
+            transition: left 0.3s ease, background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
         }
         #page-content-wrapper {
             width: 100%;
             background-color: var(--bs-tertiary-bg);
             margin-left: 250px;
-            transition: margin-left 0.3s ease;
+            transition: margin-left 0.3s ease, background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
         }
         .navbar {
             position: fixed;
@@ -65,8 +68,21 @@
             left: 250px; /* HARUS sama dengan lebar sidebar */
             right: 0;
             z-index: 1000;
-            transition: left 0.3s ease;
+            transition: left 0.3s ease, background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
             height: 56px;
+        }
+        
+        /* Transition for general cards, lists, tables, sub-navbar */
+        .card, .list-group-item, .table, .dropdown-menu, #sub-navbar, .btn-date {
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        /* Micro-animation for theme toggle button */
+        #theme-toggle-icon {
+            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.3s ease;
+        }
+        #theme-toggle-btn:hover #theme-toggle-icon {
+            transform: scale(1.2) rotate(30deg);
         }
         .sidebar-heading {
             height: 56px;
