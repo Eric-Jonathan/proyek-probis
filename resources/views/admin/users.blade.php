@@ -1,6 +1,7 @@
 @extends('layout.layout')
 
 @section('custom_css')
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css">
     <style>
         body { background-color: #f8f9fa; color: #334155; font-family: 'Inter', sans-serif; }
         .rounded-4 { border-radius: 1rem !important; }
@@ -165,7 +166,10 @@
         </div>
     </div>
 @endsection
-
 @section('custom_js')
-    <script src="{{ asset('custom_js/admin/users.js') }}"></script>
+    <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
+    @if(count($users) > 0)
+        <script src="{{ asset('custom_js/admin/users.js') }}"></script>
+    @endif
 @endsection

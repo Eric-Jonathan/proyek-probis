@@ -63,9 +63,14 @@
     
     {{-- Header --}}
     <div class="row align-items-center mb-4 g-3">
-        <div class="col-md-12">
+        <div class="col-md-8">
             <h2 class="fw-bold mb-1 text-dark">Laporan Retensi & Loyalitas Renter</h2>
             <p class="text-secondary mb-0">Analisis rasio renter berulang, segmentasi keaktifan penyewa, dan nilai loyalitas (Customer Lifetime Value)</p>
+        </div>
+        <div class="col-md-4 text-md-end">
+            <a href="{{ route('admin.report.retention.pdf') }}" class="btn btn-outline-danger rounded-pill px-3 py-2 shadow-sm d-inline-flex align-items-center gap-2 fw-bold" id="downloadPdfBtn">
+                <i class="bi bi-file-earmark-pdf-fill"></i> Cetak PDF
+            </a>
         </div>
     </div>
 

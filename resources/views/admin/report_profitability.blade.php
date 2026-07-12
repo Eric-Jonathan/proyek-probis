@@ -68,13 +68,18 @@
             <p class="text-secondary mb-0">Analisis total transaksi (GMV), pendapatan bagi-hasil komisi platform, dan rata-rata nilai transaksi</p>
         </div>
         <div class="col-md-4 text-md-end">
-            <div class="d-inline-flex align-items-center gap-2 bg-white p-2 rounded-pill shadow-sm border">
-                <span class="small text-muted ps-2 fw-semibold"><i class="bi bi-funnel me-1"></i>Periode:</span>
-                <select id="filterPeriod" class="form-select border-0 bg-transparent py-1 pe-4 fw-bold text-primary" style="width: auto; box-shadow: none; outline: none;">
-                    <option value="30" {{ $filter === '30' ? 'selected' : '' }}>30 Hari Terakhir</option>
-                    <option value="90" {{ $filter === '90' ? 'selected' : '' }}>90 Hari Terakhir</option>
-                    <option value="all" {{ $filter === 'all' ? 'selected' : '' }}>Semua Waktu</option>
-                </select>
+            <div class="d-flex align-items-center justify-content-md-end gap-2">
+                <div class="d-inline-flex align-items-center gap-2 bg-white p-2 rounded-pill shadow-sm border">
+                    <span class="small text-muted ps-2 fw-semibold"><i class="bi bi-funnel me-1"></i>Periode:</span>
+                    <select id="filterPeriod" class="form-select border-0 bg-transparent py-1 pe-4 fw-bold text-primary" style="width: auto; box-shadow: none; outline: none;">
+                        <option value="30" {{ $filter === '30' ? 'selected' : '' }}>30 Hari Terakhir</option>
+                        <option value="90" {{ $filter === '90' ? 'selected' : '' }}>90 Hari Terakhir</option>
+                        <option value="all" {{ $filter === 'all' ? 'selected' : '' }}>Semua Waktu</option>
+                    </select>
+                </div>
+                <a href="{{ route('admin.report.profitability.pdf', ['filter' => $filter]) }}" class="btn btn-outline-danger rounded-pill px-3 py-2 shadow-sm d-inline-flex align-items-center gap-2 fw-bold" id="downloadPdfBtn">
+                    <i class="bi bi-file-earmark-pdf-fill"></i> Cetak PDF
+                </a>
             </div>
         </div>
     </div>
@@ -236,6 +241,16 @@
         document.getElementById('filterPeriod').addEventListener('change', function() {
             window.location.href = `{{ route('admin.report.profitability') }}?filter=${this.value}`;
         });
+
+        // Dynamic PDF Link
+        const filterSelect = document.getElementById('filterPeriod');
+        const pdfBtn = document.getElementById('downloadPdfBtn');
+        if (pdfBtn && filterSelect) {
+            pdfBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                window.location.href = `{{ route('admin.report.profitability.pdf') }}?filter=${filterSelect.value}`;
+            });
+        }
 
         // Setup Line Chart - Monthly commission
         const trendLabels = @json($chartLabels);

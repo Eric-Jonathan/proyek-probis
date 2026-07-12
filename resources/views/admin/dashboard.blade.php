@@ -301,6 +301,23 @@
                                             'on_the_way' => 'Menuju Lokasi',
                                             'checking' => 'Pemeriksaan'
                                         ];
+                                        $statusColors = [
+                                            'on_the_way' => 'primary',
+                                            'checking' => 'warning'
+                                        ];
+                                        
+                                        if ($m->assignment_status === 'completed') {
+                                            if ($m->progress < 100) {
+                                                $label = 'Menunggu Verifikasi Admin';
+                                                $currColor = 'info';
+                                            } else {
+                                                $label = 'Selesai';
+                                                $currColor = 'success';
+                                            }
+                                        } else {
+                                            $label = $statusLabels[$m->assignment_status] ?? $m->assignment_status;
+                                            $currColor = $statusColors[$m->assignment_status] ?? 'warning';
+                                        }
                                     @endphp
                                     <tr>
                                         <td class="py-2.5 border-0 ps-0">
@@ -309,11 +326,11 @@
                                         </td>
                                         <td class="py-2.5 border-0 pe-0" style="width: 140px;">
                                             <div class="d-flex align-items-center justify-content-between mb-1">
-                                                <span class="text-warning fw-bold" style="font-size: 0.65rem;">{{ $statusLabels[$m->assignment_status] ?? $m->assignment_status }}</span>
+                                                <span class="text-{{ $currColor }} fw-bold" style="font-size: 0.65rem;">{{ $label }}</span>
                                                 <span class="text-muted" style="font-size: 0.65rem;">{{ $m->progress }}%</span>
                                             </div>
                                             <div class="progress progress-thin bg-light">
-                                                <div class="progress-bar bg-warning" role="progressbar" style="width: {{ $m->progress }}%"></div>
+                                                <div class="progress-bar bg-{{ $currColor }}" role="progressbar" style="width: {{ $m->progress }}%"></div>
                                             </div>
                                         </td>
                                     </tr>

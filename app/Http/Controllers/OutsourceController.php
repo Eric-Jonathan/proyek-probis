@@ -234,7 +234,7 @@ class OutsourceController extends Controller
         $assignment->update([
             'assignment_status' => 'checking',
             'surveyor_id' => \Illuminate\Support\Facades\Auth::user()->user_id,
-            'progress' => 50
+            'progress' => 30
         ]);
 
         return redirect()->route('outsource.job')->with('success', 'Tugas berhasil diambil! Silakan mulai pengisian laporan.');
@@ -296,10 +296,10 @@ class OutsourceController extends Controller
             'facilities' => $request->input('facilities', [])
         ]);
 
-        // 4. Update status penugasan ke completed dan progress ke 100%
+        // 4. Update status penugasan ke completed dan progress ke 80%
         $assignment->update([
             'assignment_status' => 'completed',
-            'progress' => 100
+            'progress' => 80
         ]);
 
         // 5. Sinkronisasi fasilitas hasil verifikasi lapangan ke tabel fasilitas ruangan asli
@@ -637,5 +637,111 @@ class OutsourceController extends Controller
             'chartLabels',
             'chartValues'
         ));
+    }
+
+    public function downloadPerformancePDF(Request $request)
+    {
+        $userId = \Illuminate\Support\Facades\Auth::user()->user_id;
+        $username = \Illuminate\Support\Facades\Auth::user()->username;
+
+        $completedAssignments = \App\Models\OutsourceAssignment::with(['room', 'report'])
+            ->where('surveyor_id', $userId)
+            ->where('assignment_status', 'completed')
+            ->whereHas('report')
+            ->get();
+
+        $completedCount = $completedAssignments->count();
+        $totalEarnings = $completedCount * 200000;
+
+        // SLA (Speed of Completion)
+        $totalHours = 0;
+        foreach ($completedAssignments as $item) {
+            $reportTime = $item->report->created_at ?? $item->updated_at;
+            $totalHours += (int) abs($item->created_at->diffInHours($reportTime));
+        }
+        $avgSla = $completedCount > 0 ? round($totalHours / $completedCount, 1) : 0;
+
+        // Feasibility breakdown
+        $layakCount = $completedAssignments->filter(function($item) {
+            return strtolower($item->report->rekomendasi ?? '') === 'layak';
+        })->count();
+        $tidakLayakCount = $completedCount - $layakCount;
+
+        // Accuracy (Approved vs Decided)
+        $processedCount = $completedAssignments->filter(function($item) {
+            return in_array($item->room->status ?? 0, [2, 3]);
+        })->count();
+        $approvedCount = $completedAssignments->filter(function($item) {
+            return ($item->room->status ?? 0) == 2;
+        })->count();
+        $accuracy = $processedCount > 0 ? round(($approvedCount / $processedCount) * 100) : 100;
+
+        // Regional Workload Analysis
+        $regionalData = [];
+        foreach ($completedAssignments as $item) {
+            $location = $item->room->location ?? 'Malang';
+            $parts = explode(',', $location);
+            $city = trim($parts[0]);
+            if (empty($city)) {
+                $city = 'Malang';
+            }
+
+            $reportTime = $item->report->created_at ?? $item->updated_at;
+            $hours = (int) abs($item->created_at->diffInHours($reportTime));
+
+            if (!isset($regionalData[$city])) {
+                $regionalData[$city] = [
+                    'name' => $city,
+                    'count' => 0,
+                    'total_hours' => 0,
+                ];
+            }
+            $regionalData[$city]['count']++;
+            $regionalData[$city]['total_hours'] += $hours;
+        }
+
+        $regionsList = [];
+        foreach ($regionalData as $r) {
+            $regionsList[] = (object)[
+                'name' => $r['name'],
+                'count' => $r['count'],
+                'avg_hours' => round($r['total_hours'] / $r['count'], 1),
+                'percentage' => $completedCount > 0 ? round(($r['count'] / $completedCount) * 100) : 0
+            ];
+        }
+
+        // --- BUSINESS ANALYSIS & RECOMMENDATIONS ENGINE ---
+        $recommendations = [];
+        if ($avgSla > 24.0) {
+            $recommendations[] = "Rata-rata kecepatan penyelesaian survei (SLA) Anda adalah " . $avgSla . " jam (di atas target 24 jam). Disarankan untuk mengoptimalkan perencanaan rute perjalanan surveyor harian atau memprioritaskan penugasan berdasarkan urgensi pemesanan.";
+        } else {
+            $recommendations[] = "Kecepatan survei (SLA) Anda sangat luar biasa dengan rata-rata hanya " . $avgSla . " jam. Pertahankan kinerja respons cepat ini untuk menjaga kepuasan klien dan kecepatan rilis inventori ruangan platform.";
+        }
+
+        if ($accuracy < 85) {
+            $recommendations[] = "Tingkat akurasi penilaian kelayakan fisik ruangan sebesar " . $accuracy . "% (di bawah standar 85%). Direkomendasikan melakukan kalibrasi kriteria kelayakan berkala dengan standar platform agar kesimpulan survei fisik lebih sejalan dengan keputusan persetujuan akhir manajemen.";
+        } else {
+            $recommendations[] = "Tingkat akurasi komparasi penilaian fisik dengan keputusan akhir sangat tinggi (" . $accuracy . "%). Ini membuktikan objektivitas dan keandalan laporan surveyor lapangan Anda.";
+        }
+
+        // Cari regional tersibuk
+        $busiestRegion = null;
+        $maxJobs = -1;
+        foreach ($regionsList as $reg) {
+            if ($reg->count > $maxJobs) {
+                $maxJobs = $reg->count;
+                $busiestRegion = $reg->name;
+            }
+        }
+        if ($busiestRegion) {
+            $recommendations[] = "Wilayah dengan beban kerja tertinggi berada di kota \"" . $busiestRegion . "\". Pertimbangkan penempatan atau rekrutmen surveyor lokal tambahan khusus di wilayah ini untuk membagi beban tugas dan menekan angka SLA rata-rata wilayah.";
+        }
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('outsource.pdf_performance', compact(
+            'username', 'completedCount', 'totalEarnings', 'avgSla', 'accuracy',
+            'layakCount', 'tidakLayakCount', 'regionsList', 'recommendations'
+        ));
+
+        return $pdf->download('Laporan_Kinerja_Outsource_' . $username . '.pdf');
     }
 }

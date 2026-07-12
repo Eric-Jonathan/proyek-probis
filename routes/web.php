@@ -68,7 +68,9 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::post('/admin/fines/{id}/approve', [AdminController::class, 'approveFine'])->name('admin.fines.approve');
     Route::post('/admin/fines/{id}/reject', [AdminController::class, 'rejectFine'])->name('admin.fines.reject');
     Route::get('/admin/report/profitability', [AdminController::class, 'profitabilityReport'])->name('admin.report.profitability');
+    Route::get('/admin/report/profitability/pdf', [AdminController::class, 'downloadProfitabilityPDF'])->name('admin.report.profitability.pdf');
     Route::get('/admin/report/retention', [AdminController::class, 'retentionReport'])->name('admin.report.retention');
+    Route::get('/admin/report/retention/pdf', [AdminController::class, 'downloadRetentionPDF'])->name('admin.report.retention.pdf');
 });
 
 Route::middleware(['auth', 'role:penyedia'])->group(function () {
@@ -112,6 +114,7 @@ Route::middleware(['auth', 'role:outsource'])->group(function () {
 
         // Halaman Laporan Kinerja
         Route::get('/report', [OutsourceController::class, 'performanceReport'])->name('report');
+        Route::get('/report/pdf', [OutsourceController::class, 'downloadPerformancePDF'])->name('report.pdf');
     });
 });
 

@@ -273,25 +273,27 @@
 @section('custom_js')
     <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
-    <script src="{{ asset('custom_js/admin/outsource.js') }}"></script>
-    <script>
-        $(document).ready(function() {
-            $('#tableOutsource').DataTable({
-                responsive: true,
-                language: {
-                    search: "_INPUT_",
-                    searchPlaceholder: "Cari vendor...",
-                    lengthMenu: "Tampilkan _MENU_ data",
-                    info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ entri",
-                    paginate: {
-                        previous: "<i class='bi bi-chevron-left'></i>",
-                        next: "<i class='bi bi-chevron-right'></i>"
-                    }
-                },
-                columnDefs: [
-                    { orderable: false, targets: [4] } // Matikan sorting kolom aksi
-                ]
+    @if(count($partners) > 0)
+        <script src="{{ asset('custom_js/admin/outsource.js') }}"></script>
+        <script>
+            $(document).ready(function() {
+                $('#tableOutsource').DataTable({
+                    responsive: true,
+                    language: {
+                        search: "_INPUT_",
+                        searchPlaceholder: "Cari vendor...",
+                        lengthMenu: "Tampilkan _MENU_ data",
+                        info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ entri",
+                        paginate: {
+                            previous: "<i class='bi bi-chevron-left'></i>",
+                            next: "<i class='bi bi-chevron-right'></i>"
+                        }
+                    },
+                    columnDefs: [
+                        { orderable: false, targets: [4] } // Matikan sorting kolom aksi
+                    ]
+                });
             });
-        });
-    </script>
+        </script>
+    @endif
 @endsection

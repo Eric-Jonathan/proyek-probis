@@ -17,13 +17,17 @@ class AdminController extends Controller
         // 1. Ambil data pengajuan BARU (yang status tugasnya masih 'waiting' alias belum punya surveyor)
         $incoming = Room::where('status', 1)
                     ->whereDoesntHave('outsourceAssignments', function($query) {
-                        $query->whereIn('assignment_status', ['on_the_way', 'checking']);
+                        $query->whereIn('assignment_status', ['on_the_way', 'checking'])
+                              ->orWhere(function($q) {
+                                  $q->where('assignment_status', 'completed')
+                                    ->where('progress', '<', 100);
+                              });
                     })
                     ->get();
 
-        // 2. Ambil data tugas AKTIF (yang sedang dikerjakan tim lapangan untuk dipantau progresnya)
+        // 2. Ambil data tugas AKTIF & SELESAI (untuk dipantau progresnya dan history-nya)
         $monitoring = OutsourceAssignment::with(['room', 'company'])
-                    ->whereIn('assignment_status', ['on_the_way', 'checking'])
+                    ->orderBy('progress', 'asc')
                     ->get();
 
         // 3. Ambil data list pegawai surveyor kustom outsource untuk isi dropdown select
@@ -295,13 +299,17 @@ class AdminController extends Controller
         // 1. Ambil data pengajuan BARU (yang status tugasnya masih 'waiting' alias belum punya surveyor)
         $incoming = Room::where('status', 1)
                     ->whereDoesntHave('outsourceAssignments', function($query) {
-                        $query->whereIn('assignment_status', ['on_the_way', 'checking']);
+                        $query->whereIn('assignment_status', ['on_the_way', 'checking'])
+                              ->orWhere(function($q) {
+                                  $q->where('assignment_status', 'completed')
+                                    ->where('progress', '<', 100);
+                              });
                     })
                     ->get();
 
-        // 2. Ambil data tugas AKTIF (yang sedang dikerjakan tim lapangan untuk dipantau progresnya)
+        // 2. Ambil data tugas AKTIF & SELESAI (untuk dipantau progresnya dan history-nya)
         $monitoring = OutsourceAssignment::with(['room', 'company'])
-                    ->whereIn('assignment_status', ['on_the_way', 'checking'])
+                    ->orderBy('progress', 'asc')
                     ->get();
 
         // 3. Ambil data list partner outsource untuk isi dropdown select
@@ -310,9 +318,19 @@ class AdminController extends Controller
         // 4. Hitung data statistik box atas secara dinamis dari database
         $countWaiting = Room::where('status', 1)
                     ->whereDoesntHave('outsourceAssignments', function($query) {
-                        $query->whereIn('assignment_status', ['on_the_way', 'checking']);
+                        $query->whereIn('assignment_status', ['on_the_way', 'checking'])
+                              ->orWhere(function($q) {
+                                  $q->where('assignment_status', 'completed')
+                                    ->where('progress', '<', 100);
+                              });
                     })->count();
-        $countActive = OutsourceAssignment::whereIn('assignment_status', ['on_the_way', 'checking'])->count();
+        $countActive = OutsourceAssignment::where(function($query) {
+            $query->whereIn('assignment_status', ['on_the_way', 'checking'])
+                  ->orWhere(function($q) {
+                      $q->where('assignment_status', 'completed')
+                        ->where('progress', '<', 100);
+                  });
+        })->count();
         $countSurveyor = Outsource::count();
 
         return view('admin.assign_outsource', compact('incoming', 'monitoring', 'mitra', 'countWaiting', 'countActive', 'countSurveyor'));
@@ -330,7 +348,13 @@ class AdminController extends Controller
         // LOGIKA AMAN ERP: Mencegah Duplikasi Penugasan Aktif untuk Ruangan yang Sama
         // =========================================================================
         $isAssigned = OutsourceAssignment::where('room_id', $room_id)
-                        ->whereIn('assignment_status', ['on_the_way', 'checking'])
+                        ->where(function($query) {
+                            $query->whereIn('assignment_status', ['on_the_way', 'checking'])
+                                  ->orWhere(function($q) {
+                                      $q->where('assignment_status', 'completed')
+                                        ->where('progress', '<', 100);
+                                  });
+                        })
                         ->exists();
 
         if ($isAssigned) {
@@ -376,7 +400,6 @@ class AdminController extends Controller
 
             // Update the outsource assignment status to completed if any
             OutsourceAssignment::where('room_id', $room_id)
-                ->whereIn('assignment_status', ['on_the_way', 'checking'])
                 ->update(['assignment_status' => 'completed', 'progress' => 100]);
 
             return redirect()->route('admin.dashboard')->with('success', 'Ruangan ' . $room->name . ' berhasil disetujui untuk disewa!');
@@ -394,7 +417,6 @@ class AdminController extends Controller
 
             // Update the outsource assignment status to completed/canceled
             OutsourceAssignment::where('room_id', $room_id)
-                ->whereIn('assignment_status', ['on_the_way', 'checking'])
                 ->update(['assignment_status' => 'completed', 'progress' => 100]);
 
             return redirect()->route('admin.dashboard')->with('success', 'Pengajuan ruangan ' . $room->name . ' berhasil ditolak.');
@@ -700,5 +722,214 @@ class AdminController extends Controller
             'totalRenters', 'totalActiveRenters', 'repeatRentersCount', 'repeatRenterRate',
             'loyalCount', 'occasionalCount', 'inactiveCount', 'topRenters', 'avgLifetimeSpent'
         ));
+    }
+
+    public function downloadProfitabilityPDF(Request $request)
+    {
+        $filter = $request->query('filter', '30'); // '30', '90', 'all'
+        
+        $startDate = null;
+        if ($filter === '30') {
+            $startDate = now()->subDays(30);
+        } elseif ($filter === '90') {
+            $startDate = now()->subDays(90);
+        }
+
+        $bookingsQuery = \App\Models\Booking::whereIn('status', [1, 2]);
+        if ($startDate) {
+            $bookingsQuery->where('start_date', '>=', $startDate);
+        }
+        $bookings = $bookingsQuery->get();
+
+        $totalGmv = $bookings->sum('total');
+        $commissionFee = $bookings->sum(function($b) {
+            return (int) round(($b->total / 1.05) * 0.10);
+        });
+        $bookingsCount = $bookings->count();
+        $avgTransactionValue = $bookingsCount > 0 ? round($totalGmv / $bookingsCount) : 0;
+
+        // Top Profitable Properties (Commission Contribution)
+        $detailsQuery = \App\Models\BookingDetail::where('item_type', 1)
+            ->whereHas('booking', function($q) use ($startDate) {
+                $q->whereIn('status', [1, 2]);
+                if ($startDate) {
+                    $q->where('start_date', '>=', $startDate);
+                }
+            });
+
+        $topRoomsRaw = $detailsQuery
+            ->select('item_id', 'item_name', DB::raw('count(*) as booking_count'), DB::raw('sum(item_price) as total_revenue'))
+            ->groupBy('item_id', 'item_name')
+            ->orderBy('total_revenue', 'desc')
+            ->take(5)
+            ->get();
+
+        $topRooms = $topRoomsRaw->map(function($r) {
+            return (object)[
+                'name' => $r->item_name,
+                'booking_count' => $r->booking_count,
+                'revenue' => $r->total_revenue,
+                'commission' => $r->total_revenue * 0.10
+            ];
+        });
+
+        // Monthly Commission Trend (for this year)
+        $monthlyGmvRaw = \App\Models\Booking::whereIn('status', [1, 2])
+            ->select(
+                DB::raw('MONTH(start_date) as month'),
+                DB::raw('SUM(total) as gmv')
+            )
+            ->whereYear('start_date', date('Y'))
+            ->groupBy('month')
+            ->orderBy('month')
+            ->get()
+            ->pluck('gmv', 'month')
+            ->toArray();
+
+        $months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+        $monthlyTrends = [];
+        for ($m = 1; $m <= 12; $m++) {
+            $gmv = isset($monthlyGmvRaw[$m]) ? (int)$monthlyGmvRaw[$m] : 0;
+            $comm = (int) round(($gmv / 1.05) * 0.10);
+            $monthlyTrends[] = (object)[
+                'month_name' => $months[$m - 1],
+                'gmv' => $gmv,
+                'commission' => $comm
+            ];
+        }
+
+        // --- BUSINESS ANALYSIS & RECOMMENDATIONS ENGINE ---
+        $recommendations = [];
+        if ($avgTransactionValue < 300000) {
+            $recommendations[] = "Nilai transaksi rata-rata relatif rendah (Rp " . number_format($avgTransactionValue, 0, ',', '.') . "). Pertimbangkan strategi bundling paket fasilitas premium (seperti katering terintegrasi, sound system modern, atau dekorasi khusus) untuk meningkatkan nilai per pemesanan.";
+        } else {
+            $recommendations[] = "Nilai rata-rata transaksi cukup baik (Rp " . number_format($avgTransactionValue, 0, ',', '.') . "). Fokuskan pemasaran pada korporat dan acara besar untuk mempertahankan metrik transaksi bernilai tinggi ini.";
+        }
+
+        if ($topRooms->count() > 0) {
+            $flagship = $topRooms->first();
+            $recommendations[] = "Unit \"" . $flagship->name . "\" merupakan kontributor komisi terbesar dengan pendapatan Rp " . number_format($flagship->revenue, 0, ',', '.') . ". Rekomendasikan kepada tim kemitraan untuk menambah inventori ruangan dengan spesifikasi atau model serupa untuk menduplikasi kesuksesan tersebut.";
+        }
+
+        // Cari bulan dengan komisi terendah di tahun berjalan
+        $lowestMonth = null;
+        $lowestComm = PHP_INT_MAX;
+        $highestMonth = null;
+        $highestComm = -1;
+        
+        foreach ($monthlyTrends as $trend) {
+            if ($trend->gmv > 0) {
+                if ($trend->commission < $lowestComm) {
+                    $lowestComm = $trend->commission;
+                    $lowestMonth = $trend->month_name;
+                }
+                if ($trend->commission > $highestComm) {
+                    $highestComm = $trend->commission;
+                    $highestMonth = $trend->month_name;
+                }
+            }
+        }
+
+        if ($lowestMonth) {
+            $recommendations[] = "Bulan dengan aktivitas terendah terdeteksi pada \"" . $lowestMonth . "\". Untuk meningkatkan utilisasi ruangan pada periode 'low-season' ini, luncurkan kampanye promosi potongan harga khusus hari kerja (weekday discounts) atau keringanan biaya admin untuk pemesanan berkelanjutan.";
+        }
+        
+        if ($highestMonth) {
+            $recommendations[] = "Puncak pemesanan ('peak season') terdeteksi pada \"" . $highestMonth . "\". Terapkan sistem 'surge pricing' (penyesuaian tarif dinamis) sebesar 5-10% pada periode puncak ini untuk memaksimalkan margin komisi platform.";
+        }
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('admin.pdf_profitability', compact(
+            'filter', 'totalGmv', 'commissionFee', 'avgTransactionValue', 'bookingsCount',
+            'topRooms', 'monthlyTrends', 'recommendations'
+        ));
+
+        return $pdf->download('Laporan_Profitabilitas_Platform_' . ucfirst($filter) . '.pdf');
+    }
+
+    public function downloadRetentionPDF(Request $request)
+    {
+        $totalRenters = \App\Models\People::where('role', 'penyewa')->count();
+
+        // Get renters who have at least 1 successful booking
+        $rentersWithBookings = \App\Models\People::where('role', 'penyewa')
+            ->whereHas('bookings', function($q) {
+                $q->whereIn('status', [1, 2]);
+            })
+            ->withCount(['bookings' => function($q) {
+                $q->whereIn('status', [1, 2]);
+            }])
+            ->get();
+
+        $totalActiveRenters = $rentersWithBookings->count();
+
+        // Repeat Renter Rate
+        $repeatRenters = $rentersWithBookings->filter(function($u) {
+            return $u->bookings_count >= 2;
+        });
+        $repeatRentersCount = $repeatRenters->count();
+        $repeatRenterRate = $totalActiveRenters > 0 ? round(($repeatRentersCount / $totalActiveRenters) * 100, 1) : 0;
+
+        // Renter Segmentation
+        $loyalCount = $rentersWithBookings->filter(function($u) {
+            return $u->bookings_count >= 3;
+        })->count();
+
+        $occasionalCount = $rentersWithBookings->filter(function($u) {
+            return $u->bookings_count >= 1 && $u->bookings_count <= 2;
+        })->count();
+
+        $inactiveCount = $totalRenters - $totalActiveRenters;
+
+        // Top Renters by Spent (CLV)
+        $topRentersRaw = \App\Models\People::where('role', 'penyewa')
+            ->whereHas('bookings', function($q) {
+                $q->whereIn('status', [1, 2]);
+            })
+            ->with(['bookings' => function($q) {
+                $q->whereIn('status', [1, 2]);
+            }])
+            ->get();
+
+        $topRenters = $topRentersRaw->map(function($u) {
+            $totalSpent = $u->bookings->sum('total');
+            return (object)[
+                'username' => $u->username,
+                'email' => $u->email,
+                'booking_count' => $u->bookings->count(),
+                'total_spent' => $totalSpent,
+                'clv' => $totalSpent
+            ];
+        })->sortByDesc('total_spent')->take(5);
+
+        $avgLifetimeSpent = $totalActiveRenters > 0 ? round($topRentersRaw->map(function($u) { return $u->bookings->sum('total'); })->avg()) : 0;
+
+        // --- BUSINESS ANALYSIS & RECOMMENDATIONS ENGINE ---
+        $recommendations = [];
+        if ($repeatRenterRate < 35.0) {
+            $recommendations[] = "Tingkat pembelian berulang (Repeat Renter Rate) berada di angka " . $repeatRenterRate . "%, yang tergolong rendah. Direkomendasikan untuk merilis program loyalitas berbasis poin (loyalty points) untuk menstimulasi penyewa agar memesan kembali.";
+        } else {
+            $recommendations[] = "Tingkat pembelian berulang Anda sangat sehat di angka " . $repeatRenterRate . "%. Pertahankan ini dengan meluncurkan buletin email berkala berisi rekomendasi ruangan eksklusif untuk penyewa aktif.";
+        }
+
+        if ($inactiveCount > 0) {
+            $inactivePercent = round(($inactiveCount / $totalRenters) * 100, 1);
+            $recommendations[] = "Sebanyak " . $inactiveCount . " penyewa (" . $inactivePercent . "%) belum melakukan transaksi pertama mereka. Kirimkan voucher diskon 'Pemesanan Pertama' otomatis via email/WhatsApp untuk mendorong konversi awal.";
+        }
+
+        if ($loyalCount > 0) {
+            $recommendations[] = "Terdapat " . $loyalCount . " penyewa Loyal (melakukan >= 3 pemesanan). Tawarkan keanggotaan VIP/Korporasi khusus dengan keuntungan berupa pemesanan prioritas atau fleksibilitas reschedule gratis guna meningkatkan Customer Lifetime Value (CLV).";
+        }
+
+        if ($occasionalCount > 0) {
+            $recommendations[] = "Segmen penyewa Occasional mendominasi dengan jumlah " . $occasionalCount . " penyewa. Lakukan survei singkat pasca-acara dengan insentif kupon cashback untuk memicu pemesanan berikutnya dan merubah status mereka menjadi Loyal.";
+        }
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('admin.pdf_retention', compact(
+            'totalRenters', 'totalActiveRenters', 'repeatRentersCount', 'repeatRenterRate',
+            'loyalCount', 'occasionalCount', 'inactiveCount', 'topRenters', 'avgLifetimeSpent',
+            'recommendations'
+        ));
+
+        return $pdf->download('Laporan_Retensi_Penyewa_Platform.pdf');
     }
 }

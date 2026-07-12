@@ -38,10 +38,15 @@
 @section('content')
 <div class="container py-4">
     {{-- Header with Back Button --}}
-    <div class="d-flex align-items-center mb-4">
+    <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-3">
         <div>
             <h3 class="fw-bold mb-0 text-dark">Laporan Analisis Kinerja & Alokasi Wilayah</h3>
             <p class="text-secondary small mb-0">Kelola produktivitas tim surveyor lapangan, evaluasi kualitas verifikasi, dan optimalkan alokasi wilayah tugas</p>
+        </div>
+        <div>
+            <a href="{{ route('outsource.report.pdf') }}" class="btn btn-outline-danger rounded-pill px-3 py-2 shadow-sm d-inline-flex align-items-center gap-2 fw-bold" id="downloadPdfBtn">
+                <i class="bi bi-file-earmark-pdf-fill"></i> Cetak PDF
+            </a>
         </div>
     </div>
 

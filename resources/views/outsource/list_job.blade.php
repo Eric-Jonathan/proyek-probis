@@ -9,62 +9,6 @@
     .stat-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.05) !important; }
     .table tbody tr:hover { background-color: rgba(0, 108, 228, 0.05) !important; }
     .modal-content { border-radius: 1.5rem !important; }
-
-    /* ==========================================================================
-       STYLE TABEL UTAMA (SERAGAM DENGAN HALAMAN LAIN)
-       ========================================================================== */
-    table.dataTable thead th {
-        background-color: var(--bs-tertiary-bg) !important;
-        border-bottom: 1px solid var(--bs-border-color) !important;
-        text-transform: uppercase;
-        font-size: 0.75rem;
-        font-weight: 700;
-        color: var(--bs-body-color);
-        padding: 1.25rem 1rem !important;
-    }
-    .table tbody td { 
-        padding: 1.25rem 1rem !important; 
-        vertical-align: middle; 
-        font-size: 0.9rem; 
-    }
-
-    /* ==========================================================================
-       CSS OVERRIDE PAGINATION DATATABLES (SERAGAM DAN BERJARAK)
-       ========================================================================== */
-    .dataTables_wrapper .dataTables_paginate .paginate_button {
-        padding: 0 !important;
-        margin: 0 !important;
-        border: none !important;
-        background: none !important;
-        display: inline !important;
-    }
-    .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
-        border: none !important;
-        background: none !important;
-    }
-    .dataTables_wrapper .dataTables_paginate .pagination .page-item {
-        width: 40px;
-        height: 40px;
-        margin: 0 4px !important;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-    }
-    .dataTables_wrapper .dataTables_paginate .pagination .page-item .page-link {
-        width: 100% !important;
-        height: 100% !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        border-radius: 12px !important;
-        box-sizing: border-box !important;
-    }
-    .dataTables_wrapper .dataTables_paginate .pagination {
-        border-radius: 0 !important;
-        box-shadow: none !important;
-    }
 </style>
 @endsection
 
@@ -189,6 +133,7 @@
 @section('custom_js')
 <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
+@if(count($allJobs) > 0)
 <script>
     $(document).ready(function() {
         $('#tableJobs').DataTable({
@@ -213,4 +158,5 @@
         });
     });
 </script>
+@endif
 @endsection

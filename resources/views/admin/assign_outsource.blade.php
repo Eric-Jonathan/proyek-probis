@@ -136,27 +136,24 @@
                                         {{ Str::limit(implode(', ', array_slice(explode(',', $item->location), 0, 1)), 25) }}
                                     </span>
                                 </td>
-                                <td colspan="2" class="pe-4">
-                                    <div class="d-flex align-items-center justify-content-end gap-3">
-                                        
-                                        <select class="form-select form-assign shadow-none select-surveyor" 
-                                                style="max-width: 250px;" 
-                                                data-room-id="{{ $item->room_id }}" 
-                                                required>
-                                            <option selected disabled value="">Pilih Mitra Outsource...</option>
-                                            @foreach($mitra as $m)
-                                                <option value="{{ $m->outsource_id }}">{{ $m->company_name }}</option>
-                                            @endforeach
-                                        </select>
-
-                                        <button type="button" 
-                                                class="btn btn-primary btn-sm rounded-pill px-4 fw-bold shadow-sm btn-submit-assign" 
-                                                data-room-id="{{ $item->room_id }}" 
-                                                style="white-space: nowrap;">
-                                            Tugaskan <i class="bi bi-send-fill ms-1"></i>
-                                        </button>
-                                        
-                                    </div>
+                                <td>
+                                    <select class="form-select form-assign shadow-none select-surveyor mx-auto" 
+                                            style="max-width: 250px;" 
+                                            data-room-id="{{ $item->room_id }}" 
+                                            required>
+                                        <option selected disabled value="">Pilih Mitra Outsource...</option>
+                                        @foreach($mitra as $m)
+                                            <option value="{{ $m->outsource_id }}">{{ $m->company_name }}</option>
+                                        @endforeach
+                                    </select>
+                                </td>
+                                <td class="pe-4 text-end">
+                                    <button type="button" 
+                                            class="btn btn-primary btn-sm rounded-pill px-4 fw-bold shadow-sm btn-submit-assign" 
+                                            data-room-id="{{ $item->room_id }}" 
+                                            style="white-space: nowrap;">
+                                        Tugaskan <i class="bi bi-send-fill ms-1"></i>
+                                    </button>
                                 </td>
                             </tr>
                         @endforeach
@@ -179,8 +176,27 @@
     </div>
 
     <div class="section-divider mt-5">
-        <h5 class="fw-bold mb-1 text-warning">Monitor Progres Lapangan</h5>
-        <p class="small text-muted mb-0">Memantau progres pengerjaan surveyor di lapangan.</p>
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-3">
+            <div>
+                <h5 class="fw-bold mb-1 text-warning">Monitor Progres Lapangan</h5>
+                <p class="small text-muted mb-0">Memantau progres pengerjaan surveyor di lapangan.</p>
+            </div>
+            <!-- Legend / Keterangan Progres -->
+            <div class="d-flex flex-wrap gap-2 mt-2 mt-md-0">
+                <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-2.5 py-2 rounded-pill" style="font-size: 0.72rem;">
+                    <strong>15%</strong>: Menuju Lokasi (+15%)
+                </span>
+                <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 px-2.5 py-2 rounded-pill" style="font-size: 0.72rem;">
+                    <strong>30%</strong>: Pengisian Data (+15%)
+                </span>
+                <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25 px-2.5 py-2 rounded-pill" style="font-size: 0.72rem;">
+                    <strong>80%</strong>: Menunggu Verifikasi Admin (+50%)
+                </span>
+                <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2.5 py-2 rounded-pill" style="font-size: 0.72rem;">
+                    <strong>100%</strong>: Selesai (+20%)
+                </span>
+            </div>
+        </div>
     </div>
 
     <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
@@ -202,6 +218,23 @@
                                 'on_the_way' => 'Menuju Lokasi',
                                 'checking' => 'Pengisian Data'
                             ];
+                            $statusColors = [
+                                'on_the_way' => 'primary',
+                                'checking' => 'warning'
+                            ];
+                            
+                            if ($m->assignment_status === 'completed') {
+                                if ($m->progress < 100) {
+                                    $label = 'Menunggu Verifikasi Admin';
+                                    $currColor = 'info';
+                                } else {
+                                    $label = 'Selesai';
+                                    $currColor = 'success';
+                                }
+                            } else {
+                                $label = $statusLabels[$m->assignment_status] ?? $m->assignment_status;
+                                $currColor = $statusColors[$m->assignment_status] ?? 'warning';
+                            }
                         @endphp
                         <tr>
                             <td class="ps-4 py-4">
@@ -216,13 +249,13 @@
                             </td>
                             <td>
                                 <div class="d-flex align-items-center justify-content-between mb-1">
-                                    <span class="small fw-bold text-warning" style="font-size: 0.65rem;">
-                                        {{ $statusLabels[$m->assignment_status] ?? $m->assignment_status }}
+                                    <span class="small fw-bold text-{{ $currColor }}" style="font-size: 0.65rem;">
+                                        {{ $label }}
                                     </span>
                                     <span class="small text-muted" style="font-size: 0.65rem;">{{ $m->progress }}%</span>
                                 </div>
                                 <div class="progress progress-thin bg-light">
-                                    <div class="progress-bar bg-warning" role="progressbar" style="width: {{ $m->progress }}%"></div>
+                                    <div class="progress-bar bg-{{ $currColor }}" role="progressbar" style="width: {{ $m->progress }}%"></div>
                                 </div>
                             </td>
                             <td class="pe-4 text-end">
@@ -266,6 +299,7 @@
     <script src="{{ asset('custom_js/admin/assign_outsource.js') }}"></script>
     <script>
         $(document).ready(function() {
+            @if(isset($incoming) && count($incoming) > 0)
             $('#tableIncoming').DataTable({
                 responsive: true,
                 language: {
@@ -282,8 +316,12 @@
                     { orderable: false, targets: [2, 3] } // Matikan sorting kolom assign
                 ]
             });
+            @endif
+
+            @if(isset($monitoring) && count($monitoring) > 0)
             $('#tableMonitoring').DataTable({
                 responsive: true,
+                order: [], // Preserve backend sorting by progress ascending
                 language: {
                     search: "_INPUT_",
                     searchPlaceholder: "Cari progres...",
@@ -298,6 +336,7 @@
                     { orderable: false, targets: [3] } // Matikan sorting kolom aksi
                 ]
             });
+            @endif
         });
     </script>
 @endsection

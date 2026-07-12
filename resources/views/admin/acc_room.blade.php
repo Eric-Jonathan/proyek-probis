@@ -76,7 +76,7 @@
                         <th>Surveyor</th>
                         <th>Rekomendasi Mitra</th>
                         <th>Status Review</th>
-                        <th class="pe-4Action">Aksi</th>
+                        <th class="pe-4">Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -162,6 +162,7 @@
     <script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
     <script>
         $(document).ready(function() {
+            @if(count($pendingRooms) > 0)
             $('#tablePending').DataTable({
                 responsive: true,
                 language: {
@@ -178,6 +179,9 @@
                     { orderable: false, targets: [4] } // Matikan sorting kolom aksi
                 ]
             });
+            @endif
+
+            @if(count($processedRooms) > 0)
             $('#tableProcessed').DataTable({
                 responsive: true,
                 language: {
@@ -194,6 +198,7 @@
                     { orderable: false, targets: [3] } // Matikan sorting kolom aksi
                 ]
             });
+            @endif
         });
     </script>
 @endsection

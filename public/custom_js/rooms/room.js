@@ -19,6 +19,9 @@ function init(){
                 next: '<i class="bi bi-chevron-right"></i>',
                 previous: '<i class="bi bi-chevron-left"></i>'
             }
-        }
+        },
+        columnDefs: [
+            { orderable: false, targets: [6] }
+        ]
     });
 }

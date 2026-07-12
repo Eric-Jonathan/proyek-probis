@@ -2,45 +2,6 @@
 
 @section('custom_css')
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css">
-<style>
-    /* ==========================================================================
-       CSS OVERRIDE PAGINATION DATATABLES (SERAGAM DAN BERJARAK)
-       ========================================================================== */
-    .dataTables_wrapper .dataTables_paginate .paginate_button {
-        padding: 0 !important;
-        margin: 0 !important;
-        border: none !important;
-        background: none !important;
-        display: inline !important;
-    }
-    .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
-        border: none !important;
-        background: none !important;
-    }
-    .dataTables_wrapper .dataTables_paginate .pagination .page-item {
-        width: 40px;
-        height: 40px;
-        margin: 0 4px !important;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-    }
-    .dataTables_wrapper .dataTables_paginate .pagination .page-item .page-link {
-        width: 100% !important;
-        height: 100% !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        border-radius: 12px !important;
-        box-sizing: border-box !important;
-    }
-    .dataTables_wrapper .dataTables_paginate .pagination {
-        border-radius: 0 !important;
-        box-shadow: none !important;
-    }
-</style>
 @endsection
 
 @section('content')
@@ -172,29 +133,7 @@
 @section('custom_js')
     <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
-    <script src="{{ asset('custom_js/rooms/room.js') }}"></script>
-    <script>
-        $(document).ready(function() {
-            $('#tableRoom').DataTable({
-                responsive: true,
-                // Mengatur DOM grid layout Bootstrap 5
-                dom: "<'row'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6'f>>" +
-                     "<'row'<'col-sm-12'tr>>" +
-                     "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
-                language: {
-                    search: "_INPUT_",
-                    searchPlaceholder: "Cari ruangan...",
-                    lengthMenu: "Tampilkan _MENU_ data",
-                    info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ entri",
-                    paginate: {
-                        previous: "‹",
-                        next: "›"
-                    }
-                },
-                columnDefs: [
-                    { orderable: false, targets: [6] }
-                ]
-            });
-        });
-    </script>
+    @if(count($rooms) > 0)
+        <script src="{{ asset('custom_js/rooms/room.js') }}"></script>
+    @endif
 @endsection

@@ -118,51 +118,130 @@
             border-top: 1px solid #f1f5f9;
         }
 
-        /* Style untuk bagian 'Show entries' (Kiri) */
+        /* ========================================================================= */
+        /* GLOBAL DATATABLES STYLING OVERRIDES (BOOTSTRAP 5 INTEGRATION)             */
+        /* ========================================================================= */
+        /* 1. Show Entries Dropdown (Left side) */
         .dataTables_length {
-            font-size: 0.85rem;
-            color: #64748b;
+            font-size: 0.82rem;
+            color: var(--bs-secondary-color);
         }
-
         .dataTables_length select {
-            margin: 0 5px;
-            padding: 0.25rem 0.5rem !important;
+            margin: 0 6px;
+            padding: 0.375rem 1.75rem 0.375rem 0.75rem !important;
             border-radius: 0.5rem !important;
-            border: 1px solid #e2e8f0 !important;
+            border: 1px solid var(--bs-border-color) !important;
+            background-color: var(--bs-body-bg) !important;
+            color: var(--bs-body-color) !important;
             outline: none;
+            font-size: 0.82rem;
+            cursor: pointer;
+            display: inline-block;
+            width: auto;
+        }
+        .dataTables_length select:focus {
+            border-color: #0d6efd !important;
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15) !important;
+        }
+        
+        /* 2. Search Box (Right side) */
+        .dataTables_filter {
+            font-size: 0.82rem;
+            color: var(--bs-secondary-color);
+        }
+        .dataTables_filter input {
+            margin-left: 8px;
+            padding: 0.375rem 0.75rem !important;
+            border-radius: 0.5rem !important;
+            border: 1px solid var(--bs-border-color) !important;
+            background-color: var(--bs-body-bg) !important;
+            color: var(--bs-body-color) !important;
+            outline: none;
+            font-size: 0.82rem;
+            min-width: 200px;
+            display: inline-block;
+            width: auto;
+        }
+        .dataTables_filter input:focus {
+            border-color: #0d6efd !important;
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15) !important;
         }
 
-        /* Style untuk navigasi (Kanan) */
-        .dataTables_paginate {
+        /* 3. Table Header Styling consistency */
+        table.dataTable thead th {
+            font-size: 0.75rem !important;
+            font-weight: 700 !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.05em !important;
+            color: var(--bs-secondary-color) !important;
+            background-color: var(--bs-tertiary-bg) !important;
+            border-bottom: 2px solid var(--bs-border-color) !important;
+            padding: 0.75rem 1rem !important;
+        }
+        
+        /* 4. Reset default DataTables pagination button styles to avoid BS5 clash */
+        .dataTables_wrapper .dataTables_paginate .paginate_button {
+            padding: 0 !important;
+            margin: 0 !important;
+            border: none !important;
+            background: none !important;
+            display: inline !important;
+        }
+        .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+            border: none !important;
+            background: none !important;
+        }
+
+        /* 5. Pagination Buttons (Bootstrap 5 styling) */
+        .dataTables_wrapper .dataTables_paginate {
+            margin-top: 1rem !important;
+            display: flex;
+            justify-content: flex-end;
+        }
+        .dataTables_wrapper .dataTables_paginate .pagination {
+            margin-bottom: 0 !important;
+            gap: 4px;
+            display: flex;
+            flex-wrap: wrap;
+        }
+        .dataTables_wrapper .dataTables_paginate .pagination .page-item .page-link {
+            padding: 0.35rem 0.75rem !important;
+            border-radius: 0.5rem !important;
+            color: var(--bs-body-color) !important;
+            background-color: var(--bs-body-bg) !important;
+            border: 1px solid var(--bs-border-color) !important;
+            font-size: 0.82rem !important;
+            font-weight: 500 !important;
+            transition: all 0.2s ease;
+            box-shadow: none !important;
             display: flex;
             align-items: center;
+            justify-content: center;
+            min-width: 32px;
+            height: 32px;
+        }
+        .dataTables_wrapper .dataTables_paginate .pagination .page-item.active .page-link {
+            background-color: #0d6efd !important;
+            border-color: #0d6efd !important;
+            color: #fff !important;
+        }
+        .dataTables_wrapper .dataTables_paginate .pagination .page-item:hover:not(.active) .page-link {
+            background-color: var(--bs-tertiary-bg) !important;
+            color: var(--bs-body-color) !important;
+        }
+        .dataTables_wrapper .dataTables_paginate .pagination .page-item.disabled .page-link {
+            background-color: var(--bs-tertiary-bg) !important;
+            border-color: var(--bs-border-color) !important;
+            color: var(--bs-secondary-color) !important;
+            opacity: 0.6;
+            cursor: not-allowed;
         }
 
-        .dataTables_wrapper .dataTables_paginate .paginate_button {
-            padding: 0.35rem 0.85rem !important;
-            margin-left: 5px !important;
-            border-radius: 0.5rem !important;
-            border: 1px solid #e2e8f0 !important;
-            background-color: #fff !important;
-            font-size: 0.85rem;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .dataTables_wrapper .dataTables_paginate .paginate_button.current {
-            background-color: #1e3a8a !important; /* Biru gelap sesuai Armada */
-            color: white !important;
-            border-color: #1e3a8a !important;
-        }
-
-        .dataTables_wrapper .dataTables_paginate .paginate_button:hover:not(.current) {
-            background-color: #f1f5f9 !important;
-        }
-
-        /* Hilangkan garis fokus biru standar DataTables */
-        .paginate_button:focus {
-            outline: none !important;
-            box-shadow: none !important;
+        /* 6. Info Text (Left bottom) */
+        .dataTables_info {
+            font-size: 0.82rem !important;
+            color: var(--bs-secondary-color) !important;
+            padding-top: 1rem !important;
         }
 
         /* Fixed Toggle Button styling */

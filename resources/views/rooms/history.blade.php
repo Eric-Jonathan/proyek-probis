@@ -53,46 +53,7 @@
     .bg-danger-subtle { background-color: #fce8e6; color: #dc3545; }
     .btn-primary:disabled { background-color: #cbd5e1 !important; opacity: 0.7; cursor: not-allowed; }
     .rating-text.selected { color: #FFC107 !important; }
-
-    /* ==========================================================================
-       TAMBAHAN CSS OVERRIDE PAGINATION DATATABLES (SAMA SEPERTI SEBELUMNYA)
-       ========================================================================== */
-    .dataTables_wrapper .dataTables_paginate .paginate_button {
-        padding: 0 !important;
-        margin: 0 !important;
-        border: none !important;
-        background: none !important;
-        display: inline !important;
-    }
-    .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
-        border: none !important;
-        background: none !important;
-    }
-    .dataTables_wrapper .dataTables_paginate .pagination .page-item {
-        width: 40px;
-        height: 40px;
-        margin: 0 4px !important;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-    }
-    .dataTables_wrapper .dataTables_paginate .pagination .page-item .page-link {
-        width: 100% !important;
-        height: 100% !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        border-radius: 12px !important;
-        box-sizing: border-box !important;
-    }
-    .dataTables_wrapper .dataTables_paginate .pagination {
-        border-radius: 0 !important;
-        box-shadow: none !important;
-    }
 </style>
-{{-- Load CSS DataTables --}}
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css">
 @endsection
 
