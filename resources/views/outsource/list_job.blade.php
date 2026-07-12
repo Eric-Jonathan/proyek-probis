@@ -1,5 +1,73 @@
 @extends('layout.layout')
 
+@section('custom_css')
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css">
+<style>
+    body { background-color: var(--bs-tertiary-bg); }
+    .rounded-4 { border-radius: 1rem !important; }
+    .stat-card { transition: transform 0.2s ease, box-shadow 0.2s ease; border: none; background-color: var(--bs-card-bg); }
+    .stat-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.05) !important; }
+    .table tbody tr:hover { background-color: rgba(0, 108, 228, 0.05) !important; }
+    .modal-content { border-radius: 1.5rem !important; }
+
+    /* ==========================================================================
+       STYLE TABEL UTAMA (SERAGAM DENGAN HALAMAN LAIN)
+       ========================================================================== */
+    table.dataTable thead th {
+        background-color: var(--bs-tertiary-bg) !important;
+        border-bottom: 1px solid var(--bs-border-color) !important;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: var(--bs-body-color);
+        padding: 1.25rem 1rem !important;
+    }
+    .table tbody td { 
+        padding: 1.25rem 1rem !important; 
+        vertical-align: middle; 
+        font-size: 0.9rem; 
+    }
+
+    /* ==========================================================================
+       CSS OVERRIDE PAGINATION DATATABLES (SERAGAM DAN BERJARAK)
+       ========================================================================== */
+    .dataTables_wrapper .dataTables_paginate .paginate_button {
+        padding: 0 !important;
+        margin: 0 !important;
+        border: none !important;
+        background: none !important;
+        display: inline !important;
+    }
+    .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+        border: none !important;
+        background: none !important;
+    }
+    .dataTables_wrapper .dataTables_paginate .pagination .page-item {
+        width: 40px;
+        height: 40px;
+        margin: 0 4px !important;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .dataTables_wrapper .dataTables_paginate .pagination .page-item .page-link {
+        width: 100% !important;
+        height: 100% !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border-radius: 12px !important;
+        box-sizing: border-box !important;
+    }
+    .dataTables_wrapper .dataTables_paginate .pagination {
+        border-radius: 0 !important;
+        box-shadow: none !important;
+    }
+</style>
+@endsection
+
 @section('content')
 <div class="container py-3">
     @if(session('success'))
@@ -47,8 +115,8 @@
     </div>
 
     <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
-        <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0 text-center">
+        <div class="table-responsive p-3">
+            <table class="table table-hover align-middle mb-0 text-center" id="tableJobs" style="width: 100%;">
                 <thead class="table-light text-secondary text-uppercase" style="font-size: 0.75rem; letter-spacing: 0.5px;">
                     <tr>
                         <th class="ps-4 py-3 text-start border-0">ID & Unit Ruangan</th>
@@ -59,8 +127,6 @@
                     </tr>
                 </thead>
                 <tbody>
-
-
                     @forelse($allJobs as $job)
                     <tr>
                         <td class="ps-4 py-4 text-start">
@@ -76,7 +142,7 @@
                                     Ambil Tugas <i class="bi bi-plus-circle ms-1"></i>
                                 </button>
  
-                                <div class="modal fade" id="modalAmbil{{ $job->id }}" tabindex="-1" aria-hidden="true">
+                                <div class="modal fade text-start" id="modalAmbil{{ $job->id }}" tabindex="-1" aria-hidden="true">
                                     <div class="modal-dialog modal-dialog-centered">
                                         <div class="modal-content border-0 rounded-4 shadow">
                                             <div class="modal-body p-4 text-center">
@@ -118,13 +184,33 @@
         </div>
     </div>
 </div>
+@endsection
 
-<style>
-    body { background-color: #f8f9fa; }
-    .rounded-4 { border-radius: 1rem !important; }
-    .stat-card { transition: transform 0.2s ease, box-shadow 0.2s ease; border: none; }
-    .stat-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.05) !important; }
-    .table tbody tr:hover { background-color: #f8fbff !important; }
-    .modal-content { border-radius: 1.5rem !important; }
-</style>
+@section('custom_js')
+<script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
+<script>
+    $(document).ready(function() {
+        $('#tableJobs').DataTable({
+            responsive: true,
+            // Mengatur layout DOM grid sistem Bootstrap 5
+            dom: "<'row'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6'f>>" +
+                 "<'row'<'col-sm-12'tr>>" +
+                 "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
+            language: {
+                search: "_INPUT_",
+                searchPlaceholder: "Cari tugas...",
+                lengthMenu: "Tampilkan _MENU_ data",
+                info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ entri",
+                paginate: {
+                    previous: "‹",
+                    next: "›"
+                }
+            },
+            columnDefs: [
+                { orderable: false, targets: [4] } // Matikan sorting untuk kolom aksi
+            ]
+        });
+    });
+</script>
 @endsection

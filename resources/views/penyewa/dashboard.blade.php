@@ -51,13 +51,13 @@
     <div class="card-body p-0">
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
-                <thead class="table-light">
+                <thead class="table-light text-secondary text-uppercase" style="font-size: 0.75rem; letter-spacing: 0.5px;">
                     <tr>
                         <th class="ps-4 py-3" style="width: 10%;">ID Booking</th>
-                        <th style="width: 35%;">Ruangan & Lokasi</th>
-                        <th style="width: 25%;">Waktu Sewa</th>
-                        <th style="width: 15%;">Status</th>
-                        <th class="text-center" style="width: 15%;">Aksi</th>
+                        <th style="width: 30%;">Ruangan & Lokasi</th>
+                        <th style="width: 15%;">Waktu Sewa</th>
+                        <th style="width: 20%;">Status</th>
+                        <th class="text-center" style="width: 25%;">Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -116,7 +116,7 @@
                             @endif
                         </td>
                         <td class="pe-3">
-                            <div class="d-flex gap-2 justify-content-center align-items-center">
+                            <div class="d-flex gap-2 justify-content-center align-items-center" style="white-space: nowrap;">
                                 @if($b->status == 0)
                                     <a href="/bookings/history?detail={{ $b->booking_id }}" class="btn btn-sm btn-outline-secondary rounded-pill px-3 py-1 fw-bold text-decoration-none">Detail</a>
                                 @else
@@ -179,7 +179,7 @@
                 <div class="modal-header border-0 p-4 pb-0">
                     <div>
                         <h4 class="fw-bold mb-0">Beri Penilaian</h4>
-                        <p class="text-secondary small mb-0">{{ $b->roomDetail->item_name ?? 'Ruangan' }}</p>
+                        <p class="text-secondary-emphasis small mb-0">Untuk Ruangan: <strong class="text-warning">{{ $b->roomDetail->item_name ?? 'Ruangan' }}</strong></p>
                     </div>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
@@ -195,7 +195,7 @@
                             @foreach(['kebersihan' => 'Kebersihan', 'pelayanan' => 'Pelayanan', 'kenyamanan' => 'Kenyamanan'] as $key => $label)
                             <div class="col-12">
                                 <label class="form-label fw-bold small text-uppercase" style="letter-spacing: 1px;">{{ $label }}</label>
-                                <div class="rating-container p-3 rounded-3 d-flex align-items-center justify-content-between" style="background-color: #f8f9fa;">
+                            <div class="rating-container p-3 rounded-3 d-flex align-items-center justify-content-between">
                                     <div class="star-rating d-flex flex-row-reverse">
                                         @for($i = 5; $i >= 1; $i--)
                                         <input type="radio" id="{{ $key }}-{{ $i }}-{{ $b->booking_id }}" name="{{ $key }}" value="{{ $i }}" required>
@@ -237,7 +237,7 @@
                 <div>
                     <div class="badge bg-warning text-dark mb-2 px-3 py-1.5 fw-bold" style="font-size: 10px;"><i class="bi bi-bell-fill me-1"></i> ULASAN DIBUTUHKAN</div>
                     <h4 class="fw-bold mb-0">Bagaimana Acara Anda?</h4>
-                    <p class="text-secondary small mb-0">Silakan beri penilaian untuk penyewaan: <strong>{{ $unratedBooking->roomDetail->item_name ?? 'Ruangan' }}</strong></p>
+                    <p class="text-secondary-emphasis small mb-0">Silakan beri penilaian untuk penyewaan: <strong class="text-warning">{{ $unratedBooking->roomDetail->item_name ?? 'Ruangan' }}</strong></p>
                 </div>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
@@ -253,7 +253,7 @@
                         @foreach(['kebersihan' => 'Kebersihan', 'pelayanan' => 'Pelayanan', 'kenyamanan' => 'Kenyamanan'] as $key => $label)
                         <div class="col-12">
                             <label class="form-label fw-bold small text-uppercase" style="letter-spacing: 1px;">{{ $label }}</label>
-                            <div class="rating-container p-3 rounded-3 d-flex align-items-center justify-content-between" style="background-color: #f8f9fa;">
+                            <div class="rating-container p-3 rounded-3 d-flex align-items-center justify-content-between">
                                 <div class="star-rating d-flex flex-row-reverse">
                                     @for($i = 5; $i >= 1; $i--)
                                     <input type="radio" id="{{ $key }}-{{ $i }}-auto" name="{{ $key }}" value="{{ $i }}" required>
@@ -352,8 +352,20 @@
 <style>
     /* Star Rating CSS */
     .star-rating input { display: none; }
-    .star-rating label { font-size: 1.6rem; color: #ddd; cursor: pointer; transition: 0.2s; margin: 0 2px; }
+    .star-rating label { font-size: 1.8rem; color: var(--bs-border-color); cursor: pointer; transition: color 0.15s ease-in-out, transform 0.15s ease-in-out; margin: 0 4px; }
     .star-rating label:hover, .star-rating label:hover ~ label, .star-rating input:checked ~ label { color: #FFC107; }
+    .star-rating label:hover { transform: scale(1.15); }
+    
+    /* Rating Container Style */
+    .rating-container {
+        background-color: var(--bs-tertiary-bg);
+        border: 1px solid var(--bs-border-color);
+        transition: all 0.2s ease-in-out;
+    }
+    .rating-container:hover {
+        background-color: var(--bs-secondary-bg);
+        border-color: var(--bs-border-color-translucent);
+    }
     
     /* Subtle Badge */
     .bg-primary-subtle { background-color: #e7f1ff; color: #0064D2; }
@@ -361,7 +373,7 @@
     .bg-danger-subtle { background-color: #fce8e6; color: #dc3545; }
 
     .btn-primary:disabled { background-color: #cbd5e1 !important; opacity: 0.7; cursor: not-allowed; }
-    .rating-text.selected { color: #0064D2 !important; }
+    .rating-text.selected { color: #FFC107 !important; }
     
     .transition-transform {
         transition: transform 0.2s ease-in-out;

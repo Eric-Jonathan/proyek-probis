@@ -79,11 +79,18 @@
                     <h6 class="fw-bold small text-muted text-uppercase mb-3">Ringkasan Biaya</h6>
                     
                     @php 
-                        $basePrice = $room->price * ($room->jenis_harga === 'Pax' ? $room->min_order : $totalDays);
+                        $jenisHargaLower = strtolower(trim($room->jenis_harga));
+                        if ($jenisHargaLower === 'pax') {
+                            $basePrice = $room->price * $room->min_order;
+                        } elseif ($jenisHargaLower === 'pax_hari') {
+                            $basePrice = $room->price * $room->min_order * $totalDays;
+                        } else {
+                            $basePrice = $room->price * $totalDays;
+                        }
                     @endphp
 
-                    <div class="d-flex justify-content-between mb-2">
-                        <span>Sewa Ruangan Utama</span>
+                    <div class="d-flex justify-content-between mb-1">
+                        <span class="fw-semibold">Sewa Ruangan Utama</span>
                         <span class="fw-bold" id="render-base-price" 
                             data-jenis-harga="{{ $room->jenis_harga }}" 
                             data-raw-price="{{ $room->price }}"
@@ -93,6 +100,9 @@
                             data-deposit-percent="{{ $room->deposit_percent }}">
                             Rp {{ number_format($basePriceCalculated, 0, ',', '.') }}
                         </span>
+                    </div>
+                    <div class="mb-3">
+                        <small class="text-muted d-block" id="label-sewa-utama" style="font-size: 0.8rem; line-height: 1.4;"></small>
                     </div>
                     
                     <div id="render-extra-services-cost">
@@ -140,15 +150,25 @@
             <div class="card shadow-sm border-0 rounded-4 p-4">
                 <h4 class="fw-bold mb-4 border-bottom pb-2">Detail Formulir Acara</h4>
                 
-                <form action="{{ route('booking.store', $room->room_id) }}" method="POST" id="main-booking-form">
+                <form action="{{ route('booking.store', $room->room_id) }}" method="POST" id="main-booking-form" data-room-id="{{ $room->room_id }}">
                     @csrf
                     <input type="hidden" name="start_date" value="{{ $startDate->format('Y-m-d') }}">
                     <input type="hidden" name="end_date" value="{{ $endDate->format('Y-m-d') }}">
+                    @php
+                        $userPhone = Auth::user()->phone ?? '';
+                        if (str_starts_with($userPhone, '+62')) {
+                            $userPhone = substr($userPhone, 3);
+                        } elseif (str_starts_with($userPhone, '62')) {
+                            $userPhone = substr($userPhone, 2);
+                        } elseif (str_starts_with($userPhone, '0')) {
+                            $userPhone = substr($userPhone, 1);
+                        }
+                    @endphp
 
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label class="form-label small fw-bold">Nama Lengkap / Instansi Pemesan <span class="text-danger">*</span></label>
-                            <input type="text" name="instansi" class="form-control py-2" placeholder="Masukkan nama pemesan" value="{{ old('instansi') }}" required>
+                            <input type="text" name="instansi" class="form-control py-2" placeholder="Masukkan nama pemesan" value="{{ old('instansi', Auth::user()->username ?? '') }}" required>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small fw-bold">Jenis Kegiatan Acara <span class="text-danger">*</span></label>
@@ -165,14 +185,14 @@
                             <label class="form-label small fw-bold">Nomor WhatsApp Aktif <span class="text-danger">*</span></label>
                             <div class="input-group">
                                 <span class="input-group-text bg-light">+62</span>
-                                <input type="number" name="phone" class="form-control py-2" placeholder="8123xxxx" value="{{ old('phone') }}" required>
+                                <input type="number" name="phone" class="form-control py-2" placeholder="8123xxxx" value="{{ old('phone', $userPhone) }}" required>
                             </div>
                         </div>
 
                         <div class="col-md-6">
                             <label class="form-label small fw-bold">Estimasi Jumlah Pax / Tamu Hadir <span class="text-danger">*</span></label>
                             <input type="number" name="total_capacity" id="input-capacity" class="form-control py-2" 
-                                   max="{{ $room->capacity }}" placeholder="Maks. {{ $room->capacity }} orang" value="{{ old('total_capacity') }}" required>
+                                   min="1" max="{{ $room->capacity }}" placeholder="Maks. {{ $room->capacity }} orang" value="{{ old('total_capacity', 1) }}" required>
                             <div class="form-text text-muted" style="font-size: 11px;">Tidak boleh melebihi kapasitas maksimal ruangan.</div>
                         </div>
 
@@ -271,6 +291,8 @@
     </div>
 </div>
 
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+@endsection
+
+@section('custom_js')
 <script src="{{ asset('custom_js/rooms/booking.js') }}"></script>
 @endsection

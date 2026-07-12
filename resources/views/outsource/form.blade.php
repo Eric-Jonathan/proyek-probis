@@ -221,12 +221,12 @@
 
                             {{-- DOKUMENTASI FOTO --}}
                             <div class="col-12 mt-4">
-                                <label class="form-label fw-bold small text-uppercase">Unggah Foto Lapangan (Minimal 3) *</label>
+                                <label class="form-label fw-bold small text-uppercase">Unggah Foto Lapangan (Minimal 3, Maksimal 5) *</label>
                                 <div class="input-group">
                                     <input type="file" name="fotos[]" id="foto-input" class="form-control bg-light border-0 py-2" accept="image/*" multiple required>
                                     <span class="input-group-text bg-light border-0"><i class="bi bi-camera-fill text-primary"></i></span>
                                 </div>
-                                <small class="text-muted d-block mt-1">Gunakan format JPEG, PNG, JPG, atau WebP. Maks 2MB per gambar.</small>
+                                <small class="text-muted d-block mt-1">Gunakan format JPEG, PNG, JPG, atau WebP. Maks 2MB per gambar. Batas maksimal 5 foto.</small>
                                 
                                 <div id="foto-preview-container" class="d-flex flex-wrap gap-2.5 p-3 border rounded bg-light mt-3 align-items-center" style="min-height: 110px;">
                                     <div class="text-center w-100 text-muted" id="foto-placeholder">

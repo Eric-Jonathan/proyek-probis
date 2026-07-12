@@ -41,6 +41,51 @@
 @endsection
 
 @section('content')
+@php
+    $start = \Carbon\Carbon::parse($booking->start_date);
+    $end = \Carbon\Carbon::parse($booking->end_date);
+    $days = max(1, $start->diffInDays($end) + 1);
+    
+    // Let's check room price and booking details
+    $roomPrice = $booking->roomDetail->room->price ?? 0;
+    $jenisHarga = strtolower(trim($booking->roomDetail->room->jenis_harga ?? ''));
+    $minPax = $booking->roomDetail->room->min_order ?? 1;
+    
+    // Calculate total hours if Hourly
+    $durationHours = max(1, $start->diffInHours($end));
+    if ($durationHours <= 0) {
+        $durationHours = 1;
+    }
+    
+    // Reverse calculate actual pax based on price paid
+    $actualPax = $minPax;
+    if ($roomPrice > 0) {
+        $roomBasePrice = $booking->roomDetail->item_price ?? 0;
+        if ($jenisHarga === 'pax') {
+            $actualPax = (int) round($roomBasePrice / $roomPrice);
+        } elseif ($jenisHarga === 'pax_hari') {
+            $actualPax = (int) round($roomBasePrice / ($roomPrice * $days));
+        } elseif ($jenisHarga === 'pax_jam') {
+            $actualPax = (int) round($roomBasePrice / ($roomPrice * $durationHours * $days));
+        }
+    }
+    $actualPax = max(1, $actualPax);
+    
+    $formulaText = '';
+    if ($jenisHarga === 'pax') {
+        $formulaText = '(Rp ' . number_format($roomPrice, 0, ',', '.') . ' / Pax x ' . $actualPax . ' Pax)';
+    } elseif ($jenisHarga === 'pax_hari') {
+        $formulaText = '(Rp ' . number_format($roomPrice, 0, ',', '.') . ' / Pax/Hari x ' . $actualPax . ' Pax x ' . $days . ' Hari)';
+    } elseif ($jenisHarga === 'hari') {
+        $formulaText = '(Rp ' . number_format($roomPrice, 0, ',', '.') . ' / Hari x ' . $days . ' Hari)';
+    } elseif ($jenisHarga === 'jam') {
+        $formulaText = '(Rp ' . number_format($roomPrice, 0, ',', '.') . ' / Jam x ' . $durationHours . ' Jam x ' . $days . ' Hari)';
+    } elseif ($jenisHarga === 'pax_jam') {
+        $formulaText = '(Rp ' . number_format($roomPrice, 0, ',', '.') . ' / Pax/Jam x ' . $actualPax . ' Pax x ' . $durationHours . ' Jam x ' . $days . ' Hari)';
+    }
+    
+    $invoiceCode = 'INV/' . \Carbon\Carbon::parse($booking->created_at)->format('Ymd') . '/TRX/' . str_pad($booking->booking_id, 4, '0', STR_PAD_LEFT);
+@endphp
 <div class="container py-4">
     {{-- Top Navigation --}}
     <div class="d-flex justify-content-between align-items-center mb-4 btn-print-hide">
@@ -49,13 +94,13 @@
                 <i class="bi bi-arrow-left"></i>
             </a>
             <div>
-                <h4 class="fw-bold mb-0">Laporan Detail Pemesanan</h4>
-                <p class="text-secondary mb-0">ID Booking: <span class="text-primary fw-bold">#TRX-{{ $booking->booking_id }}</span></p>
+                <h4 class="fw-bold mb-0">Invoice Pendapatan Penyedia</h4>
+                <p class="text-secondary mb-0">No. Invoice: <span class="text-primary fw-bold">{{ $invoiceCode }}</span></p>
             </div>
         </div>
-        {{-- <button onclick="window.print()" class="btn btn-primary px-4 rounded-pill shadow-sm fw-bold">
-            <i class="bi bi-printer me-2"></i> Cetak Laporan
-        </button> --}}
+        <a href="{{ route('penyedia.booking.pdf', $booking->booking_id) }}" class="btn btn-danger px-4 rounded-pill shadow-sm fw-bold">
+            <i class="bi bi-file-earmark-pdf me-2"></i> Unduh PDF
+        </a>
     </div>
 
     <div class="card card-report shadow-sm">
@@ -63,6 +108,7 @@
         <div class="report-header">
             <div class="row align-items-center">
                 <div class="col-md-8">
+                    <span class="small text-white-50 text-uppercase fw-bold d-block mb-1" style="font-size: 0.72rem; letter-spacing: 1px;">Gedung / Ruangan Utama</span>
                     <h3 class="fw-bold mb-2">{{ $booking->roomDetail->room->name ?? 'Gedung' }}</h3>
                     <p class="mb-0 opacity-75"><i class="bi bi-geo-alt me-2"></i>{{ $booking->roomDetail->room->location ?? 'Lokasi tidak tersedia' }}</p>
                 </div>
@@ -99,6 +145,30 @@
         </div>
 
         <div class="card-body p-4 p-md-5">
+            @if(session('success'))
+                <div class="alert alert-success alert-dismissible fade show border-0 rounded-4 shadow-sm mb-4" role="alert">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-check-circle-fill me-2 fs-5 text-success"></i>
+                        <div>{{ session('success') }}</div>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            @endif
+
+            @if($errors->any())
+                <div class="alert alert-danger alert-dismissible fade show border-0 rounded-4 shadow-sm mb-4" role="alert">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-exclamation-octagon-fill me-2 fs-5 text-danger"></i>
+                        <div>
+                            @foreach($errors->all() as $error)
+                                <div>{{ $error }}</div>
+                            @endforeach
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            @endif
+
             <div class="row">
                 {{-- Data Penyewa --}}
                 <div class="col-md-6 mb-4">
@@ -152,15 +222,69 @@
                 @endif
             </div>
 
+            @php
+                $isInstallment = str_contains(strtolower($booking->method_payment), 'cicilan');
+            @endphp
+
+            @if($isInstallment)
+                <div class="divider"></div>
+                <div class="row">
+                    <div class="col-12 mb-4">
+                        <h5 class="fw-bold mb-3 text-warning"><i class="bi bi-clock-history me-2"></i>Status & Jatuh Tempo Cicilan</h5>
+                        <div class="p-4 rounded-4 border bg-warning-subtle" style="background-color: #fffbeb !important; border-color: #fde68a !important;">
+                            <div class="row align-items-center">
+                                <div class="col-md-6 mb-3 mb-md-0">
+                                    <div class="mb-2">
+                                        <span class="info-label d-block text-secondary">Cicilan Terbayar</span>
+                                        <span class="info-value text-dark fw-bold" style="font-size: 1.15rem;">{{ $booking->installments_paid }} dari 3 Kali Pembayaran</span>
+                                    </div>
+                                    <div>
+                                        <span class="info-label d-block text-secondary">Batas Waktu Pembayaran (Jatuh Tempo)</span>
+                                        @if($booking->installment_due_date)
+                                            <span class="info-value text-danger fw-bold" style="font-size: 1.15rem;">
+                                                <i class="bi bi-calendar-event me-1"></i>
+                                                {{ \Carbon\Carbon::parse($booking->installment_due_date)->translatedFormat('l, d F Y') }}
+                                            </span>
+                                        @else
+                                            <span class="info-value text-muted fw-bold" style="font-size: 1.15rem;">Belum ditentukan oleh Anda</span>
+                                        @endif
+                                    </div>
+                                </div>
+                                <div class="col-md-6 text-md-end">
+                                    @if($booking->status == 3 || $booking->status == 4)
+                                        <form action="{{ route('penyedia.booking.update_due_date', $booking->booking_id) }}" method="POST" class="d-inline-block text-start w-100" style="max-width: 350px;">
+                                            @csrf
+                                            <label for="installment_due_date" class="form-label small fw-bold text-secondary mb-1">Atur / Ubah Tanggal Jatuh Tempo</label>
+                                            <div class="input-group">
+                                                <input type="date" class="form-control rounded-start-pill" id="installment_due_date" name="installment_due_date" 
+                                                       value="{{ $booking->installment_due_date ?? '' }}" required min="{{ date('Y-m-d') }}">
+                                                <button class="btn btn-warning text-dark fw-bold rounded-end-pill px-3" type="submit">
+                                                    <i class="bi bi-save me-1"></i> Simpan
+                                                </button>
+                                            </div>
+                                        </form>
+                                    @else
+                                        <span class="badge bg-success text-white px-3 py-2 rounded-pill fw-bold"><i class="bi bi-check-circle-fill me-1"></i> Cicilan Sudah Selesai/Lunas</span>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @endif
+
             <div class="divider"></div>
 
             {{-- Rincian Biaya --}}
             <div class="row justify-content-end">
-                <div class="col-md-5">
+                <div class="col-md-6 col-lg-5">
                     <h5 class="fw-bold mb-4 text-primary text-md-end">Rincian Pendapatan</h5>
-                    <div class="cost-item">
-                        <span class="text-secondary">Harga Sewa Ruangan Utama</span>
-                        <span class="fw-bold text-dark">Rp {{ number_format($booking->roomDetail->item_price ?? 0, 0, ',', '.') }}</span>
+                    <div class="cost-item align-items-start">
+                        <div>
+                            <span class="text-secondary">Harga Sewa Ruangan Utama</span>
+                            <span class="d-block small text-muted font-monospace" style="font-size: 0.72rem; line-height: 1.2;">{{ $formulaText }}</span>
+                        </div>
+                        <span class="fw-bold text-dark text-end">Rp {{ number_format($booking->roomDetail->item_price ?? 0, 0, ',', '.') }}</span>
                     </div>
                     
                     @if($booking->serviceDetails->count() > 0)

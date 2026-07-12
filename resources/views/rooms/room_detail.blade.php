@@ -12,10 +12,19 @@
     html { scroll-behavior: smooth; }
 
     section, .container[id] {
-        scroll-margin-top: 140px;
+        scroll-margin-top: 120px;
     }
 
     body { background-color: #f8f9fa; }
+
+    /* Fix transparent navbar and sub-navbar issues */
+    .navbar, #sub-navbar {
+        background-color: #ffffff !important;
+    }
+    [data-bs-theme="dark"] .navbar,
+    [data-bs-theme="dark"] #sub-navbar {
+        background-color: #212529 !important;
+    }
 
     .clickable-box {
         background-color: #f8f9fa;
@@ -186,7 +195,7 @@
 @section('content')
 <body class="bg-white">
     <!-- Sticky Sub-Navbar -->
-    <div class="sticky-top bg-white border-bottom shadow-sm d-flex justify-content-between" style="z-index: 900; top: 70px;">
+    <div id="sub-navbar" class="sticky-top bg-white border-bottom shadow-sm d-flex justify-content-between" style="z-index: 900; top: 56px;">
         <div class="container">
             <ul id="main-nav" class="nav nav-tabs border-0 mb-0 text-nowrap flex-nowrap overflow-auto py-2">
                 <li class="nav-item"><a class="nav-link active text-primary fw-bold border-0 border-bottom border-primary border-3" href="#section-info">Info Umum</a></li>
@@ -260,8 +269,12 @@
                 </div>
                 <h2 class="fw-bold mb-1" style="font-size: 2.2rem; letter-spacing: -0.5px;">{{ $room->name }}</h2>
                 <div class="d-flex align-items-center gap-2 small">
-                    <span class="fw-bold">{{ number_format($averageRating, 1) }}<span class="text-muted fw-normal">/5</span></span>
-                    <a href="#section-review" class="text-decoration-none fw-semibold" style="color: var(--primary-blue);">({{ $totalReview }} Review)</a>
+                    @if($totalReview > 0)
+                        <span class="fw-bold">{{ number_format($averageRating, 1) }}<span class="text-muted fw-normal">/5</span></span>
+                        <a href="#section-review" class="text-decoration-none fw-semibold" style="color: var(--primary-blue);">({{ $totalReview }} Review)</a>
+                    @else
+                        <span class="text-muted fw-medium"><i class="bi bi-chat-left-text me-1"></i>Belum ada review</span>
+                    @endif
                     <span class="text-muted mx-1">•</span>
                     <span class="text-muted fw-medium"><i class="bi bi-geo-alt"></i> {{ $room->location }}</span>
                 </div>
@@ -279,6 +292,8 @@
                     <span class="text-dark fw-bold text-uppercase" style="font-size: 1.2rem; color: #222 !important;">
                         @if($room->jenis_harga === 'pax_jam')
                             / Pax / Jam
+                        @elseif($room->jenis_harga === 'pax_hari')
+                            / Pax / Hari
                         @else
                             / {{ ucfirst($room->jenis_harga) }}
                         @endif
@@ -290,6 +305,7 @@
                     @php
                         $labelMapping = [
                             'pax' => 'Pax',
+                            'pax_hari' => 'Pax',
                             'hari' => 'Hari',
                             'jam' => 'Jam',
                             'pax_jam' => 'Pax' // Untuk pax_jam, minimal ordernya dihitung per orang (pax)

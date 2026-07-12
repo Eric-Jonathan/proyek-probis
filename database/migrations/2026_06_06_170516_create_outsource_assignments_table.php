@@ -17,7 +17,7 @@ return new class extends Migration
             $table->integer('surveyor_id')->nullable(); 
             $table->integer('progress')->default(0); // 0 s/d 100%
             // Mengelola tahapan verifikasi lapangan
-            $table->enum('assignment_status', ['on_the_way', 'checking', 'completed', 'canceled'])->default('waiting');
+            $table->enum('assignment_status', ['waiting', 'on_the_way', 'checking', 'completed', 'canceled'])->default('waiting');
             $table->timestamps();
         });
     }

@@ -98,21 +98,31 @@ class BookingController extends Controller
 
         switch ($room->jenis_harga) {
             case 'Pax':
-                // Rumus: Harga x Jumlah Minimal Pax (Awal)
+            case 'pax':
+                // Rumus: Harga x Jumlah Minimal Pax (Awal) - Tanpa Hari
                 $basePriceCalculated = $price * $minPax;
                 break;
 
+            case 'Pax_hari':
+            case 'pax_hari':
+                // Rumus: Harga x Jumlah Minimal Pax (Awal) x Jumlah Hari Sewa
+                $basePriceCalculated = $price * $minPax * $totalDays;
+                break;
+
             case 'Hari':
+            case 'hari':
                 // Rumus: Harga x Jumlah Hari Sewa
                 $basePriceCalculated = $price * $totalDays;
                 break;
 
             case 'Jam':
+            case 'jam':
                 // Rumus: Harga x Durasi Jam x Jumlah Hari Sewa
                 $basePriceCalculated = $price * $durationHours * $totalDays;
                 break;
 
             case 'Pax_jam':
+            case 'pax_jam':
                 // Skenario Barumu: Harga x Min Pax x Durasi Jam x Jumlah Hari Sewa
                 $basePriceCalculated = $price * $minPax * $durationHours * $totalDays;
                 break;
@@ -181,8 +191,11 @@ class BookingController extends Controller
         $totalDays = max(1, $carbonStart->diffInDays($carbonEnd) + 1);
 
         $totalPax = intval($request->total_capacity);
-        if ($totalPax < $room->min_order) {
-            $totalPax = $room->min_order;
+        $jenisHarga = strtolower(trim($room->jenis_harga));
+        $needsMinOrder = ($jenisHarga === 'pax' || $jenisHarga === 'pax_jam');
+
+        if ($needsMinOrder && $totalPax < $room->min_order) {
+            return back()->withInput()->with('error', 'Jumlah tamu kurang dari batas minimal order (' . $room->min_order . ' pax).');
         }
 
         // Durasi jam
@@ -202,6 +215,8 @@ class BookingController extends Controller
         $basePrice = 0;
         $jenisHarga = strtolower(trim($room->jenis_harga));
         if ($jenisHarga === 'pax') {
+            $basePrice = $room->price * $totalPax;
+        } elseif ($jenisHarga === 'pax_hari') {
             $basePrice = $room->price * $totalPax * $totalDays;
         } elseif ($jenisHarga === 'hari') {
             $basePrice = $room->price * $totalDays;
@@ -302,7 +317,7 @@ class BookingController extends Controller
 
     public function transaction($booking_id)
     {
-        $booking = \App\Models\Booking::with(['roomDetail.room', 'serviceDetails'])
+        $booking = \App\Models\Booking::with(['roomDetail.room.owner', 'serviceDetails'])
             ->findOrFail($booking_id);
 
         $roomDetail = $booking->roomDetail;
@@ -432,9 +447,21 @@ class BookingController extends Controller
                 if ($isInstallment) {
                     $booking->installments_paid = 1;
                     $booking->status = 3; // Cicilan (Belum Lunas)
+                    
+                    // Set default due date (30 days from now or 3 days before start date, whichever is earlier)
+                    $startDateTime = \Carbon\Carbon::parse($booking->start_date);
+                    $defaultDueDate = \Carbon\Carbon::now()->addDays(30);
+                    if ($defaultDueDate->gt($startDateTime->copy()->subDays(3))) {
+                        $defaultDueDate = $startDateTime->copy()->subDays(3);
+                    }
+                    if ($defaultDueDate->lt(\Carbon\Carbon::now())) {
+                        $defaultDueDate = \Carbon\Carbon::now()->addDay();
+                    }
+                    $booking->installment_due_date = $defaultDueDate->toDateString();
                 } else {
                     $booking->installments_paid = 3;
                     $booking->status = 1; // Terjadwal (Lunas)
+                    $booking->installment_due_date = null;
                 }
             } else {
                 $booking->paid_amount += $nextPayment;
@@ -442,6 +469,18 @@ class BookingController extends Controller
                 
                 if ($booking->installments_paid >= 3) {
                     $booking->status = 1; // 1 = Terjadwal (Lunas)
+                    $booking->installment_due_date = null;
+                } else {
+                    // Set default due date for the next installment (30 days from now or 3 days before start date, whichever is earlier)
+                    $startDateTime = \Carbon\Carbon::parse($booking->start_date);
+                    $defaultDueDate = \Carbon\Carbon::now()->addDays(30);
+                    if ($defaultDueDate->gt($startDateTime->copy()->subDays(3))) {
+                        $defaultDueDate = $startDateTime->copy()->subDays(3);
+                    }
+                    if ($defaultDueDate->lt(\Carbon\Carbon::now())) {
+                        $defaultDueDate = \Carbon\Carbon::now()->addDay();
+                    }
+                    $booking->installment_due_date = $defaultDueDate->toDateString();
                 }
             }
             $booking->save();

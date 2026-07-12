@@ -1,7 +1,7 @@
-<div class="bg-dark text-white p-3" id="sidebar-wrapper">
-    <div class="sidebar-heading fs-4 fw-bold border-bottom pb-3 mb-3">Tempat-In</div>
-    @if(Auth::user()->role !== 'outsource')
-        <div class="p-3 py-2.5 mb-3 bg-secondary bg-opacity-10 rounded mx-1 mt-n2 border border-secondary border-opacity-25">
+<div class="bg-dark text-white" id="sidebar-wrapper">
+    <div class="sidebar-heading fs-4 fw-bold">Tempat-In</div>
+    @if(Auth::user()->role !== 'outsource' && Auth::user()->role !== 'admin')
+        <div class="p-3 py-2.5 mb-3 bg-secondary bg-opacity-10 rounded mx-3 border border-secondary border-opacity-25">
             <div class="small opacity-75" style="font-size: 0.75rem;"><i class="bi bi-wallet2 me-1"></i> Saldo Anda</div>
             <div class="fs-5 fw-bold text-truncate text-warning mt-1">Rp {{ number_format(Auth::user()->saldo, 0, ',', '.') }}</div>
             @if(Auth::user()->role !== 'admin')
@@ -9,7 +9,7 @@
                     <i class="bi bi-plus-lg me-1"></i> Top Up Saldo
                 </a>
             @endif
-            @if(Auth::user()->role === 'admin' || Auth::user()->role === 'penyedia')
+            @if(Auth::user()->role === 'penyedia')
                 <a href="{{ route('withdraw.show') }}" class="btn btn-sm btn-success w-100 rounded-pill mt-2 py-1 fw-bold" style="font-size: 0.72rem; border: none;">
                     <i class="bi bi-cash-coin me-1"></i> Cairkan Saldo
                 </a>
@@ -17,7 +17,7 @@
         </div>
     @endif
     @if (Auth::user()->role == "admin")
-        <div class="list-group list-group-flush">
+        <div class="list-group list-group-flush px-3">
             <a href="/admin/dashboard" class="list-group-item list-group-item-action bg-dark text-white border-0 py-2">
                 <i class="bi bi-speedometer2 me-2"></i> Dashboard
             </a>
@@ -44,7 +44,7 @@
             </a>
         </div>
     @elseif (Auth::user()->role == "penyedia")
-        <div class="list-group list-group-flush">
+        <div class="list-group list-group-flush px-3">
             <a href="/penyedia/dashboard" class="list-group-item list-group-item-action bg-dark text-white border-0 py-2">
                 <i class="bi bi-speedometer2 me-2"></i> Dashboard
             </a>
@@ -68,7 +68,7 @@
             </a>
         </div>
     @elseif (Auth::user()->role == "outsource")
-        <div class="list-group list-group-flush">
+        <div class="list-group list-group-flush px-3">
             <a href="/outsource" class="list-group-item list-group-item-action bg-dark text-white border-0 py-2">
                 <i class="bi bi-speedometer2 me-2"></i> Dashboard
             </a>
@@ -83,7 +83,7 @@
             </a>
         </div>
     @else
-        <div class="list-group list-group-flush">
+        <div class="list-group list-group-flush px-3">
             <a href="/penyewa/dashboard" class="list-group-item list-group-item-action bg-dark text-white border-0 py-2">
                 <i class="bi bi-speedometer2 me-2"></i> Dashboard
             </a>

@@ -94,7 +94,7 @@
             <h2 class="fw-bold mb-1 text-dark">Laporan Okupansi Ruangan</h2>
             <p class="text-secondary mb-0">Analisis performa utilitas dan kapasitas penggunaan properti Anda untuk optimasi bisnis</p>
         </div>
-        <div class="col-md-4 text-md-end">
+        <div class="col-md-4 text-md-end d-flex align-items-center justify-content-md-end gap-2">
             <div class="d-inline-flex align-items-center gap-2 bg-white p-2 rounded-pill shadow-sm border">
                 <span class="small text-muted ps-2 fw-semibold"><i class="bi bi-funnel me-1"></i>Periode:</span>
                 <select id="filterPeriod" class="form-select border-0 bg-transparent py-1 pe-4 fw-bold text-primary" style="width: auto; box-shadow: none; outline: none;">
@@ -103,6 +103,9 @@
                     <option value="all" {{ $filter === 'all' ? 'selected' : '' }}>Semua Waktu</option>
                 </select>
             </div>
+            <a href="{{ route('penyedia.occupancy.pdf', ['filter' => $filter]) }}" class="btn btn-danger rounded-pill fw-bold shadow-sm px-4 py-2">
+                <i class="bi bi-file-earmark-pdf me-1"></i> Unduh PDF
+            </a>
         </div>
     </div>
 

@@ -2,28 +2,28 @@
 
 @section('custom_css')
 <style>
-    body { background-color: #f8f9fa; }
+    body { background-color: var(--bs-tertiary-bg); }
 
     /* Statistik Card Style */
     .stat-card {
         border-radius: 12px;
         border: none;
         transition: transform 0.2s;
-        background: #ffffff;
+        background-color: var(--bs-card-bg);
     }
     .stat-card:hover { transform: translateY(-5px); }
-    .stat-value { font-size: 2rem; font-weight: 800; color: #334155; }
-    .stat-label { font-size: 0.75rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }
+    .stat-value { font-size: 2rem; font-weight: 800; color: var(--bs-body-color); }
+    .stat-label { font-size: 0.75rem; font-weight: 700; color: var(--bs-secondary-color); text-transform: uppercase; letter-spacing: 0.5px; }
     
     /* Table Styling */
-    .table-container { border-radius: 15px; background: #ffffff; }
+    .table-container { border-radius: 15px; background-color: var(--bs-card-bg); }
     table.dataTable thead th {
-        background-color: #fcfcfd;
-        border-bottom: 1px solid #f1f5f9 !important;
+        background-color: var(--bs-tertiary-bg);
+        border-bottom: 1px solid var(--bs-border-color) !important;
         text-transform: uppercase;
         font-size: 0.75rem;
         font-weight: 700;
-        color: #475569;
+        color: var(--bs-body-color);
         padding: 1.25rem 1rem !important;
     }
     .table tbody td { padding: 1.25rem 1rem; vertical-align: middle; font-size: 0.9rem; }
@@ -34,13 +34,63 @@
     
     /* Star Rating CSS */
     .star-rating input { display: none; }
-    .star-rating label { font-size: 1.6rem; color: #ddd; cursor: pointer; transition: 0.2s; margin: 0 2px; }
+    .star-rating label { font-size: 1.8rem; color: var(--bs-border-color); cursor: pointer; transition: color 0.15s ease-in-out, transform 0.15s ease-in-out; margin: 0 4px; }
     .star-rating label:hover, .star-rating label:hover ~ label, .star-rating input:checked ~ label { color: #FFC107; }
+    .star-rating label:hover { transform: scale(1.15); }
+    
+    /* Rating Container Style */
+    .rating-container {
+        background-color: var(--bs-tertiary-bg);
+        border: 1px solid var(--bs-border-color);
+        transition: all 0.2s ease-in-out;
+    }
+    .rating-container:hover {
+        background-color: var(--bs-secondary-bg);
+        border-color: var(--bs-border-color-translucent);
+    }
     
     .bg-primary-subtle { background-color: #e7f1ff; color: #0064D2; }
     .bg-danger-subtle { background-color: #fce8e6; color: #dc3545; }
     .btn-primary:disabled { background-color: #cbd5e1 !important; opacity: 0.7; cursor: not-allowed; }
-    .rating-text.selected { color: #0064D2 !important; }
+    .rating-text.selected { color: #FFC107 !important; }
+
+    /* ==========================================================================
+       TAMBAHAN CSS OVERRIDE PAGINATION DATATABLES (SAMA SEPERTI SEBELUMNYA)
+       ========================================================================== */
+    .dataTables_wrapper .dataTables_paginate .paginate_button {
+        padding: 0 !important;
+        margin: 0 !important;
+        border: none !important;
+        background: none !important;
+        display: inline !important;
+    }
+    .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+        border: none !important;
+        background: none !important;
+    }
+    .dataTables_wrapper .dataTables_paginate .pagination .page-item {
+        width: 40px;
+        height: 40px;
+        margin: 0 4px !important;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .dataTables_wrapper .dataTables_paginate .pagination .page-item .page-link {
+        width: 100% !important;
+        height: 100% !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border-radius: 12px !important;
+        box-sizing: border-box !important;
+    }
+    .dataTables_wrapper .dataTables_paginate .pagination {
+        border-radius: 0 !important;
+        box-shadow: none !important;
+    }
 </style>
 {{-- Load CSS DataTables --}}
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css">
@@ -89,13 +139,13 @@
                 <table class="table align-middle" id="tableHistory" style="width:100%">
                     <thead>
                         <tr>
-                            <th style="width: 10%;">ID Booking</th>
-                            <th style="width: 25%;">Ruangan</th>
-                            <th style="width: 20%;">Kegiatan / Kontak</th>
-                            <th style="width: 20%;">Tanggal Sewa</th>
+                            <th style="width: 8%;">ID Booking</th>
+                            <th style="width: 20%;">Ruangan</th>
+                            <th style="width: 17%;">Kegiatan / Kontak</th>
+                            <th style="width: 12%;">Tanggal Sewa</th>
                             <th style="width: 10%;">Total Bayar</th>
-                            <th class="text-center" style="width: 10%;">Status</th>
-                            <th class="text-center" style="width: 5%;">Aksi</th>
+                            <th class="text-center" style="width: 13%;">Status</th>
+                            <th class="text-center" style="width: 20%;">Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -135,7 +185,14 @@
                                  @elseif($b->status == 2)
                                      <span class="badge rounded-pill badge-selesai px-3 py-2">Selesai</span>
                                  @elseif($b->status == 3)
-                                     <span class="badge rounded-pill bg-warning-subtle text-warning px-3 py-2" style="color: #a16207 !important;">Cicilan ({{ $b->installments_paid }}/3)</span>
+                                      <span class="badge rounded-pill bg-warning-subtle text-warning px-3 py-2" style="color: #a16207 !important;">Cicilan ({{ $b->installments_paid }}/3)</span>
+                                      @if($b->installment_due_date)
+                                          <div class="mt-1" style="font-size: 0.72rem;">
+                                              <span class="text-danger fw-bold">
+                                                  <i class="bi bi-calendar-event me-1"></i>Tempo: {{ \Carbon\Carbon::parse($b->installment_due_date)->translatedFormat('d M Y') }}
+                                              </span>
+                                          </div>
+                                      @endif
                                  @elseif($b->status == 4)
                                      <span class="badge rounded-pill bg-secondary-subtle text-secondary px-3 py-2">Menunggu Pembayaran</span>
                                  @elseif($b->status == 0)
@@ -161,7 +218,7 @@
                                  @endif
                             </td>
                              <td class="text-center">
-                                 <div class="d-flex gap-2 justify-content-center align-items-center">
+                                 <div class="d-flex gap-2 justify-content-center align-items-center" style="white-space: nowrap;">
                                      @if($b->status == 0)
                                          <span class="text-muted small italic">Tidak ada tindakan</span>
                                       @else
@@ -220,7 +277,7 @@
                 <div class="modal-header border-0 p-4 pb-0">
                     <div>
                         <h4 class="fw-bold mb-0">Beri Penilaian</h4>
-                        <p class="text-secondary small mb-0">{{ $b->roomDetail->item_name ?? 'Ruangan' }}</p>
+                        <p class="text-secondary-emphasis small mb-0">Untuk Ruangan: <strong class="text-warning">{{ $b->roomDetail->item_name ?? 'Ruangan' }}</strong></p>
                     </div>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
@@ -236,7 +293,7 @@
                             @foreach(['kebersihan' => 'Kebersihan', 'pelayanan' => 'Pelayanan', 'kenyamanan' => 'Kenyamanan'] as $key => $label)
                             <div class="col-12">
                                 <label class="form-label fw-bold small text-uppercase" style="letter-spacing: 1px;">{{ $label }}</label>
-                                <div class="rating-container p-3 rounded-3 d-flex align-items-center justify-content-between" style="background-color: #f8f9fa;">
+                                <div class="rating-container p-3 rounded-3 d-flex align-items-center justify-content-between">
                                     <div class="star-rating d-flex flex-row-reverse">
                                         @for($i = 5; $i >= 1; $i--)
                                         <input type="radio" id="{{ $key }}-{{ $i }}-{{ $b->booking_id }}" name="{{ $key }}" value="{{ $i }}" required>
@@ -330,6 +387,11 @@
                                  <span class="badge rounded-pill bg-success text-white px-3 py-2"><i class="bi bi-check-circle-fill me-1"></i> Selesai</span>
                              @elseif($b->status == 3)
                                  <span class="badge rounded-pill bg-warning text-dark px-3 py-2" style="background-color: #ffc107 !important;"><i class="bi bi-wallet2 me-1"></i> Cicilan ({{ $b->installments_paid }}/3)</span>
+                                 @if($b->installment_due_date)
+                                     <div class="mt-2 text-danger fw-bold small">
+                                         <i class="bi bi-calendar-event me-1"></i> Jatuh Tempo: {{ \Carbon\Carbon::parse($b->installment_due_date)->translatedFormat('d M Y') }}
+                                     </div>
+                                 @endif
                              @elseif($b->status == 4)
                                  <span class="badge rounded-pill bg-secondary text-white px-3 py-2"><i class="bi bi-clock-history me-1"></i> Menunggu Pembayaran</span>
                              @elseif($b->status == 0)
@@ -399,30 +461,28 @@
     </div>
 </div>
 @endforeach
-
-
-
-
 @endsection
 
 @section('custom_js')
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
 
 <script>
     $(document).ready(function() {
-        // Inisialisasi DataTable
+        // Inisialisasi DataTable dengan layout terstandarisasi Bootstrap 5
         $('#tableHistory').DataTable({
             responsive: true,
+            dom: "<'row'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6'f>>" +
+                 "<'row'<'col-sm-12'tr>>" +
+                 "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
             language: {
                 search: "_INPUT_",
                 searchPlaceholder: "Cari riwayat...",
                 lengthMenu: "Tampilkan _MENU_ data",
                 info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ entri",
                 paginate: {
-                    previous: "<i class='bi bi-chevron-left'></i>",
-                    next: "<i class='bi bi-chevron-right'></i>"
+                    previous: "‹",
+                    next: "›"
                 }
             },
             columnDefs: [
@@ -436,7 +496,7 @@
         document.querySelectorAll('.rating-form').forEach(form => {
             const bookingId = form.dataset.id;
             const radios = form.querySelectorAll('input[type="radio"]');
-            const submitBtn = form.querySelector('.submit-rating');
+            const submitBtn = form.querySelector('.submit-rating'); // Pastikan class tombol submit di HTML Anda adalah .submit-rating atau sesuaikan ke btn-primary jika memakai selektor tag
 
             radios.forEach(radio => {
                 radio.addEventListener('change', function() {
@@ -451,7 +511,7 @@
                     // Validasi: Apakah semua kategori (3 kategori) sudah diisi?
                     const checked = form.querySelectorAll('input[type="radio"]:checked');
                     if (checked.length === 3) {
-                        submitBtn.disabled = false;
+                        if(submitBtn) submitBtn.disabled = false;
                     }
                 });
             });
@@ -466,8 +526,6 @@
                 var detailModal = new bootstrap.Modal(detailModalElement);
                 detailModal.show();
             }
-        }
-
         }
     });
 </script>

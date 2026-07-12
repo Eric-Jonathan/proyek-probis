@@ -180,7 +180,7 @@ class AdminController extends Controller
         }
 
         // Ambil data dengan pagination
-        $partners = $query->paginate(10);
+        $partners = $query->get();
 
         // Menghitung data statistik box atas secara real-time
         $totalMitra    = Outsource::where('status', '>=', 0)->count();
@@ -541,7 +541,7 @@ class AdminController extends Controller
 
     public function fines()
     {
-        $fines = \App\Models\Fine::with(['booking.user', 'booking.roomDetail.room'])->orderBy('created_at', 'desc')->get();
+        $fines = \App\Models\Fine::with(['booking.user', 'booking.roomDetail.room.owner'])->orderBy('created_at', 'desc')->get();
         return view('admin.fines', compact('fines'));
     }
 

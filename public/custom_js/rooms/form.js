@@ -241,6 +241,7 @@ $(document).on('change', '#jenis_harga', function() {
 
     const labelMapping = {
         'pax': 'Pax',
+        'pax_hari': 'Pax / Hari',
         'hari': 'Hari',
         'jam': 'Jam',
         'pax_jam': 'Pax / Jam'

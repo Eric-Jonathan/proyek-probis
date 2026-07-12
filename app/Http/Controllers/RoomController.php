@@ -33,7 +33,7 @@ class RoomController extends Controller
         }
 
         // 4. Ambil data dengan pagination di akhir rangkaian filter
-        $rooms = $query->latest()->paginate(10)->withQueryString();
+        $rooms = $query->latest()->get();
 
         return view('rooms.room', [
             'rooms'         => $rooms,
@@ -161,67 +161,7 @@ class RoomController extends Controller
             'ratings.booking.user'
         ])->findOrFail($id);
 
-        // Auto-seed review dummy jika ruangan belum memiliki review sama sekali
-        if ($room->ratings->count() === 0) {
-            $dummyUser = \App\Models\People::where('role', 'penyewa')->where('user_id', '!=', auth()->id())->first();
-            if (!$dummyUser) {
-                $dummyUser = \App\Models\People::create([
-                    'username' => 'royce_reviewer',
-                    'email'    => 'royce_reviewer@example.com',
-                    'phone'    => '8129999999',
-                    'password' => bcrypt('password'),
-                    'role'     => 'penyewa',
-                    'status'   => 1
-                ]);
-            }
 
-            $comments = [
-                'Tempatnya sangat bersih dan pelayanannya ramah sekali. IT support bekerja dengan sigap saat proyektor bermasalah. Recommended!',
-                'Sangat luas dan nyaman untuk acara keluarga. AC dingin dan fasilitas lengkap. Sangat puas dengan layanannya.'
-            ];
-            $dates = [now()->subDays(10), now()->subDays(12)];
-            $scores = [
-                ['kebersihan' => 5, 'pelayanan' => 5, 'kenyamanan' => 4],
-                ['kebersihan' => 4, 'pelayanan' => 5, 'kenyamanan' => 5]
-            ];
-
-            foreach ($comments as $idx => $comment) {
-                $booking = \App\Models\Booking::create([
-                    'user_id'        => $dummyUser->user_id,
-                    'total'          => $room->price,
-                    'method_payment' => 'Manual',
-                    'event'          => 'Acara Review ' . ($idx + 1),
-                    'phone'          => '812345678',
-                    'start_date'     => $dates[$idx]->format('Y-m-d') . ' 09:00:00',
-                    'end_date'       => $dates[$idx]->format('Y-m-d') . ' 17:00:00',
-                    'status'         => 2, // Selesai
-                ]);
-
-                \App\Models\BookingDetail::create([
-                    'booking_id' => $booking->booking_id,
-                    'item_id'    => $room->room_id,
-                    'item_name'  => $room->name,
-                    'item_type'  => 1,
-                    'item_price' => $room->price,
-                    'status'     => 1
-                ]);
-
-                \App\Models\Rating::create([
-                    'booking_id' => $booking->booking_id,
-                    'item_id'    => $room->room_id,
-                    'item_type'  => 1,
-                    'kebersihan' => $scores[$idx]['kebersihan'],
-                    'pelayanan'  => $scores[$idx]['pelayanan'],
-                    'kenyamanan' => $scores[$idx]['kenyamanan'],
-                    'komentar'   => $comment,
-                    'created_at' => $dates[$idx],
-                    'updated_at' => $dates[$idx]
-                ]);
-            }
-
-            // Reload ratings agar terhitung di totalReview dan averageRating
-            $room->load('ratings.booking.user');
-        }
 
         $ratings = $room->ratings;
         $totalReview = $ratings->count();

@@ -119,9 +119,10 @@
             padding-bottom: 3px;
         }
         .gallery-img {
-            width: 100%;
-            height: 140px;
-            object-fit: cover;
+            max-width: 100%;
+            max-height: 140px;
+            display: block;
+            margin: 0 auto;
             border-radius: 4px;
             border: 1px solid #cbd5e1;
         }

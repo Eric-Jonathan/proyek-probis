@@ -63,7 +63,7 @@
                             <!-- Nilai Denda -->
                             <div class="col-md-6">
                                 <label class="form-label fw-bold small text-uppercase">Nominal Denda (Rp) *</label>
-                                <input type="number" name="nominal_denda" class="form-control bg-light border-0 py-2" placeholder="Contoh: 500000" required>
+                                <input type="text" name="nominal_denda" class="form-control bg-light border-0 py-2 thousand-separator" placeholder="Contoh: 500.000" required>
                             </div>
 
                             <!-- Penjelasan -->

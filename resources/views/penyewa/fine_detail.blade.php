@@ -190,7 +190,6 @@
 @endsection
 
 @section('custom_js')
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
     document.addEventListener("DOMContentLoaded", function() {
         @if($fine->is_paid == 0)
@@ -206,10 +205,21 @@
                 },
                 success: function(response) {
                     if (response.success) {
-                        alert(response.message);
-                        window.location.href = '{{ route("bookings.history") }}';
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Berhasil',
+                            text: response.message,
+                            confirmButtonColor: '#0064D2'
+                        }).then(function() {
+                            window.location.href = '{{ route("bookings.history") }}';
+                        });
                     } else {
-                        alert(response.message || 'Pembayaran gagal.');
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Gagal',
+                            text: response.message || 'Pembayaran gagal.',
+                            confirmButtonColor: '#0064D2'
+                        });
                         btn.prop('disabled', false).text('Ya, Bayar Denda');
                     }
                 },
@@ -218,7 +228,12 @@
                     if (xhr.responseJSON && xhr.responseJSON.message) {
                         errorMsg = xhr.responseJSON.message;
                     }
-                    alert(errorMsg);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: errorMsg,
+                        confirmButtonColor: '#0064D2'
+                    });
                     btn.prop('disabled', false).text('Ya, Bayar Denda');
                 }
             });

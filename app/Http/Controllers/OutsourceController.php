@@ -248,8 +248,14 @@ class OutsourceController extends Controller
             'catatan' => 'nullable|string',
             'rekomendasi' => 'required|in:layak,tidak',
             'facilities' => 'nullable|array',
-            'fotos.*' => 'required|image|mimes:jpeg,png,jpg,webp|max:2048',
+            'fotos' => 'required|array|min:3|max:5',
+            'fotos.*' => 'image|mimes:jpeg,png,jpg,webp|max:2048',
             'video' => 'nullable|file|mimes:mp4,webm,ogg,mov|max:10240'
+        ], [
+            'fotos.required' => 'Anda harus mengunggah minimal 3 foto hasil cek lapangan.',
+            'fotos.array' => 'Format foto tidak valid.',
+            'fotos.min' => 'Anda harus mengunggah minimal 3 foto hasil cek lapangan.',
+            'fotos.max' => 'Maksimal jumlah foto yang boleh diunggah adalah 5 foto.',
         ]);
 
         $assignment = \App\Models\OutsourceAssignment::with('room')->findOrFail($assignment_id);

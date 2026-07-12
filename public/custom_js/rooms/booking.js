@@ -6,14 +6,61 @@ $(document).ready(function() {
     
     // Ambil kontrol skema pricing dari elemen invoice sejak halaman pertama dimuat
     const $priceElement = $('#render-base-price');
+    const roomId = $('#main-booking-form').data('room-id');
+    const draftKey = 'booking_draft_' + roomId;
+
+    // Hapus draf untuk ruangan lain agar bersih
+    if (roomId) {
+        for (let i = 0; i < sessionStorage.length; i++) {
+            let key = sessionStorage.key(i);
+            if (key && key.startsWith('booking_draft_') && key !== draftKey) {
+                sessionStorage.removeItem(key);
+                i--;
+            }
+        }
+    }
     
     // PERBAIKAN: Langsung paksa ke huruf kecil sejak awal agar sinkron dengan database
     const jenisHarga = String($priceElement.data('jenis-harga') || '').trim().toLowerCase(); 
 
+    // Muat draf booking jika ada
+    if (roomId) {
+        let draft = sessionStorage.getItem(draftKey);
+        if (draft) {
+            try {
+                let data = JSON.parse(draft);
+                if (data.instansi) $('input[name="instansi"]').val(data.instansi);
+                if (data.jenis_acara) $('select[name="jenis_acara"]').val(data.jenis_acara);
+                if (data.phone) $('input[name="phone"]').val(data.phone);
+                if (data.total_capacity) $('#input-capacity').val(data.total_capacity);
+                if (data.sewa_tipe) {
+                    $(`.select-tipe-sewa[value="${data.sewa_tipe}"]`).prop('checked', true);
+                    if (data.sewa_tipe === 'jam') {
+                        $('#container-input-jam').removeClass('d-none');
+                    } else {
+                        $('#container-input-jam').addClass('d-none');
+                    }
+                }
+                if (data.jam_mulai) $('#jam_mulai').val(data.jam_mulai);
+                if (data.jam_selesai) $('#jam_selesai').val(data.jam_selesai);
+                if (data.services && Array.isArray(data.services)) {
+                    $('.addon-service-checkbox').each(function() {
+                        let val = $(this).val();
+                        $(this).prop('checked', data.services.includes(val));
+                    });
+                }
+                if (data.payment_scheme) $('#payment_scheme').val(data.payment_scheme);
+                if (data.notes) $('textarea[name="notes"]').val(data.notes);
+            } catch (e) {
+                console.error("Gagal memuat draf booking:", e);
+            }
+        }
+    } 
+
     // =========================================================================
     // CODE FIX: PROTEKSI OTOMATIS PILIHAN WAKTU BERDASARKAN DATABASE (UX LOCK)
     // =========================================================================
-    if (jenisHarga === 'hari' || jenisHarga === 'pax') {
+    if (jenisHarga === 'hari' || jenisHarga === 'pax' || jenisHarga === 'pax_hari') {
         // Jika kebijakan flat harian/pax, kunci ke radio button Harian
         $('#tipe-hari').prop('checked', true);
         $('#tipe-jam').prop('disabled', true); // Kunci opsi jam
@@ -41,6 +88,44 @@ $(document).ready(function() {
         calculateTotalPrice();
     });
 
+    $(document).on('change blur', '#input-capacity', function() {
+        let val = parseInt($(this).val());
+        let maxCap = parseInt($(this).attr('max')) || 999999;
+        let minOrder = parseInt($('#render-base-price').data('min-order')) || 1;
+        let jenisHargaRaw = $('#render-base-price').data('jenis-harga');
+        let jenisHarga = String(jenisHargaRaw).trim().toLowerCase();
+        let needsMinOrder = (jenisHarga === 'pax' || jenisHarga === 'pax_hari' || jenisHarga === 'pax_jam');
+
+        if (isNaN(val) || val <= 0) {
+            $(this).val(needsMinOrder ? minOrder : 1);
+            Swal.fire({
+                icon: 'warning',
+                title: 'Jumlah Tamu Tidak Valid',
+                text: 'Estimasi jumlah tamu tidak boleh 0 atau kosong. Jumlah tamu disesuaikan ke minimal.',
+                confirmButtonColor: '#0064D2'
+            });
+            calculateTotalPrice();
+        } else if (val > maxCap) {
+            $(this).val(maxCap);
+            Swal.fire({
+                icon: 'error',
+                title: 'Melebihi Kapasitas',
+                text: `Estimasi jumlah tamu melebihi kapasitas maksimal ruangan (${maxCap} orang).`,
+                confirmButtonColor: '#0064D2'
+            });
+            calculateTotalPrice();
+        } else if (needsMinOrder && val < minOrder) {
+            $(this).val(minOrder);
+            Swal.fire({
+                icon: 'warning',
+                title: 'Kurang Dari Batas Minimum',
+                text: `Ruangan ini memiliki batas minimal order sebanyak ${minOrder} pax. Jumlah tamu disesuaikan ke minimal order.`,
+                confirmButtonColor: '#0064D2'
+            });
+            calculateTotalPrice();
+        }
+    });
+
     // 3. Fungsi Utama Kalkulator Multi-Skema Pricing ERP
     function calculateTotalPrice() {
         let $priceElement = $('#render-base-price');
@@ -52,14 +137,13 @@ $(document).ready(function() {
         let minOrder = parseInt($priceElement.data('min-order')) || 1;
 
         // Ambil nilai input kapasitas
-        let totalPaxInput = parseInt($('#input-capacity').val()) || 0;
+        let totalPaxInput = parseInt($('#input-capacity').val());
+        if (isNaN(totalPaxInput) || totalPaxInput < 1) {
+            totalPaxInput = 1;
+        }
         
         // Evaluasi penentu jumlah pengali orang (pax) untuk hitungan berbasis kapasitas
         let paxMultiplier = totalPaxInput;
-        if (paxMultiplier < minOrder) {
-            // Jika form kosong (0) atau di bawah ketentuan, paksa gunakan batas minimal order database
-            paxMultiplier = minOrder; 
-        }
 
         let basePriceCalculated = 0;
         let durationHours = 1; 
@@ -94,27 +178,32 @@ $(document).ready(function() {
         }
 
         // =========================================================================
-        // EKSEKUSI DATA 4 FORMULA PRICING (SINKRONISASI BIAYA PER PAX DAN JAM)
+        // EKSEKUSI DATA FORMULA PRICING (SINKRONISASI BIAYA PER PAX DAN JAM)
         // =========================================================================
         if (jenisHarga === 'pax') {
-            // Skema Cuma Per Pax: Harga x Pengali Orang x Total Hari
+            // Skema Cuma Per Pax: Harga x Pengali Orang (Tanpa Hari)
+            basePriceCalculated = rawPrice * paxMultiplier;
+            $('#label-sewa-utama').html(`Detail: Rp ${rawPrice.toLocaleString('id-ID')} / pax &times; ${paxMultiplier} Pax`);
+            
+        } else if (jenisHarga === 'pax_hari') {
+            // Skema Per Pax Per Hari: Harga x Pengali Orang x Total Hari
             basePriceCalculated = rawPrice * paxMultiplier * totalDays;
-            $('#label-sewa-utama').text(`Sewa Ruangan (${paxMultiplier} Pax x ${totalDays} Hari)`);
+            $('#label-sewa-utama').html(`Detail: Rp ${rawPrice.toLocaleString('id-ID')} / pax &times; ${paxMultiplier} Pax &times; ${totalDays} Hari`);
             
         } else if (jenisHarga === 'hari') {
             // Skema Cuma Per Hari: Harga x Total Hari
             basePriceCalculated = rawPrice * totalDays;
-            $('#label-sewa-utama').text(`Sewa Ruangan (${totalDays} Hari)`);
+            $('#label-sewa-utama').html(`Detail: Rp ${rawPrice.toLocaleString('id-ID')} / hari &times; ${totalDays} Hari<br><span class="text-secondary" style="font-size: 0.75rem;">(Tamu: ${totalPaxInput} orang)</span>`);
             
         } else if (jenisHarga === 'jam') {
             // Skema Cuma Per Jam: Harga x Durasi Jam
             basePriceCalculated = rawPrice * durationHours;
-            $('#label-sewa-utama').text(`Sewa Ruangan (${durationHours} Jam)`);
+            $('#label-sewa-utama').html(`Detail: Rp ${rawPrice.toLocaleString('id-ID')} / jam &times; ${durationHours} Jam<br><span class="text-secondary" style="font-size: 0.75rem;">(Tamu: ${totalPaxInput} orang)</span>`);
             
         } else if (jenisHarga === 'pax_jam') {
             // Skenario Gabungan: Harga x Pengali Orang x Durasi Jam x Total Hari
             basePriceCalculated = rawPrice * paxMultiplier * durationHours * totalDays;
-            $('#label-sewa-utama').text(`Sewa Ruangan (${paxMultiplier} Pax x ${durationHours} Jam)`);
+            $('#label-sewa-utama').html(`Detail: Rp ${rawPrice.toLocaleString('id-ID')} / pax/jam &times; ${paxMultiplier} Pax &times; ${durationHours} Jam &times; ${totalDays} Hari`);
         }
 
         // =========================================================================
@@ -183,10 +272,42 @@ $(document).ready(function() {
     $('#main-booking-form').on('submit', function(e) {
         let inputCap = parseInt($('#input-capacity').val()) || 0;
         let maxCap = parseInt($('#input-capacity').attr('max')) || 0;
+        let minOrder = parseInt($('#render-base-price').data('min-order')) || 1;
+        let jenisHargaRaw = $('#render-base-price').data('jenis-harga');
+        let jenisHarga = String(jenisHargaRaw).trim().toLowerCase();
+        let needsMinOrder = (jenisHarga === 'pax' || jenisHarga === 'pax_hari' || jenisHarga === 'pax_jam');
+
+        if (inputCap <= 0) {
+            e.preventDefault();
+            Swal.fire({
+                icon: 'warning',
+                title: 'Jumlah Tamu Tidak Valid',
+                text: 'Jumlah tamu tidak boleh kosong atau 0.',
+                confirmButtonColor: '#0064D2'
+            });
+            return false;
+        }
 
         if (inputCap > maxCap) {
             e.preventDefault();
-            alert(`Jumlah tamu melebihi kapasitas maksimal ruangan! Ruangan ini hanya muat untuk maksimal ${maxCap} orang.`);
+            Swal.fire({
+                icon: 'error',
+                title: 'Melebihi Kapasitas',
+                text: `Estimasi jumlah tamu melebihi kapasitas maksimal ruangan (${maxCap} orang).`,
+                confirmButtonColor: '#0064D2'
+            });
+            $('#input-capacity').addClass('is-invalid').focus();
+            return false;
+        }
+
+        if (needsMinOrder && inputCap < minOrder) {
+            e.preventDefault();
+            Swal.fire({
+                icon: 'warning',
+                title: 'Kurang Dari Batas Minimum',
+                text: `Jumlah tamu minimal untuk pemesanan ini adalah ${minOrder} pax.`,
+                confirmButtonColor: '#0064D2'
+            });
             $('#input-capacity').addClass('is-invalid').focus();
             return false;
         }
@@ -204,9 +325,48 @@ $(document).ready(function() {
 
         if (userSaldo < paymentRequired) {
             e.preventDefault();
-            alert(`Saldo Tempat-In Anda (Rp ${userSaldo.toLocaleString('id-ID')}) tidak mencukupi untuk melakukan pembayaran sebesar Rp ${paymentRequired.toLocaleString('id-ID')}. Silakan Top Up terlebih dahulu!`);
+            Swal.fire({
+                icon: 'error',
+                title: 'Saldo Tidak Cukup',
+                text: `Saldo Tempat-In Anda (Rp ${userSaldo.toLocaleString('id-ID')}) tidak mencukupi untuk melakukan pembayaran sebesar Rp ${paymentRequired.toLocaleString('id-ID')}. Silakan Top Up terlebih dahulu!`,
+                confirmButtonColor: '#0064D2'
+            });
             return false;
         }
+
+        // Sukses validasi, hapus draf booking
+        if (roomId) {
+            sessionStorage.removeItem(draftKey);
+        }
+    });
+
+    // Fungsi menyimpan draf input formulir booking secara real-time
+    function saveDraft() {
+        if (!roomId) return;
+        let services = [];
+        $('.addon-service-checkbox:checked').each(function() {
+            services.push($(this).val());
+        });
+
+        let draftData = {
+            instansi: $('input[name="instansi"]').val(),
+            jenis_acara: $('select[name="jenis_acara"]').val(),
+            phone: $('input[name="phone"]').val(),
+            total_capacity: $('#input-capacity').val(),
+            sewa_tipe: $('.select-tipe-sewa:checked').val(),
+            jam_mulai: $('#jam_mulai').val(),
+            jam_selesai: $('#jam_selesai').val(),
+            services: services,
+            payment_scheme: $('#payment_scheme').val(),
+            notes: $('textarea[name="notes"]').val()
+        };
+
+        sessionStorage.setItem(draftKey, JSON.stringify(draftData));
+    }
+
+    // Pemicu otomatis draf saat ada perubahan atau pengetikan di formulir
+    $(document).on('input change keyup blur', '#main-booking-form input, #main-booking-form select, #main-booking-form textarea', function() {
+        saveDraft();
     });
 
     // =========================================================================

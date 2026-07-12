@@ -6,6 +6,7 @@ use App\Models\People;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Http;
 use Midtrans\Config;
 use Midtrans\Snap;
 
@@ -70,7 +71,23 @@ class TopUpController extends Controller
         $isSimulated = false;
 
         try {
-            $snapToken = Snap::getSnapToken($params);
+            $serverKey = config('services.midtrans.server_key') ?: config('midtrans.server_key');
+            $isProduction = config('services.midtrans.is_production') ?: false;
+            $baseUrl = $isProduction 
+                ? 'https://app.midtrans.com/snap/v1/transactions' 
+                : 'https://app.sandbox.midtrans.com/snap/v1/transactions';
+
+            $response = Http::withBasicAuth($serverKey, '')
+                ->withoutVerifying()
+                ->post($baseUrl, $params);
+
+            $result = $response->json();
+
+            if (isset($result['token'])) {
+                $snapToken = $result['token'];
+            } else {
+                throw new \Exception('Response does not contain snap token: ' . json_encode($result));
+            }
         } catch (\Exception $e) {
             Log::error('Midtrans Top Up Error: ' . $e->getMessage());
             $snapToken = 'MOCK-TOPUP-TOKEN-' . uniqid();

@@ -75,9 +75,14 @@ Route::middleware(['auth', 'role:penyedia'])->group(function () {
     Route::get('/penyedia/dashboard', [PenyediaController::class, 'index'])->name('penyedia.dashboard');
     Route::get('/penyedia/dashboard/chart', [PenyediaController::class, 'getChartData'])->name('penyedia.dashboard.chart');
     Route::get('/penyedia/history/{id}', [PenyediaController::class, 'detail_history'])->name('penyedia.detail_history');
+    Route::get('/penyedia/history/{id}/pdf', [PenyediaController::class, 'downloadBookingPDF'])->name('penyedia.booking.pdf');
+    Route::post('/penyedia/booking/{id}/update-due-date', [PenyediaController::class, 'updateInstallmentDueDate'])->name('penyedia.booking.update_due_date');
     Route::get('/penyedia/fines/history', [PenyediaController::class, 'finesHistory'])->name('penyedia.fines.history');
     Route::get('/penyedia/report/occupancy', [PenyediaController::class, 'occupancyReport'])->name('penyedia.report.occupancy');
+    Route::get('/penyedia/report/occupancy/pdf', [PenyediaController::class, 'downloadOccupancyPDF'])->name('penyedia.occupancy.pdf');
     Route::get('/penyedia/report/finance', [PenyediaController::class, 'financeReport'])->name('penyedia.report.finance');
+    Route::get('/penyedia/report/finance/pdf', [PenyediaController::class, 'downloadFinancePDF'])->name('penyedia.finance.pdf');
+    Route::get('/penyedia/list_booking/pdf', [PenyediaController::class, 'downloadListBookingPDF'])->name('penyedia.list_booking.pdf');
 });
 
 Route::middleware(['auth', 'role:penyewa'])->group(function () {

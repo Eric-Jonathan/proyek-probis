@@ -14,7 +14,7 @@ class PenyewaController extends Controller
             ->where(function($q) {
                 $q->where('status', 2)
                   ->orWhere('end_date', '<', now());
-            })
+            })  
             ->exists();
 
         if (!$completedBookingExists) {

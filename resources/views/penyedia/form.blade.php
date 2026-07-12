@@ -91,7 +91,7 @@
                                 <label class="form-label fw-semibold">Harga Sewa</label>
                                 <div class="input-group">
                                     <span class="input-group-text bg-light">Rp</span>
-                                    <input type="number" name="price" class="form-control" 
+                                    <input type="text" name="price" class="form-control thousand-separator" 
                                         value="{{ old('price', $room->price ?? '') }}" placeholder="0">
                                 </div>
                             </div>

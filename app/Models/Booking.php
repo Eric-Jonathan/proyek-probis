@@ -26,6 +26,7 @@ class Booking extends Model
         'status',
         'paid_amount',
         'installments_paid',
+        'installment_due_date',
     ];
 
     // Relasi ke User/People (Penyewa)
