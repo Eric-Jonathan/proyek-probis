@@ -15,7 +15,7 @@ class TopUpController extends Controller
     {
         $user = Auth::user();
         if ($user->role === 'outsource') {
-            abort(403, 'Mitra outsource tidak memiliki saldo.');
+            // abort(403, 'Mitra outsource tidak memiliki saldo.');
         }
         if ($user->role === 'admin') {
             abort(403, 'Administrator tidak diperbolehkan melakukan top up saldo.');
