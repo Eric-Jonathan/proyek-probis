@@ -326,6 +326,14 @@ class BookingController extends Controller
 
         // Perform booking creation inside a transaction (no balance deduction yet)
         DB::transaction(function() use ($renter, $grandTotalFinal, $scheme, $reqStart, $reqEnd, $request, $basePrice, $addons, $room, &$booking) {
+            // Calculate due date (H-1 from start_date, minimum is now)
+            $startDateTime = \Carbon\Carbon::parse($reqStart);
+            $dueDateLimit = $startDateTime->copy()->subDay();
+            if ($dueDateLimit->lt(\Carbon\Carbon::now())) {
+                $dueDateLimit = \Carbon\Carbon::now();
+            }
+            $installmentDueDate = $dueDateLimit->toDateString();
+
             // Create booking with status 4 (Menunggu Pembayaran)
             $booking = \App\Models\Booking::create([
                 'user_id' => $renter->user_id,
@@ -338,6 +346,7 @@ class BookingController extends Controller
                 'notes' => $request->notes,
                 'start_date' => $reqStart,
                 'end_date' => $reqEnd,
+                'installment_due_date' => $installmentDueDate,
                 'status' => 4 // 4 = Menunggu Pembayaran
             ]);
 

@@ -185,6 +185,10 @@
                         <div class="info-label">Email</div>
                         <div class="info-value">{{ $booking->user->email ?? '-' }}</div>
                     </div>
+                    <div class="mb-3">
+                        <div class="info-label">Jumlah Orang (Pax)</div>
+                        <div class="info-value">{{ $actualPax }} Orang</div>
+                    </div>
                 </div>
 
                 {{-- Waktu Sewa --}}
@@ -226,18 +230,25 @@
                 $isInstallment = str_contains(strtolower($booking->method_payment), 'cicilan');
             @endphp
 
-            @if($isInstallment)
+            @if($isInstallment || $booking->status == 4)
                 <div class="divider"></div>
                 <div class="row">
                     <div class="col-12 mb-4">
-                        <h5 class="fw-bold mb-3 text-warning"><i class="bi bi-clock-history me-2"></i>Status & Jatuh Tempo Cicilan</h5>
+                        <h5 class="fw-bold mb-3 text-warning"><i class="bi bi-clock-history me-2"></i>Status & Jatuh Tempo Pembayaran</h5>
                         <div class="p-4 rounded-4 border bg-warning-subtle" style="background-color: #fffbeb !important; border-color: #fde68a !important;">
                             <div class="row align-items-center">
                                 <div class="col-md-6 mb-3 mb-md-0">
-                                    <div class="mb-2">
-                                        <span class="info-label d-block text-secondary">Cicilan Terbayar</span>
-                                        <span class="info-value text-dark fw-bold" style="font-size: 1.15rem;">{{ $booking->installments_paid }} dari 3 Kali Pembayaran</span>
-                                    </div>
+                                    @if($isInstallment)
+                                        <div class="mb-2">
+                                            <span class="info-label d-block text-secondary">Cicilan Terbayar</span>
+                                            <span class="info-value text-dark fw-bold" style="font-size: 1.15rem;">{{ $booking->installments_paid }} dari 3 Kali Pembayaran</span>
+                                        </div>
+                                    @else
+                                        <div class="mb-2">
+                                            <span class="info-label d-block text-secondary">Skema Pembayaran</span>
+                                            <span class="info-value text-dark fw-bold" style="font-size: 1.15rem;">Bayar Lunas (100%)</span>
+                                        </div>
+                                    @endif
                                     <div>
                                         <span class="info-label d-block text-secondary">Batas Waktu Pembayaran (Jatuh Tempo)</span>
                                         @if($booking->installment_due_date)

@@ -77,12 +77,89 @@
             transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
         }
 
-        /* Micro-animation for theme toggle button */
-        #theme-toggle-icon {
-            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.3s ease;
+        /* Custom Theme Switch Toggle styles to match user reference image */
+        .theme-switch-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
         }
-        #theme-toggle-btn:hover #theme-toggle-icon {
-            transform: scale(1.2) rotate(30deg);
+
+        .theme-switch-btn {
+            position: relative;
+            width: 48px;
+            height: 24px;
+            background-color: #374151; /* Dark grey by default */
+            border-radius: 50px;
+            border: 2px solid #e5e7eb;
+            cursor: pointer;
+            transition: background-color 0.3s, border-color 0.3s;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            outline: none;
+        }
+        
+        [data-bs-theme="light"] .theme-switch-btn {
+            background-color: #e5e7eb;
+            border-color: #9ca3af;
+        }
+
+        .theme-switch-knob {
+            position: absolute;
+            top: 1px;
+            left: 1px;
+            width: 18px;
+            height: 18px;
+            background-color: #ffffff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+
+        /* Slide knob to right in dark mode */
+        [data-bs-theme="dark"] .theme-switch-knob {
+            transform: translateX(24px);
+            background-color: #1f2937;
+        }
+        
+        .theme-switch-knob i {
+            font-size: 10px;
+            transition: color 0.3s, transform 0.4s ease;
+        }
+        
+        .theme-switch-btn:hover .theme-switch-knob i {
+            transform: scale(1.15) rotate(15deg);
+        }
+        
+        [data-bs-theme="dark"] .theme-switch-knob i {
+            color: #fbbf24; /* yellow sun in dark mode */
+        }
+        
+        [data-bs-theme="light"] .theme-switch-knob i {
+            color: #4b5563; /* grey moon in light mode */
+        }
+
+        .theme-switch-text {
+            font-size: 0.62rem;
+            font-weight: 700;
+            letter-spacing: 1.2px;
+            margin-top: 4px;
+            text-transform: uppercase;
+            transition: color 0.3s;
+            line-height: 1;
+        }
+        
+        [data-bs-theme="dark"] .theme-switch-text {
+            color: #9ca3af;
+        }
+        
+        [data-bs-theme="light"] .theme-switch-text {
+            color: #4b5563;
         }
         .sidebar-heading {
             height: 56px;
@@ -367,12 +444,15 @@
             // Theme Toggle Logic
             const themeToggleBtn = $('#theme-toggle-btn');
             const themeToggleIcon = $('#theme-toggle-icon');
+            const themeToggleText = $('#theme-toggle-text');
 
             const updateThemeIcon = (theme) => {
                 if (theme === 'dark') {
                     themeToggleIcon.removeClass('bi-moon-stars text-secondary').addClass('bi-sun-fill text-warning');
+                    if (themeToggleText.length) themeToggleText.text('DARK MODE');
                 } else {
                     themeToggleIcon.removeClass('bi-sun-fill text-warning').addClass('bi-moon-stars text-secondary');
+                    if (themeToggleText.length) themeToggleText.text('LIGHT MODE');
                 }
             }
 

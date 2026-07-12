@@ -155,7 +155,14 @@
                                           </div>
                                       @endif
                                  @elseif($b->status == 4)
-                                     <span class="badge rounded-pill bg-secondary-subtle text-secondary px-3 py-2">Menunggu Pembayaran</span>
+                                      <span class="badge rounded-pill bg-secondary-subtle text-secondary px-3 py-2">Menunggu Pembayaran</span>
+                                      @if($b->installment_due_date)
+                                          <div class="mt-1" style="font-size: 0.72rem;">
+                                              <span class="text-danger fw-bold">
+                                                  <i class="bi bi-calendar-event me-1"></i>Tempo: {{ \Carbon\Carbon::parse($b->installment_due_date)->translatedFormat('d M Y') }}
+                                              </span>
+                                          </div>
+                                      @endif
                                  @elseif($b->status == 0)
                                      <span class="badge rounded-pill bg-danger-subtle text-danger px-3 py-2">Batal</span>
                                  @endif

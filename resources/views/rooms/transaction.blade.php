@@ -268,6 +268,11 @@
                     </div>
 
                     <div class="col-md-6">
+                        <div class="label-title">Jumlah Orang (Pax)</div>
+                        <div class="value-text">{{ $actualPax }} Orang</div>
+                    </div>
+
+                    <div class="col-md-6">
                         <div class="label-title">Waktu Mulai Sewa</div>
                         <div class="value-text">
                             {{ \Carbon\Carbon::parse($booking->start_date)->translatedFormat('d F Y, H:i') }} WIB

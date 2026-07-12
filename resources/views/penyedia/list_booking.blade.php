@@ -95,14 +95,27 @@
                             Rp {{ number_format($item->total, 0, ',', '.') }}
                         </td>
                         <td class="text-center">
-                             @if($item->status == 2)
+                             @php
+                                 $isOccupied = ($item->status == 2 || (($item->status == 1 || $item->status == 3) && strtotime($item->end_date) < time()));
+                             @endphp
+                             @if($isOccupied)
                                  <span class="badge rounded-pill bg-success-subtle text-success px-3 py-2">Occupied</span>
                              @elseif($item->status == 1)
                                  <span class="badge rounded-pill bg-primary-subtle text-primary px-3 py-2">Booked</span>
                              @elseif($item->status == 3)
                                  <span class="badge rounded-pill bg-warning-subtle text-warning px-3 py-2" style="color: #a16207 !important;">Cicilan ({{ $item->installments_paid }}/3)</span>
+                                 @if($item->installment_due_date)
+                                     <div class="mt-1" style="font-size: 0.7rem;">
+                                         <span class="text-danger fw-bold">Tempo: {{ \Carbon\Carbon::parse($item->installment_due_date)->translatedFormat('d M Y') }}</span>
+                                     </div>
+                                 @endif
                              @elseif($item->status == 4)
                                  <span class="badge rounded-pill bg-secondary-subtle text-secondary px-3 py-2">Menunggu Pembayaran</span>
+                                 @if($item->installment_due_date)
+                                     <div class="mt-1" style="font-size: 0.7rem;">
+                                         <span class="text-danger fw-bold">Tempo: {{ \Carbon\Carbon::parse($item->installment_due_date)->translatedFormat('d M Y') }}</span>
+                                     </div>
+                                 @endif
                              @elseif($item->status == 0)
                                  <span class="badge rounded-pill bg-danger-subtle text-danger px-3 py-2">Canceled</span>
                              @else
@@ -117,11 +130,11 @@
                                     <i class="bi bi-eye me-1"></i> Detail
                                 </a>
                                 
-                                @if($item->status != 3 && $item->status != 0 && $item->status != 1)
-                                    <a href="{{ $item->status == 2 ? route('bookings.denda', $item->booking_id) : 'javascript:void(0)' }}" 
-                                       class="btn {{ $item->status == 2 ? 'btn-danger' : 'btn-light text-muted border' }} btn-sm rounded-pill px-3 fw-bold d-flex align-items-center shadow-sm" 
-                                       style="font-size: 0.75rem; {{ $item->status != 2 ? 'pointer-events: none; opacity: 0.5; cursor: not-allowed;' : '' }}"
-                                       @if($item->status != 2) title="Denda hanya tersedia setelah pesanan selesai" @endif>
+                                @if($item->status != 0 && $item->status != 4)
+                                    <a href="{{ $isOccupied ? route('bookings.denda', $item->booking_id) : 'javascript:void(0)' }}" 
+                                       class="btn {{ $isOccupied ? 'btn-danger' : 'btn-light text-muted border' }} btn-sm rounded-pill px-3 fw-bold d-flex align-items-center shadow-sm" 
+                                       style="font-size: 0.75rem; {{ !$isOccupied ? 'pointer-events: none; opacity: 0.5; cursor: not-allowed;' : '' }}"
+                                       @if(!$isOccupied) title="Denda hanya tersedia setelah pesanan occupied atau selesai" @endif>
                                         <i class="bi bi-exclamation-octagon me-1"></i> Denda
                                     </a>
                                 @endif
@@ -148,6 +161,7 @@
     $(document).ready(function() {
         $('#tableBookings').DataTable({
             responsive: true,
+            order: [], // Respect server-side query sorting order
             // Mengatur layout DOM grid sistem Bootstrap 5 agar layouting sejajar dan rapi
             dom: "<'row'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6'f>>" +
                  "<'row'<'col-sm-12'tr>>" +

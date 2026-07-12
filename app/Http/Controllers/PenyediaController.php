@@ -258,7 +258,61 @@ class PenyediaController extends Controller
         $unpaidOrder  = (clone $statsQuery)->whereIn('status', [3, 4])->count();
         $cancelOrder  = (clone $statsQuery)->where('status', 0)->count();
 
-        $bookings = $query->latest()->get();
+        $bookings = $query->get();
+
+        // Urutkan koleksi:
+        // - status 4 (Menunggu Pembayaran) -> Bobot 1
+        // - status 3 (Cicilan - jika belum lewat) -> Bobot 2, urutkan berdasarkan jatuh tempo terdekat
+        // - status 1 (Booked - jika belum lewat) -> Bobot 3
+        // - status 2 / occupied (jika lewat atau status 2) -> Bobot 4
+        // - status 0 (Canceled) -> Bobot 5
+        $bookings = $bookings->sort(function ($a, $b) {
+            $now = time();
+            $isOccupiedA = ($a->status == 2 || (($a->status == 1 || $a->status == 3) && strtotime($a->end_date) < $now));
+            $isOccupiedB = ($b->status == 2 || (($b->status == 1 || $b->status == 3) && strtotime($b->end_date) < $now));
+
+            if ($a->status == 4) {
+                $weightA = 1;
+            } elseif ($a->status == 3 && !$isOccupiedA) {
+                $weightA = 2;
+            } elseif ($a->status == 1 && !$isOccupiedA) {
+                $weightA = 3;
+            } elseif ($isOccupiedA) {
+                $weightA = 4;
+            } else {
+                $weightA = 5;
+            }
+
+            if ($b->status == 4) {
+                $weightB = 1;
+            } elseif ($b->status == 3 && !$isOccupiedB) {
+                $weightB = 2;
+            } elseif ($b->status == 1 && !$isOccupiedB) {
+                $weightB = 3;
+            } elseif ($isOccupiedB) {
+                $weightB = 4;
+            } else {
+                $weightB = 5;
+            }
+
+            if ($weightA !== $weightB) {
+                return $weightA <=> $weightB;
+            }
+
+            // Sub-sorting untuk status 3 (Cicilan) berdasarkan jatuh tempo terdekat
+            if ($a->status == 3 && !$isOccupiedA) {
+                $dateA = $a->installment_due_date ? strtotime($a->installment_due_date) : 9999999999;
+                $dateB = $b->installment_due_date ? strtotime($b->installment_due_date) : 9999999999;
+                if ($dateA !== $dateB) {
+                    return $dateA <=> $dateB;
+                }
+            }
+
+            // Fallback: created_at desc (terbaru ke terlama)
+            $timeA = $a->created_at ? strtotime($a->created_at) : 0;
+            $timeB = $b->created_at ? strtotime($b->created_at) : 0;
+            return $timeB <=> $timeA;
+        })->values();
 
         return view('penyedia.list_booking', compact(
             'bookings', 'totalOrder', 'pendingOrder', 'successOrder', 'unpaidOrder', 'cancelOrder'

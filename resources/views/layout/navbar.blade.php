@@ -3,9 +3,14 @@
 
         <div class="ms-auto d-flex align-items-center">
             <!-- Theme Toggle Button -->
-            <button class="btn btn-link p-0 me-3 border-0 shadow-none d-flex align-items-center justify-content-center" id="theme-toggle-btn" style="text-decoration: none;">
-                <i class="bi bi-moon-stars fs-5 text-secondary" id="theme-toggle-icon"></i>
-            </button>
+            {{-- <div class="theme-switch-container">
+                <button class="theme-switch-btn" id="theme-toggle-btn" aria-label="Toggle Theme">
+                    <span class="theme-switch-knob">
+                        <i class="bi bi-moon-stars" id="theme-toggle-icon"></i>
+                    </span>
+                </button>
+                <span class="theme-switch-text" id="theme-toggle-text">LIGHT MODE</span>
+            </div> --}}
             
             <span class="me-3 text-muted">Welcome, {{ Auth::user()->username }}</span>
             <div class="dropdown" style="cursor: pointer">
