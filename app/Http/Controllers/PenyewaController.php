@@ -63,9 +63,54 @@ class PenyewaController extends Controller
         // 2. Load recent bookings (terbaru)
         $recentBookings = \App\Models\Booking::with(['roomDetail.room', 'rating', 'fines'])
             ->where('user_id', $userId)
-            ->orderBy('created_at', 'desc')
-            ->take(5)
             ->get();
+
+        // Urutkan koleksi dengan logika yang sama dengan riwayat sewa:
+        $recentBookings = $recentBookings->sort(function ($a, $b) {
+            $weightA = match ($a->status) {
+                4 => 1,
+                3 => 2,
+                1 => 3,
+                2 => 4,
+                0 => 5,
+                default => 6,
+            };
+            $weightB = match ($b->status) {
+                4 => 1,
+                3 => 2,
+                1 => 3,
+                2 => 4,
+                0 => 5,
+                default => 6,
+            };
+
+            if ($weightA !== $weightB) {
+                return $weightA <=> $weightB;
+            }
+
+            // Jika keduanya status 3 (Cicilan), urutkan berdasarkan jatuh tempo terdekat
+            if ($a->status == 3) {
+                $dateA = $a->installment_due_date ? strtotime($a->installment_due_date) : 9999999999;
+                $dateB = $b->installment_due_date ? strtotime($b->installment_due_date) : 9999999999;
+                if ($dateA !== $dateB) {
+                    return $dateA <=> $dateB;
+                }
+            }
+
+            // Jika keduanya status 2 (Selesai), dahulukan yang belum dinilai (rating null)
+            if ($a->status == 2) {
+                $hasRatingA = $a->rating !== null ? 1 : 0;
+                $hasRatingB = $b->rating !== null ? 1 : 0;
+                if ($hasRatingA !== $hasRatingB) {
+                    return $hasRatingA <=> $hasRatingB;
+                }
+            }
+
+            // Fallback: created_at desc
+            $timeA = $a->created_at ? strtotime($a->created_at) : 0;
+            $timeB = $b->created_at ? strtotime($b->created_at) : 0;
+            return $timeB <=> $timeA;
+        })->take(5)->values();
 
         // 3. Deteksi booking selesai yang BELUM di-rate untuk modal rating otomatis
         $unratedBooking = \App\Models\Booking::with('roomDetail.room')

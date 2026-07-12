@@ -270,6 +270,19 @@ $(document).ready(function() {
 
     // 4. Validasi Batas Maksimal Tamu & Saldo Sebelum Submit Form
     $('#main-booking-form').on('submit', function(e) {
+        // Validasi nomor telepon (10-12 digit)
+        let phoneVal = $('#phone-input').val() || '';
+        if (phoneVal.length < 10 || phoneVal.length > 12) {
+            e.preventDefault();
+            $('#phone-input').addClass('is-invalid');
+            $('#phone-error').removeClass('d-none');
+            $('#phone-input').focus();
+            return false;
+        } else {
+            $('#phone-input').removeClass('is-invalid');
+            $('#phone-error').addClass('d-none');
+        }
+
         let inputCap = parseInt($('#input-capacity').val()) || 0;
         let maxCap = parseInt($('#input-capacity').attr('max')) || 0;
         let minOrder = parseInt($('#render-base-price').data('min-order')) || 1;
@@ -367,6 +380,15 @@ $(document).ready(function() {
     // Pemicu otomatis draf saat ada perubahan atau pengetikan di formulir
     $(document).on('input change keyup blur', '#main-booking-form input, #main-booking-form select, #main-booking-form textarea', function() {
         saveDraft();
+    });
+
+    // Validasi nomor telepon secara dinamis saat mengetik
+    $(document).on('input', '#phone-input', function() {
+        let val = $(this).val() || '';
+        if (val.length >= 10 && val.length <= 12) {
+            $(this).removeClass('is-invalid');
+            $('#phone-error').addClass('d-none');
+        }
     });
 
     // =========================================================================

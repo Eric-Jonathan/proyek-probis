@@ -5,7 +5,12 @@ $(document).on('click', '.btn-submit-assign', function(e) {
     // Cari select yang berada dalam satu baris d-flex dengan tombol yang diklik
     let selectedOutsource = $(this).siblings('.select-surveyor').val();
     if (!selectedOutsource) {
-        alert('Mohon pilih salah satu mitra outsource terlebih dahulu!');
+        Swal.fire({
+            icon: 'warning',
+            title: 'Perhatian',
+            text: 'Mohon pilih salah satu mitra outsource terlebih dahulu!',
+            heightAuto: false
+        });
         return;
     }
     // Set value ke form bayangan global

@@ -407,7 +407,7 @@ class PenyediaController extends Controller
                 
                 // Jika booking harian (dimulai 00:00:00 dan berakhir 23:59:59)
                 if ($start->format('H:i:s') === '00:00:00' && $end->format('H:i:s') === '23:59:59') {
-                    $days = max(1, $start->diffInDays($end) + 1);
+                    $days = (int) round(max(1, $start->diffInDays($end) + 1));
                     $hours = $days * 24;
                 } else {
                     $hours = max(1, $end->diffInHours($start));
@@ -708,7 +708,7 @@ class PenyediaController extends Controller
                 $end = \Carbon\Carbon::parse($b->end_date);
                 
                 if ($start->format('H:i:s') === '00:00:00' && $end->format('H:i:s') === '23:59:59') {
-                    $days = max(1, $start->diffInDays($end) + 1);
+                    $days = (int) round(max(1, $start->diffInDays($end) + 1));
                     $hours = $days * 24;
                 } else {
                     $hours = max(1, $end->diffInHours($start));

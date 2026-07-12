@@ -44,7 +44,7 @@
 @php
     $start = \Carbon\Carbon::parse($booking->start_date);
     $end = \Carbon\Carbon::parse($booking->end_date);
-    $days = max(1, $start->diffInDays($end) + 1);
+    $days = (int) round(max(1, $start->diffInDays($end) + 1));
     
     // Let's check room price and booking details
     $roomPrice = $booking->roomDetail->room->price ?? 0;

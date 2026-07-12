@@ -183,7 +183,7 @@
                                         
                                         <form action="{{ route('admin.outsource.terminate', $p->outsource_id) }}" 
                                                 method="POST" 
-                                                onsubmit="return confirm('Apakah Anda yakin ingin {{ $p->status == 1 ? 'menonaktifkan' : 'mengaktifkan' }} vendor ini?')">
+                                                data-confirm="Apakah Anda yakin ingin {{ $p->status == 1 ? 'menonaktifkan' : 'mengaktifkan' }} vendor ini?">
                                             @csrf
                                             <button type="submit" class="btn btn-white border-0 px-3 text-danger" title="Ubah Status Kemitraan">
                                                 <i class="bi bi-slash-circle"></i>

@@ -128,7 +128,12 @@ function executeAddFacility() {
     
     // 3. Validasi jika fasilitas sudah ada di daftar
     if ($('#fac-' + internalId).length > 0) {
-        alert('Fasilitas ini sudah terdaftar di daftar pilihan.');
+        Swal.fire({
+            icon: 'warning',
+            title: 'Perhatian',
+            text: 'Fasilitas ini sudah terdaftar di daftar pilihan.',
+            heightAuto: false
+        });
         inputField.val('');
         
         // Tutup modal secara aman dengan memicu klik pada tombol batal
@@ -201,7 +206,12 @@ $(document).on('click', '.btn-save', function(e) {
     if (totalPhotosAccumulated < 5) {
         e.preventDefault(); // Gagalkan submit form ke backend
         $('#image-input').addClass('is-invalid');
-        alert(`Form gagal dikirim! Total foto ruangan saat ini baru ${totalPhotosAccumulated} foto. Anda wajib mengunggah minimal 5 foto secara keseluruhan.`);
+        Swal.fire({
+            icon: 'error',
+            title: 'Foto Kurang',
+            text: `Form gagal dikirim! Total foto ruangan saat ini baru ${totalPhotosAccumulated} foto. Anda wajib mengunggah minimal 5 foto secara keseluruhan.`,
+            heightAuto: false
+        });
         $('#image-input').focus();
         return;
     }
@@ -282,7 +292,12 @@ $(document).on('change', '#image-input', function() {
         });
 
         if (hasLargeFile) {
-            alert('Beberapa foto dilewati karena ukurannya melebihi 2MB.');
+            Swal.fire({
+                icon: 'warning',
+                title: 'Ukuran Foto Terlalu Besar',
+                text: 'Beberapa foto dilewati karena ukurannya melebihi 2MB.',
+                heightAuto: false
+            });
         }
 
         // Sinkronisasi ulang isi input file dengan array penampung kita

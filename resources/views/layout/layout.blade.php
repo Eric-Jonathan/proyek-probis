@@ -424,8 +424,88 @@
                     $(this).val(rawVal);
                 });
             });
+
+            // Intercept form submissions that have a data-confirm attribute
+            $(document).on('submit', 'form[data-confirm]', function(e) {
+                e.preventDefault();
+                const form = this;
+                const message = $(form).data('confirm') || 'Apakah Anda yakin ingin melanjutkan tindakan ini?';
+                
+                Swal.fire({
+                    title: 'Konfirmasi Tindakan',
+                    text: message,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#006ce4',
+                    cancelButtonColor: '#dc3545',
+                    confirmButtonText: 'Ya, Lanjutkan',
+                    cancelButtonText: 'Batal',
+                    heightAuto: false
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        const tempConfirm = form.getAttribute('data-confirm');
+                        form.removeAttribute('data-confirm');
+                        form.submit();
+                        form.setAttribute('data-confirm', tempConfirm);
+                    }
+                });
+            });
+
+            // Intercept button clicks that have data-confirm
+            $(document).on('click', '.btn-confirm-action', function(e) {
+                e.preventDefault();
+                const button = this;
+                const form = $(button).closest('form')[0];
+                const message = $(button).data('confirm') || 'Apakah Anda yakin ingin melanjutkan?';
+                
+                Swal.fire({
+                    title: 'Konfirmasi Pembayaran',
+                    text: message,
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#198754',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Ya, Bayar Sekarang',
+                    cancelButtonText: 'Batal',
+                    heightAuto: false
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        if (form) {
+                            form.submit();
+                        } else if (button.href) {
+                            window.location.href = button.href;
+                        }
+                    }
+                });
+            });
         });
     </script>
+
+    @if(session('success'))
+        <script>
+            $(document).ready(function() {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Berhasil',
+                    text: "{{ session('success') }}",
+                    heightAuto: false
+                });
+            });
+        </script>
+    @endif
+
+    @if(session('error'))
+        <script>
+            $(document).ready(function() {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Kesalahan',
+                    text: "{{ session('error') }}",
+                    heightAuto: false
+                });
+            });
+        </script>
+    @endif
 
     @yield('custom_js')
 </body>

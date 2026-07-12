@@ -258,15 +258,15 @@
             <div class="modal-footer border-0 p-4 pt-0">
                 @if($f->status == 0)
                     <div class="d-flex w-100 gap-2">
-                        <form action="{{ route('admin.fines.approve', $f->fine_id) }}" method="POST" class="flex-grow-1">
+                        <form action="{{ route('admin.fines.approve', $f->fine_id) }}" method="POST" class="flex-grow-1" data-confirm="Apakah Anda yakin menyetujui pengajuan denda ini?">
                             @csrf
-                            <button type="submit" class="btn btn-success w-100 py-2.5 rounded-pill fw-bold shadow-sm" onclick="return confirm('Apakah Anda yakin menyetujui pengajuan denda ini?')">
+                            <button type="submit" class="btn btn-success w-100 py-2.5 rounded-pill fw-bold shadow-sm">
                                 <i class="bi bi-check-lg me-1"></i> Setujui & Kirim Warning
                             </button>
                         </form>
-                        <form action="{{ route('admin.fines.reject', $f->fine_id) }}" method="POST" class="flex-grow-1">
+                        <form action="{{ route('admin.fines.reject', $f->fine_id) }}" method="POST" class="flex-grow-1" data-confirm="Apakah Anda yakin menolak pengajuan denda ini?">
                             @csrf
-                            <button type="submit" class="btn btn-danger w-100 py-2.5 rounded-pill fw-bold shadow-sm" onclick="return confirm('Apakah Anda yakin menolak pengajuan denda ini?')">
+                            <button type="submit" class="btn btn-danger w-100 py-2.5 rounded-pill fw-bold shadow-sm">
                                 <i class="bi bi-x-lg me-1"></i> Tolak Pengajuan
                             </button>
                         </form>

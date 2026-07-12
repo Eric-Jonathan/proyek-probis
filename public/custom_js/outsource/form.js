@@ -27,7 +27,12 @@ $(document).ready(function() {
         let internalId = 'custom-' + facilityName.toLowerCase().replace(/[^a-z0-9]+/g, '-');
         
         if ($('#fac-' + internalId).length > 0) {
-            alert('Fasilitas sudah ditambahkan.');
+            Swal.fire({
+                icon: 'warning',
+                title: 'Perhatian',
+                text: 'Fasilitas sudah ditambahkan.',
+                heightAuto: false
+            });
             inputField.val('');
             $('#btn-close-modal-facility').click();
             return;
@@ -58,7 +63,12 @@ $(document).ready(function() {
             let validFilesToAdd = Array.from(files).filter(file => file.type.startsWith('image/'));
             
             if (selectedPhotosArray.length + validFilesToAdd.length > maxPhotos) {
-                alert(`Gagal menambahkan foto! Maksimal jumlah foto yang diperbolehkan adalah ${maxPhotos} foto.`);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Jumlah Foto Melebihi Batas',
+                    text: `Gagal menambahkan foto! Maksimal jumlah foto yang diperbolehkan adalah ${maxPhotos} foto.`,
+                    heightAuto: false
+                });
                 this.value = '';
                 return;
             }
@@ -74,7 +84,12 @@ $(document).ready(function() {
             });
 
             if (hasLargeFile) {
-                alert('Beberapa foto dilewati karena ukurannya melebihi 2MB.');
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Ukuran Foto Terlalu Besar',
+                    text: 'Beberapa foto dilewati karena ukurannya melebihi 2MB.',
+                    heightAuto: false
+                });
             }
 
             // Sinkronisasikan berkas ke input file element asli
@@ -115,6 +130,7 @@ $(document).ready(function() {
         }
     }
 
+    // ... (rest of the file stays exact same structure)
     function refreshInputFileElements() {
         const dataTransfer = new DataTransfer();
         selectedPhotosArray.forEach(file => {
@@ -142,12 +158,22 @@ $(document).ready(function() {
         
         if (file) {
             if (!file.type.startsWith('video/')) {
-                alert('Silakan pilih berkas video yang valid.');
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Format Tidak Valid',
+                    text: 'Silakan pilih berkas video yang valid.',
+                    heightAuto: false
+                });
                 clearVideoSelection();
                 return;
             }
             if (file.size > 10 * 1024 * 1024) { // 10MB
-                alert('Ukuran video melebihi batas 10MB.');
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Video Terlalu Besar',
+                    text: 'Ukuran video melebihi batas 10MB.',
+                    heightAuto: false
+                });
                 clearVideoSelection();
                 return;
             }
@@ -177,13 +203,23 @@ $(document).ready(function() {
     $('#btn-submit-report').on('click', function(e) {
         if (selectedPhotosArray.length < 3) {
             e.preventDefault();
-            alert('Gagal mengirim! Anda harus mengunggah minimal 3 foto hasil cek lapangan.');
+            Swal.fire({
+                icon: 'error',
+                title: 'Foto Kurang',
+                text: 'Gagal mengirim! Anda harus mengunggah minimal 3 foto hasil cek lapangan.',
+                heightAuto: false
+            });
             $('#foto-input').focus();
             return;
         }
         if (selectedPhotosArray.length > 5) {
             e.preventDefault();
-            alert('Gagal mengirim! Maksimal jumlah foto yang diperbolehkan adalah 5 foto.');
+            Swal.fire({
+                icon: 'error',
+                title: 'Foto Berlebih',
+                text: 'Gagal mengirim! Maksimal jumlah foto yang diperbolehkan adalah 5 foto.',
+                heightAuto: false
+            });
             $('#foto-input').focus();
             return;
         }

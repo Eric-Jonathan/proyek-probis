@@ -105,7 +105,7 @@
                                    style="width: 32px; height: 32px;" title="Edit">
                                     <i class="bi bi-pencil"></i>
                                 </a>
-                                <form action="{{ route('rooms.destroy', $room->room_id) }}" method="POST" class="d-inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus ruangan ini?')">
+                                <form action="{{ route('rooms.destroy', $room->room_id) }}" method="POST" class="d-inline" data-confirm="Apakah Anda yakin ingin menghapus ruangan ini?">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="btn btn-sm btn-outline-danger rounded-circle d-inline-flex align-items-center justify-content-center" 

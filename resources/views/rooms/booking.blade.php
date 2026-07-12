@@ -183,10 +183,16 @@
 
                         <div class="col-md-6">
                             <label class="form-label small fw-bold">Nomor WhatsApp Aktif <span class="text-danger">*</span></label>
-                            <div class="input-group">
+                            <div class="input-group @error('phone') has-validation @enderror">
                                 <span class="input-group-text bg-light">+62</span>
-                                <input type="number" name="phone" class="form-control py-2" placeholder="8123xxxx" value="{{ old('phone', $userPhone) }}" required>
+                                <input type="text" name="phone" id="phone-input" class="form-control py-2 @error('phone') is-invalid @enderror" placeholder="8123xxxx" value="{{ old('phone', $userPhone) }}" minlength="10" maxlength="12" oninput="this.value = this.value.replace(/[^0-9]/g, '')" required>
+                                @error('phone')
+                                    <div class="invalid-feedback">
+                                        {{ $message }}
+                                    </div>
+                                @enderror
                             </div>
+                            <div id="phone-error" class="text-danger mt-1 d-none" style="font-size: 11px;">Nomor telepon harus terdiri dari 10-12 digit angka.</div>
                         </div>
 
                         <div class="col-md-6">

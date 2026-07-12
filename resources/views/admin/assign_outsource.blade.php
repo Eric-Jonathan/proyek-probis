@@ -267,7 +267,7 @@
                                         <li><a class="dropdown-item small" href="tel:{{ $m->company->pic_phone ?? '#' }}"><i class="bi bi-telephone me-2 text-primary"></i> Hubungi Outsource</a></li>
                                         <li><hr class="dropdown-divider"></li>
                                         <li>
-                                            <form action="{{ route('outsource.cancel', $m->assignment_id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin membatalkan tugas ini?')">
+                                            <form action="{{ route('outsource.cancel', $m->assignment_id) }}" method="POST" data-confirm="Apakah Anda yakin ingin membatalkan tugas ini?">
                                                 @csrf
                                                 <button type="submit" class="dropdown-item small text-danger"><i class="bi bi-x-circle me-2"></i> Batalkan Tugas</button>
                                             </form>

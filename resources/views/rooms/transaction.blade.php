@@ -4,7 +4,49 @@
 @php
     $start = \Carbon\Carbon::parse($booking->start_date);
     $end = \Carbon\Carbon::parse($booking->end_date);
-    $days = max(1, $start->diffInDays($end) + 1);
+    $days = (int) round(max(1, $start->diffInDays($end) + 1));
+    
+    if (!function_exists('formatDurationText')) {
+        function formatDurationText($days) {
+            $days = (int) round($days);
+            $years = intval($days / 365);
+            $remainingDays = $days % 365;
+            
+            $months = intval($remainingDays / 30);
+            $remainingDays = $remainingDays % 30;
+            
+            $weeks = intval($remainingDays / 7);
+            $remainingDays = $remainingDays % 7;
+            
+            $result = [];
+            
+            if ($years > 0) {
+                $result[] = "{$years} Tahun";
+                if ($months > 0) {
+                    $result[] = "{$months} Bulan";
+                }
+                $daysCount = ($weeks * 7) + $remainingDays;
+                if ($daysCount > 0) {
+                    $result[] = "{$daysCount} Hari";
+                }
+            } elseif ($months > 0) {
+                $result[] = "{$months} Bulan";
+                $daysCount = ($weeks * 7) + $remainingDays;
+                if ($daysCount > 0) {
+                    $result[] = "{$daysCount} Hari";
+                }
+            } elseif ($weeks > 0) {
+                $result[] = "{$weeks} Minggu";
+                if ($remainingDays > 0) {
+                    $result[] = "{$remainingDays} Hari";
+                }
+            } else {
+                $result[] = "{$days} Hari";
+            }
+            
+            return implode(' ', $result);
+        }
+    }
     
     // Let's check room price and booking details
     $roomPrice = $booking->roomDetail->room->price ?? 0;
@@ -278,6 +320,91 @@
                     @endif
                 </div>
 
+                @php
+                    $isInstallment = str_contains(strtolower($booking->method_payment), 'cicilan');
+                    $createdAt = \Carbon\Carbon::parse($booking->created_at);
+                    if ($days < 7) {
+                        $intervalLabel = "Beberapa Hari (Jatuh Tempo 2 Hari Sekali)";
+                        $dueDate1 = $createdAt->copy();
+                        $dueDate2 = $createdAt->copy()->addDays(2);
+                        $dueDate3 = $createdAt->copy()->addDays(4);
+                    } elseif ($days <= 30) {
+                        $intervalLabel = "Beberapa Minggu (Jatuh Tempo 1 Minggu Sekali)";
+                        $dueDate1 = $createdAt->copy();
+                        $dueDate2 = $createdAt->copy()->addWeeks(1);
+                        $dueDate3 = $createdAt->copy()->addWeeks(2);
+                    } else {
+                        $intervalLabel = "Beberapa Bulan (Jatuh Tempo 1 Bulan Sekali)";
+                        $dueDate1 = $createdAt->copy();
+                        $dueDate2 = $createdAt->copy()->addMonths(1);
+                        $dueDate3 = $createdAt->copy()->addMonths(2);
+                    }
+                @endphp
+
+                @if($isInstallment)
+                    <div class="mt-4 p-4 rounded-4 border shadow-sm" style="background-color: var(--bs-tertiary-bg); border-color: var(--bs-border-color) !important;">
+                        <h5 class="fw-bold mb-3 text-dark d-flex align-items-center gap-2">
+                            <i class="bi bi-calendar-check-fill text-primary"></i> Jadwal Jatuh Tempo Cicilan
+                        </h5>
+                        <div class="alert alert-info border-0 py-2 px-3 rounded-3 mb-3 d-flex align-items-center gap-2" style="font-size: 0.82rem;">
+                            <i class="bi bi-info-circle-fill fs-5 text-primary"></i>
+                            <div>
+                                Analisis Durasi Booking: <strong>{{ formatDurationText($days) }}</strong> (Kategori: <strong>{{ $intervalLabel }}</strong>)
+                            </div>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-bordered mb-0 align-middle text-center" style="font-size: 0.85rem;">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th width="35%">Tahap Pembayaran</th>
+                                        <th width="40%">Jatuh Tempo</th>
+                                        <th width="25%">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td class="fw-bold text-start ps-3">Cicilan Ke-1 (DP 1/3 + Deposit)</td>
+                                        <td>{{ $dueDate1->translatedFormat('d M Y, H:i') }} WIB</td>
+                                        <td>
+                                            @if($booking->installments_paid >= 1)
+                                                <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-1">Lunas</span>
+                                            @else
+                                                <span class="badge bg-warning-subtle text-warning border border-warning-subtle rounded-pill px-3 py-1">Menunggu</span>
+                                            @endif
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="fw-bold text-start ps-3">Cicilan Ke-2 (1/3 Pokok)</td>
+                                        <td>{{ $dueDate2->translatedFormat('d M Y') }} (23:59 WIB)</td>
+                                        <td>
+                                            @if($booking->installments_paid >= 2)
+                                                <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-1">Lunas</span>
+                                            @elseif($booking->installments_paid == 1)
+                                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-3 py-1">Belum Dibayar</span>
+                                            @else
+                                                <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle rounded-pill px-3 py-1">Belum Aktif</span>
+                                            @endif
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="fw-bold text-start ps-3">Cicilan Ke-3 (Sisa Pokok)</td>
+                                        <td>{{ $dueDate3->translatedFormat('d M Y') }} (23:59 WIB)</td>
+                                        <td>
+                                            @if($booking->installments_paid >= 3)
+                                                <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-1">Lunas</span>
+                                            @elseif($booking->installments_paid == 2)
+                                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-3 py-1">Belum Dibayar</span>
+                                            @else
+                                                <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle rounded-pill px-3 py-1">Belum Aktif</span>
+                                            @endif
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                @endif
+
                 <div class="mini-line my-4"></div>
 
                 <div class="small text-muted">
@@ -428,11 +555,11 @@
                                 <form action="{{ route('booking.pay', $booking->booking_id) }}" method="POST">
                                     @csrf
                                     @if($booking->status == 4)
-                                        <button type="submit" class="btn btn-midtrans w-100 mb-3 py-3 bg-success border-0" onclick="return confirm('Apakah Anda yakin ingin membayar pemesanan booking ini sebesar Rp {{ number_format($nextPayment, 0, ',', '.') }} menggunakan Saldo Tempat-In?')">
+                                        <button type="submit" class="btn btn-midtrans btn-confirm-action w-100 mb-3 py-3 bg-success border-0" data-confirm="Apakah Anda yakin ingin membayar pemesanan booking ini sebesar Rp {{ number_format($nextPayment, 0, ',', '.') }} menggunakan Saldo Tempat-In?">
                                             <i class="bi bi-wallet2 me-2"></i> Bayar Sekarang
                                         </button>
                                     @else
-                                        <button type="submit" class="btn btn-midtrans w-100 mb-3 py-3 bg-success border-0" onclick="return confirm('Apakah Anda yakin ingin membayar cicilan booking ini sebesar Rp {{ number_format($nextPayment, 0, ',', '.') }} menggunakan Saldo Tempat-In?')">
+                                        <button type="submit" class="btn btn-midtrans btn-confirm-action w-100 mb-3 py-3 bg-success border-0" data-confirm="Apakah Anda yakin ingin membayar cicilan booking ini sebesar Rp {{ number_format($nextPayment, 0, ',', '.') }} menggunakan Saldo Tempat-In?">
                                             <i class="bi bi-wallet2 me-2"></i> Bayar Cicilan Sekarang
                                         </button>
                                     @endif

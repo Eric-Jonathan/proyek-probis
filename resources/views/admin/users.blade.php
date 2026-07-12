@@ -109,7 +109,7 @@
                                             <i class="bi bi-pencil-square"></i>
                                         </a>
 
-                                        <form action="{{ url('/admin/users/delete/'.$user->user_id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus user ini?')">
+                                        <form action="{{ url('/admin/users/delete/'.$user->user_id) }}" method="POST" data-confirm="Apakah Anda yakin ingin menghapus user ini?">
                                             @csrf
                                             <button type="submit" class="btn btn-white border-0 px-3 text-danger" title="Hapus">
                                                 <i class="bi bi-trash"></i>

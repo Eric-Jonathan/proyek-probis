@@ -63,8 +63,59 @@ class BookingController extends Controller
         // 1. Ambil data transaksi riwayat booking penyewa
         $bookings = \App\Models\Booking::with(['roomDetail.room', 'rating', 'fines'])
             ->where('user_id', $userId)
-            ->orderBy('created_at', 'desc')
             ->get();
+
+        // Urutkan koleksi:
+        // - status 4 (Menunggu Pembayaran) -> Urutan ke-1
+        // - status 3 (Cicilan) -> Urutan ke-2, diurutkan berdasarkan jatuh tempo terdekat sampai terjauh (installment_due_date ASC)
+        // - status 1 (Terjadwal / Lunas) -> Urutan ke-3
+        // - status 2 (Selesai) -> Urutan ke-4, prioritaskan yang belum dirating (rating null) sebelum yang sudah dirating
+        // - status 0 (Batal) -> Urutan ke-5
+        $bookings = $bookings->sort(function ($a, $b) {
+            $weightA = match ($a->status) {
+                4 => 1,
+                3 => 2,
+                1 => 3,
+                2 => 4,
+                0 => 5,
+                default => 6,
+            };
+            $weightB = match ($b->status) {
+                4 => 1,
+                3 => 2,
+                1 => 3,
+                2 => 4,
+                0 => 5,
+                default => 6,
+            };
+
+            if ($weightA !== $weightB) {
+                return $weightA <=> $weightB;
+            }
+
+            // Jika keduanya status 3 (Cicilan), urutkan berdasarkan jatuh tempo terdekat
+            if ($a->status == 3) {
+                $dateA = $a->installment_due_date ? strtotime($a->installment_due_date) : 9999999999;
+                $dateB = $b->installment_due_date ? strtotime($b->installment_due_date) : 9999999999;
+                if ($dateA !== $dateB) {
+                    return $dateA <=> $dateB;
+                }
+            }
+
+            // Jika keduanya status 2 (Selesai), dahulukan yang belum dinilai (rating null)
+            if ($a->status == 2) {
+                $hasRatingA = $a->rating !== null ? 1 : 0;
+                $hasRatingB = $b->rating !== null ? 1 : 0;
+                if ($hasRatingA !== $hasRatingB) {
+                    return $hasRatingA <=> $hasRatingB; // 0 (belum dinilai) pertama, lalu 1 (sudah dinilai)
+                }
+            }
+
+            // Default fallback: urutkan berdasarkan created_at desc (terbaru ke terlama)
+            $timeA = $a->created_at ? strtotime($a->created_at) : 0;
+            $timeB = $b->created_at ? strtotime($b->created_at) : 0;
+            return $timeB <=> $timeA;
+        })->values();
 
         // 2. Hitung statistik untuk header card
         $stats = [
@@ -86,7 +137,7 @@ class BookingController extends Controller
         $endDate = $request->query('end_date') ? Carbon::parse($request->query('end_date')) : Carbon::tomorrow();
         
         // Total hari sewa (inklusif)
-        $totalDays = max(1, $startDate->diffInDays($endDate) + 1);
+        $totalDays = (int) round(max(1, $startDate->diffInDays($endDate) + 1));
 
         // 2. Tentukan Default Hitungan Jam (Misal untuk kalkulasi awal invoice)
         $durationHours = 8; // Standar sewa harian/jam jika belum diubah di form
@@ -143,13 +194,16 @@ class BookingController extends Controller
             'end_date' => 'required|date',
             'instansi' => 'required|string|max:255',
             'jenis_acara' => 'required|string|max:100',
-            'phone' => 'required|string|max:30',
+            'phone' => 'required|string|regex:/^[0-9]{10,12}$/',
             'total_capacity' => 'required|integer|min:1|max:' . $room->capacity,
             'sewa_tipe' => 'required|in:harian,jam',
             'payment_scheme' => 'required|in:full,installment',
             'notes' => 'nullable|string',
             'jam_mulai' => 'nullable|string',
             'jam_selesai' => 'nullable|string'
+        ], [
+            'phone.regex' => 'Nomor WhatsApp aktif harus terdiri dari 10 hingga 12 digit angka.',
+            'phone.required' => 'Nomor WhatsApp aktif wajib diisi.'
         ]);
 
         $startDateVal = $request->start_date;
@@ -188,7 +242,7 @@ class BookingController extends Controller
         // =========================================================================
         $carbonStart = \Illuminate\Support\Carbon::parse($startDateVal);
         $carbonEnd = \Illuminate\Support\Carbon::parse($endDateVal);
-        $totalDays = max(1, $carbonStart->diffInDays($carbonEnd) + 1);
+        $totalDays = (int) round(max(1, $carbonStart->diffInDays($carbonEnd) + 1));
 
         $totalPax = intval($request->total_capacity);
         $jenisHarga = strtolower(trim($room->jenis_harga));
@@ -448,16 +502,22 @@ class BookingController extends Controller
                     $booking->installments_paid = 1;
                     $booking->status = 3; // Cicilan (Belum Lunas)
                     
-                    // Set default due date (30 days from now or 3 days before start date, whichever is earlier)
+                    // Hitung jatuh tempo dinamis berdasarkan durasi sewa, dihitung relatif terhadap created_at booking
+                    $createdAt = \Carbon\Carbon::parse($booking->created_at);
                     $startDateTime = \Carbon\Carbon::parse($booking->start_date);
-                    $defaultDueDate = \Carbon\Carbon::now()->addDays(30);
-                    if ($defaultDueDate->gt($startDateTime->copy()->subDays(3))) {
-                        $defaultDueDate = $startDateTime->copy()->subDays(3);
+                    $endDateTime = \Carbon\Carbon::parse($booking->end_date);
+                    $durationDays = max(1, $startDateTime->diffInDays($endDateTime) + 1);
+
+                    if ($durationDays < 7) {
+                        $offset = $booking->installments_paid * 2;
+                        $booking->installment_due_date = $createdAt->copy()->addDays($offset)->toDateString();
+                    } elseif ($durationDays <= 30) {
+                        $offset = $booking->installments_paid;
+                        $booking->installment_due_date = $createdAt->copy()->addWeeks($offset)->toDateString();
+                    } else {
+                        $offset = $booking->installments_paid;
+                        $booking->installment_due_date = $createdAt->copy()->addMonths($offset)->toDateString();
                     }
-                    if ($defaultDueDate->lt(\Carbon\Carbon::now())) {
-                        $defaultDueDate = \Carbon\Carbon::now()->addDay();
-                    }
-                    $booking->installment_due_date = $defaultDueDate->toDateString();
                 } else {
                     $booking->installments_paid = 3;
                     $booking->status = 1; // Terjadwal (Lunas)
@@ -471,16 +531,22 @@ class BookingController extends Controller
                     $booking->status = 1; // 1 = Terjadwal (Lunas)
                     $booking->installment_due_date = null;
                 } else {
-                    // Set default due date for the next installment (30 days from now or 3 days before start date, whichever is earlier)
+                    // Hitung jatuh tempo dinamis berdasarkan durasi sewa, dihitung relatif terhadap created_at booking
+                    $createdAt = \Carbon\Carbon::parse($booking->created_at);
                     $startDateTime = \Carbon\Carbon::parse($booking->start_date);
-                    $defaultDueDate = \Carbon\Carbon::now()->addDays(30);
-                    if ($defaultDueDate->gt($startDateTime->copy()->subDays(3))) {
-                        $defaultDueDate = $startDateTime->copy()->subDays(3);
+                    $endDateTime = \Carbon\Carbon::parse($booking->end_date);
+                    $durationDays = max(1, $startDateTime->diffInDays($endDateTime) + 1);
+
+                    if ($durationDays < 7) {
+                        $offset = $booking->installments_paid * 2;
+                        $booking->installment_due_date = $createdAt->copy()->addDays($offset)->toDateString();
+                    } elseif ($durationDays <= 30) {
+                        $offset = $booking->installments_paid;
+                        $booking->installment_due_date = $createdAt->copy()->addWeeks($offset)->toDateString();
+                    } else {
+                        $offset = $booking->installments_paid;
+                        $booking->installment_due_date = $createdAt->copy()->addMonths($offset)->toDateString();
                     }
-                    if ($defaultDueDate->lt(\Carbon\Carbon::now())) {
-                        $defaultDueDate = \Carbon\Carbon::now()->addDay();
-                    }
-                    $booking->installment_due_date = $defaultDueDate->toDateString();
                 }
             }
             $booking->save();
@@ -490,7 +556,7 @@ class BookingController extends Controller
             ? 'Pembayaran berhasil! Booking #' . $booking->booking_id . ' Anda sekarang LUNAS.'
             : 'Pembayaran cicilan ke-' . $booking->installments_paid . ' berhasil sebesar Rp ' . number_format($nextPayment, 0, ',', '.') . '!';
 
-        return redirect()->route('booking.transaction', $booking->booking_id)->with('success', $msg);
+        return redirect()->route('penyewa.dashboard')->with('success', $msg);
     }
 
     public function paymentCallback(Request $request, $booking_id)
